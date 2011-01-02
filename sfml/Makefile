@@ -1,4 +1,4 @@
 CC=g++
 
 test-hexfml: test-hexfml.o hexfml.o
-	$(CC) -lsfml-graphics $^ -o $@
+	$(CC) -lsfml-system -lsfml-graphics $^ -o $@
