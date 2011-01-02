@@ -59,8 +59,8 @@ int main(int argc, char *argv[]) {
 
         win.Clear( sf::Color(0,0,0) );
 
-        hexBorder.SetPosition( currentHexX,
-                               currentHexY );
+        hexBorder.SetPosition( currentHexX + 0.5,
+                               currentHexY + 0.5 );
         win.Draw( hexBorder );
 
         win.Display();
