@@ -10,6 +10,8 @@
 int main(int argc, char *argv[]) {
     using namespace std;
 
+    int sx = -400, sy = -300;
+
     ScreenGrid grid ( "./data/hexproto1.png" );
 
     sf::RenderWindow win ( sf::VideoMode(800,600,32),
@@ -45,12 +47,9 @@ int main(int argc, char *argv[]) {
                 {
                     int x = win.GetInput().GetMouseX(),
                         y = win.GetInput().GetMouseY();
-                    grid.screenToHex( x, y, 0, 0 );
+                    grid.screenToHex( x, y, sx, sy );
                     int hx = x, hy = y;
-                    hy += 2; // HAX should be in the grid code
                     grid.hexToScreen( hx, hy );
-                    cout << x << " " << y << ", ";
-                    cout << hx << " " << hy << endl;
                     currentHexX = hx;
                     currentHexY = hy;
                 }
@@ -59,8 +58,8 @@ int main(int argc, char *argv[]) {
 
         win.Clear( sf::Color(0,0,0) );
 
-        hexBorder.SetPosition( currentHexX + 0.5,
-                               currentHexY + 0.5 );
+        hexBorder.SetPosition( currentHexX - sx + 0.5,
+                               currentHexY - sy + 0.5 );
         win.Draw( hexBorder );
 
         win.Display();

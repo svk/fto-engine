@@ -39,7 +39,7 @@ int ScreenGrid::getRow( int col, int gy ) const {
 
 void ScreenGrid::cellClassify( int& gx, int& gy, int col, int row ) const {
     const int cx = 3 * col,
-              cy = 2 * row - (col % 2);
+              cy = 2 * (row+1) - ((col % 2) ? 1 : 0);
     uint32_t sample;
     gx -= col * hOffsetIncrement;
     gy -= row * 2 * vOffsetIncrement;
