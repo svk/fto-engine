@@ -5,6 +5,12 @@
 
 #include <stdint.h>
 
+int hexCircleSize(int);
+int flattenHexCoordinate(int,int);
+void inflateHexCoordinate(int,int&,int&);
+void polariseHexCoordinate(int,int,int&,int&,int&);
+void cartesianiseHexCoordinate(int,int,int,int&,int&);
+
 class ScreenGrid {
     private:
         sf::Image hexPrototype;
