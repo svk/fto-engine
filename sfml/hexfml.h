@@ -43,11 +43,42 @@ class ScreenGrid {
         ScreenGrid( const std::string& );
         ~ScreenGrid(void);
 
-        void screenToHex( int&, int&, int, int );
+        void screenToHex( int&, int&, int, int ) const;
         void hexToScreen( int&, int& ) const;
 
         int getHexWidth(void) const { return width; }
         int getHexHeight(void) const { return height; }
+
+        void centerRectangle(sf::FloatRect&);
+};
+
+class HexBlitter {
+    public:
+        virtual void drawHex(int, int, sf::RenderWindow&) = 0;
+};
+
+class HexViewport {
+    // Note: this viewport is 1:1 and does not support
+    // zoom -- this is intentional to maintain a
+    // one to one pixel mapping.
+    // This is also why integers are used for coordinates
+    // throughout.
+
+    private:
+        const ScreenGrid& grid;
+
+        int screenXOffset, screenYOffset;
+        int screenWidth, screenHeight;
+
+        int centerX, centerY;
+
+    public:
+        HexViewport(const ScreenGrid&,int,int,int,int);
+
+        void setRectangle(int,int,int,int);
+        void center(int,int);
+
+        void draw(HexBlitter&, sf::RenderWindow&, sf::View&) const;
 };
 
 class HexSprite {

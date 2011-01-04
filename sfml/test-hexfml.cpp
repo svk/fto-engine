@@ -3,9 +3,41 @@
 #include <SFML/System.hpp>
 #include <SFML/Graphics.hpp>
 
+#include <cstdio>
 #include <iostream>
 
 #include <stdexcept>
+
+ScreenGrid *gridp;
+int selectedHexX, selectedHexY;
+HexSprite *blue;
+HexSprite *red;
+HexSprite *ball;
+
+class MyHexBlitter : public HexBlitter {
+    public:
+        void drawHex(int x, int y, sf::RenderWindow& win) {
+            int ri, rj, rr;
+            polariseHexCoordinate( x, y, ri, rj, rr );
+            char buf[1024];
+            sprintf( buf, "%d", flattenHexCoordinate(x,y) );
+            sf::String text ( buf );
+            sf::FloatRect rect = text.GetRect();
+            gridp->centerRectangle( rect );
+
+            if( (rr%2) == 0 ) {
+                blue->draw( win );
+            } else {
+                red->draw( win );
+            }
+            if( x == y ) {
+                ball->draw( win );
+            }
+
+            text.SetPosition( rect.Left, rect.Top );
+            win.Draw( text );
+        }
+};
 
 int main(int argc, char *argv[]) {
     using namespace std;
@@ -14,8 +46,17 @@ int main(int argc, char *argv[]) {
 
     ScreenGrid grid ( "./data/hexproto1.png" );
 
-    HexSprite blue ( "./data/hexblue1.png", grid );
-    HexSprite ball ( "./data/ball.png", grid );
+    HexSprite bluev ( "./data/hexblue1.png", grid );
+    HexSprite redv ( "./data/hexred1.png", grid );
+    HexSprite ballv ( "./data/ball.png", grid );
+    gridp = &grid;
+    blue = &bluev;
+    red = &redv;
+    ball = &ballv;
+
+    MyHexBlitter blitter;
+
+    HexViewport viewport (grid, 10,10,700,800);
 
     sf::RenderWindow win ( sf::VideoMode(800,600,32),
                            "521 HexFML" );
@@ -26,10 +67,16 @@ int main(int argc, char *argv[]) {
         throw std::runtime_error( "unable to load hex border" );
     }
     sf::Sprite hexBorder;
+    hexBorderImage.SetSmooth( false );
     hexBorder.SetImage( hexBorderImage );
 
     int currentHexX = -1000,
         currentHexY = -1000;
+
+    sf::View mainView ( sf::Vector2f( 0, 0 ),
+                        sf::Vector2f( 400, 300 ) );
+
+    win.SetView( mainView );
 
     while( win.IsOpened() ) {
         sf::Event ev;
@@ -38,8 +85,8 @@ int main(int argc, char *argv[]) {
 
         while( win.GetEvent( ev ) ) switch( ev.Type ) {
             case sf::Event::Resized:
-                win.SetView( sf::View( sf::Vector2f( 0, 0 ),
-                                       sf::Vector2f( ev.Size.Width / 2, ev.Size.Height / 2 ) ) );
+                viewport.setRectangle( 10, 150, ev.Size.Width - 20, ev.Size.Height - 160 );
+                mainView.SetHalfSize( sf::Vector2f( ev.Size.Width / 2, ev.Size.Height / 2 ) );
                 break;
             case sf::Event::Closed:
                 win.Close();
@@ -53,6 +100,8 @@ int main(int argc, char *argv[]) {
                     sf::Vector2f p = win.ConvertCoords( x, y );
                     int hx = (int)(0.5+p.x), hy = (int)(0.5+p.y);
                     grid.screenToHex( hx, hy, sx, sy );
+                    selectedHexX = sx;
+                    selectedHexY = sy;
                     grid.hexToScreen( hx, hy );
                     currentHexX = hx;
                     currentHexY = hy;
@@ -62,22 +111,10 @@ int main(int argc, char *argv[]) {
 
         win.Clear( sf::Color(0,0,0) );
 
-        int screenWidth = win.GetWidth();
-        int screenHeight = win.GetHeight();
-        glScissor( 100, 100, screenWidth - 200, screenHeight - 200 );
-        glEnable( GL_SCISSOR_TEST );
-
-        win.Clear( sf::Color(100,100,255) );
-
-        blue.draw( win );
-        ball.draw( win );
-
-        hexBorder.SetPosition( currentHexX - sx + 0.5,
-                               currentHexY - sy + 0.5 );
-
-        win.Draw( hexBorder );
-
-        glDisable( GL_SCISSOR_TEST );
+        viewport.center( 0, 0 );
+        viewport.draw( blitter, win, mainView );
+        
+        usleep( 10000 );
 
         win.Display();
     }

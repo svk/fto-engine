@@ -106,7 +106,7 @@ void ScreenGrid::analysePrototype(void) {
     }
 }
 
-void ScreenGrid::screenToHex( int& x, int& y, int scrollX, int scrollY ) {
+void ScreenGrid::screenToHex( int& x, int& y, int scrollX, int scrollY ) const {
     screenToGeometric( x, y, scrollX, scrollY );
     int col = getColumn( x );
     int row = getRow( col, y );
@@ -233,6 +233,7 @@ HexSprite::HexSprite(const std::string& filename, const ScreenGrid& grid) :
         delete image;
         throw std::runtime_error( "failed to load image" );
     }
+    image->SetSmooth( false );
     loadSpriteFrom( *image );
 }
 
@@ -277,4 +278,76 @@ HexSprite::~HexSprite(void) {
     if( image ) {
         delete image;
     }
+}
+
+HexViewport::HexViewport(const ScreenGrid& grid, int x0, int y0, int w, int h) :
+    grid (grid),
+    screenXOffset (x0),
+    screenYOffset (y0),
+    screenWidth (w),
+    screenHeight (h),
+    centerX (0),
+    centerY (0)
+{
+}
+
+void HexViewport::center(int cx, int cy) {
+    centerX = cx;
+    centerY = cy;
+}
+
+void HexViewport::setRectangle(int x0, int y0, int w, int h) {
+    screenXOffset = x0;
+    screenYOffset = y0;
+    screenWidth = w;
+    screenHeight = h;
+}
+
+void HexViewport::draw(HexBlitter& blitter, sf::RenderWindow& win, sf::View& view) const {
+    using namespace std;
+
+    int hxw = grid.getHexWidth(),
+        hxh = grid.getHexHeight();
+    // may want to add padding to hxw,hxh to draw larger-than-hex sprites
+    // correctly
+
+    int hwx0 = centerX - screenWidth/2,
+        hwy0 = centerY - screenHeight/2,
+        hwx1 = centerX + screenWidth - 1,
+        hwy1 = centerY + screenHeight - 1;
+
+    glScissor( screenXOffset, win.GetHeight() - (screenYOffset + screenHeight), screenWidth, screenHeight );
+    glEnable( GL_SCISSOR_TEST );
+
+    win.Clear( sf::Color(255,255,255) );
+
+    grid.screenToHex( hwx0, hwy0, 0, 0 );
+    grid.screenToHex( hwx1, hwy1, 0, 0 );
+    hwx0 /= 3;
+    hwx1 /= 3;
+    hwx0--;
+    hwy0++;
+    hwx1++;
+    hwy1--;
+
+    for(int i=hwx0;i<=hwx1;i++) {
+        for(int j=hwy1;j<=hwy0;j++) {
+            if( ((i%2)!=0) != ((j%2)!=0) ) continue;
+            int sx = 3 * i, sy = j;
+            grid.hexToScreen( sx, sy );
+            view.SetCenter( -((double) sx - centerX), -((double) sy - centerY) );
+            blitter.drawHex( 3 * i, j, win );
+        }
+    }
+
+    glDisable( GL_SCISSOR_TEST );
+}
+
+void ScreenGrid::centerRectangle(sf::FloatRect& rect) {
+    int hoffset = (width - rect.GetWidth())/2,
+        voffset = (height - rect.GetHeight())/2;
+    // Note -- the use of integers here is NOT an error.
+    // We don't want to suddenly put blurry half-pixels just
+    // because we're centering oddly.
+    rect.Offset( hoffset, voffset );
 }
