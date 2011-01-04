@@ -78,9 +78,12 @@ class HexViewport {
         void setRectangle(int,int,int,int);
         void center(int,int);
 
+        int getCenterX(void) { return centerX; }
+        int getCenterY(void) { return centerY; }
+
         void draw(HexBlitter&, sf::RenderWindow&, sf::View&) const;
 
-        bool translateCoordinates(int&, int&);
+        bool translateCoordinates(int&, int&) const;
 };
 
 class HexSprite {
@@ -105,6 +108,20 @@ class HexSprite {
         void getPosition(int&,int&) const;
 
         void draw(sf::RenderWindow&) const;
+};
+
+class ViewportMouseScroller {
+    private:
+        HexViewport& vp;
+        const sf::Input& input;
+
+        int mouseX0, mouseY0;
+        int vpX0, vpY0;
+
+    public:
+        ViewportMouseScroller( HexViewport&, const sf::Input& );
+
+        void scroll(void);
 };
 
 #endif

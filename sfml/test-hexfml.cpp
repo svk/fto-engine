@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
 
     HexSprite bluev ( "./data/hexblue1.png", grid );
     HexSprite redv ( "./data/hexred1.png", grid );
-    HexSprite ballv ( "./data/ball.png", grid );
+    HexSprite ballv ( "./data/hexborder1.png", grid );
     gridp = &grid;
     blue = &bluev;
     red = &redv;
@@ -57,7 +57,6 @@ int main(int argc, char *argv[]) {
     MyHexBlitter blitter;
 
     HexViewport viewport (grid, 10,10,700,800);
-    HexViewport viewport2 (grid, 10,10,700,800);
 
     sf::RenderWindow win ( sf::VideoMode(800,600,32),
                            "521 HexFML" );
@@ -76,6 +75,8 @@ int main(int argc, char *argv[]) {
 
     win.SetView( mainView );
 
+    ViewportMouseScroller * vpMouseScroller = 0;
+
     while( win.IsOpened() ) {
         sf::Event ev;
         const double dt = clock.GetElapsedTime();
@@ -85,26 +86,40 @@ int main(int argc, char *argv[]) {
             case sf::Event::Resized:
                 viewport.setRectangle( 10,
                                        10,
-                                       (ev.Size.Width - 40)/2,
-                                       (ev.Size.Height - 40)/2 );
-                viewport2.setRectangle( (((ev.Size.Width-40)/2) + 20) + 10,
-                                        (((ev.Size.Height-40)/2) + 20) + 10,
-                                        (ev.Size.Width - 40)/2,
-                                        (ev.Size.Height - 40)/2 );
+                                       (ev.Size.Width - 20),
+                                       (ev.Size.Height - 20) );
                 mainView.SetHalfSize( sf::Vector2f( ev.Size.Width / 2, ev.Size.Height / 2 ) );
                 break;
             case sf::Event::Closed:
                 win.Close();
                 break;
+            case sf::Event::MouseButtonReleased:
+                if( ev.MouseButton.Button == sf::Mouse::Right ) {
+                    if( vpMouseScroller ) {
+                        delete vpMouseScroller;
+                        vpMouseScroller = 0;
+                        win.ShowMouseCursor(true);
+                    }
+                }
+                break;
+            case sf::Event::MouseButtonPressed:
+                if( ev.MouseButton.Button == sf::Mouse::Right ) {
+                    if( !vpMouseScroller ) {
+                        win.ShowMouseCursor(false);
+                        vpMouseScroller = new ViewportMouseScroller( viewport, win.GetInput() );
+                    }
+                }
+                break;
             case sf::Event::MouseMoved:
-                {
+                if( vpMouseScroller ) {
+                    vpMouseScroller->scroll();
+                } else {
                     int x = win.GetInput().GetMouseX(),
                         y = win.GetInput().GetMouseY();
                     int ix, iy;
                     ix = x;
                     iy = y;
-                    if( viewport.translateCoordinates( ix, iy ) 
-                        || viewport2.translateCoordinates( ix, iy ) ) {
+                    if( viewport.translateCoordinates( ix, iy ) ) {
                         grid.screenToHex( ix, iy, 0, 0 );
                         selectedHexX = ix;
                         selectedHexY = iy;
@@ -115,10 +130,7 @@ int main(int argc, char *argv[]) {
 
         win.Clear( sf::Color(128,128,128) );
 
-        viewport.center( 128, 128 );
         viewport.draw( blitter, win, mainView );
-        viewport2.center( 0, 0 );
-        viewport2.draw( blitter, win, mainView );
         
         usleep( 10000 );
 

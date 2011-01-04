@@ -316,6 +316,13 @@ void HexViewport::draw(HexBlitter& blitter, sf::RenderWindow& win, sf::View& vie
     int hwx1 = hwx0 + screenWidth - 1,
         hwy1 = hwy0 + screenHeight - 1;
 
+    hwx0 = screenXOffset;
+    hwy0 = screenYOffset; 
+    hwx1 = screenXOffset + screenWidth - 1;
+    hwy1 = screenYOffset + screenHeight - 1; 
+    translateCoordinates( hwx0, hwy0 );
+    translateCoordinates( hwx1, hwy1 );
+
     glScissor( screenXOffset, win.GetHeight() - (screenYOffset + screenHeight), screenWidth, screenHeight );
     glEnable( GL_SCISSOR_TEST );
 
@@ -359,13 +366,31 @@ void ScreenGrid::centerRectangle(sf::FloatRect& rect) {
     rect.Offset( hoffset, voffset );
 }
 
-bool HexViewport::translateCoordinates( int& x, int& y ) {
+bool HexViewport::translateCoordinates( int& x, int& y ) const {
     int mx = x - screenXOffset, my = y - screenYOffset;
     using namespace std;
-    if( mx < 0 || my < 0 || mx > screenWidth || my > screenHeight ) {
+    if( mx < 0 || my < 0 || mx >= screenWidth || my >= screenHeight ) {
         return false;
     }
     x = mx + centerX - (screenWidth/2) + grid.getHexWidth()/2;
     y = my + centerY - (screenHeight/2) + grid.getHexHeight()/2;
     return true;
+}
+
+ViewportMouseScroller::ViewportMouseScroller( HexViewport& vp, const sf::Input& input ) :
+    vp ( vp ),
+    input ( input ),
+    mouseX0 ( input.GetMouseX() ),
+    mouseY0 ( input.GetMouseY() ),
+    vpX0 ( vp.getCenterX() ),
+    vpY0 ( vp.getCenterY() )
+{
+}
+
+void ViewportMouseScroller::scroll(void) {
+    const int dx = input.GetMouseX() - mouseX0,
+              dy = input.GetMouseY() - mouseY0;
+    const int multiplier = 2;
+    using namespace std;
+    vp.center( vpX0 + multiplier * dx, vpY0 + multiplier * dy );
 }
