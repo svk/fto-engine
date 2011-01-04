@@ -3,7 +3,7 @@
 #include <cassert>
 #include <stdexcept>
 
-#include <stdio.h>
+#include <iostream>
 
 int ScreenGrid::getColumn(int gx) const {
     if( gx >= 0 ) {
@@ -47,7 +47,6 @@ void ScreenGrid::cellClassify( int& gx, int& gy, int col, int row ) const {
         gy += vOffsetIncrement;
     }
     gy = 2 * vOffsetIncrement - 1 - gy;
-    fprintf( stderr, "%d %d %d %d\n", gx, width, col, row );
     assert( gx >= 0 && gx < width );
     assert( gy >= 0 && gy < height );
     sample = pixels[gx + gy * width];
@@ -253,6 +252,7 @@ void HexSprite::loadSpriteFrom(const sf::Image& img) {
     sprite.SetImage( img );
     offsetX = (grid.getHexWidth() - img.GetWidth()) / 2;
     offsetY = (grid.getHexHeight() - img.GetHeight()) / 2;
+    setPosition( hx, hy );
 }
 
 void HexSprite::getPosition(int& hx_, int& hy_) const {
@@ -265,7 +265,8 @@ void HexSprite::setPosition(int hx_, int hy_) {
     sx = hx = hx_;
     sy = hy = hy_;
     grid.hexToScreen( sx, sy );
-    sprite.SetPosition( 0.5 + (double)sx, 0.5 + (double) sy );
+    sprite.SetPosition( 0.5 + (double) (sx + offsetX),
+                        0.5 + (double) (sy + offsetY) );
 }
 
 void HexSprite::draw(sf::RenderWindow& win) const {

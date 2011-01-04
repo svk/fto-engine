@@ -50,7 +50,6 @@ int main(int argc, char *argv[]) {
                     if( x < 0 ) x = 0;
                     if( y < 0 ) y = 0;
                     sf::Vector2f p = win.ConvertCoords( x, y );
-                    cerr << "p:" << p.x << " " << p.y << endl;
                     int hx = (int)(0.5+p.x), hy = (int)(0.5+p.y);
                     grid.screenToHex( hx, hy, sx, sy );
                     grid.hexToScreen( hx, hy );
@@ -62,11 +61,21 @@ int main(int argc, char *argv[]) {
 
         win.Clear( sf::Color(0,0,0) );
 
+        int screenWidth = win.GetWidth();
+        int screenHeight = win.GetHeight();
+        glScissor( 100, 100, screenWidth - 200, screenHeight - 200 );
+        glEnable( GL_SCISSOR_TEST );
+
+        win.Clear( sf::Color(100,100,255) );
+
         blue.draw( win );
 
         hexBorder.SetPosition( currentHexX - sx + 0.5,
                                currentHexY - sy + 0.5 );
+
         win.Draw( hexBorder );
+
+        glDisable( GL_SCISSOR_TEST );
 
         win.Display();
     }
