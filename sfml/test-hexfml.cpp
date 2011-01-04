@@ -30,7 +30,7 @@ class MyHexBlitter : public HexBlitter {
             } else {
                 red->draw( win );
             }
-            if( x == y ) {
+            if( x == selectedHexX && y == selectedHexY ) {
                 ball->draw( win );
             }
 
@@ -71,9 +71,6 @@ int main(int argc, char *argv[]) {
     hexBorderImage.SetSmooth( false );
     hexBorder.SetImage( hexBorderImage );
 
-    int currentHexX = -1000,
-        currentHexY = -1000;
-
     sf::View mainView ( sf::Vector2f( 0, 0 ),
                         sf::Vector2f( 400, 300 ) );
 
@@ -103,21 +100,20 @@ int main(int argc, char *argv[]) {
                 {
                     int x = win.GetInput().GetMouseX(),
                         y = win.GetInput().GetMouseY();
-                    if( x < 0 ) x = 0;
-                    if( y < 0 ) y = 0;
-                    sf::Vector2f p = win.ConvertCoords( x, y );
-                    int hx = (int)(0.5+p.x), hy = (int)(0.5+p.y);
-                    grid.screenToHex( hx, hy, sx, sy );
-                    selectedHexX = sx;
-                    selectedHexY = sy;
-                    grid.hexToScreen( hx, hy );
-                    currentHexX = hx;
-                    currentHexY = hy;
+                    int ix, iy;
+                    ix = x;
+                    iy = y;
+                    if( viewport.translateCoordinates( ix, iy ) 
+                        || viewport2.translateCoordinates( ix, iy ) ) {
+                        grid.screenToHex( ix, iy, 0, 0 );
+                        selectedHexX = ix;
+                        selectedHexY = iy;
+                    }
                 }
                 break;
         }
 
-        win.Clear( sf::Color(0,0,0) );
+        win.Clear( sf::Color(128,128,128) );
 
         viewport.center( 128, 128 );
         viewport.draw( blitter, win, mainView );

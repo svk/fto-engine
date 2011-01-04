@@ -358,3 +358,14 @@ void ScreenGrid::centerRectangle(sf::FloatRect& rect) {
     // because we're centering oddly.
     rect.Offset( hoffset, voffset );
 }
+
+bool HexViewport::translateCoordinates( int& x, int& y ) {
+    int mx = x - screenXOffset, my = y - screenYOffset;
+    using namespace std;
+    if( mx < 0 || my < 0 || mx > screenWidth || my > screenHeight ) {
+        return false;
+    }
+    x = mx + centerX - (screenWidth/2) + grid.getHexWidth()/2;
+    y = my + centerY - (screenHeight/2) + grid.getHexHeight()/2;
+    return true;
+}

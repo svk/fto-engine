@@ -79,6 +79,8 @@ class HexViewport {
         void center(int,int);
 
         void draw(HexBlitter&, sf::RenderWindow&, sf::View&) const;
+
+        bool translateCoordinates(int&, int&);
 };
 
 class HexSprite {
