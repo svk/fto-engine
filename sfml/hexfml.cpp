@@ -47,6 +47,7 @@ void ScreenGrid::cellClassify( int& gx, int& gy, int col, int row ) const {
         gy += vOffsetIncrement;
     }
     gy = 2 * vOffsetIncrement - 1 - gy;
+    fprintf( stderr, "%d %d %d %d\n", gx, width, col, row );
     assert( gx >= 0 && gx < width );
     assert( gy >= 0 && gy < height );
     sample = pixels[gx + gy * width];
@@ -113,7 +114,7 @@ void ScreenGrid::screenToHex( int& x, int& y, int scrollX, int scrollY ) {
     cellClassify( x, y, col, row );
 }
 
-void ScreenGrid::hexToScreen( int& x, int& y ) {
+void ScreenGrid::hexToScreen( int& x, int& y ) const {
     // (0,0) -> (0,0)
     // (3,-1) -> (hOffsetIncrement,vOffsetIncrement)
     assert( (x%3) == 0 );
@@ -216,5 +217,63 @@ void polariseHexCoordinate(int x, int y, int& i, int& j, int& r) {
         assert( i == 5 );
         j = (x+y) / 2;
         r = abs(x);
+    }
+}
+
+HexSprite::HexSprite(const std::string& filename, const ScreenGrid& grid) :
+    grid ( grid ),
+    image ( 0 ),
+    sprite (),
+    offsetX ( 0 ),
+    offsetY ( 0 ),
+    hx ( 0 ),
+    hy ( 0 )
+{
+    image = new sf::Image();
+    if( !image->LoadFromFile( filename ) ) {
+        delete image;
+        throw std::runtime_error( "failed to load image" );
+    }
+    loadSpriteFrom( *image );
+}
+
+HexSprite::HexSprite(const sf::Image& externalImage, const ScreenGrid& grid) :
+    grid ( grid ),
+    image ( 0 ),
+    sprite (),
+    offsetX ( 0 ),
+    offsetY ( 0 ),
+    hx ( 0 ),
+    hy ( 0 )
+{
+    loadSpriteFrom( externalImage );
+}
+
+void HexSprite::loadSpriteFrom(const sf::Image& img) {
+    sprite.SetImage( img );
+    offsetX = (grid.getHexWidth() - img.GetWidth()) / 2;
+    offsetY = (grid.getHexHeight() - img.GetHeight()) / 2;
+}
+
+void HexSprite::getPosition(int& hx_, int& hy_) const {
+    hx_ = hx;
+    hy_ = hy;
+}
+
+void HexSprite::setPosition(int hx_, int hy_) {
+    int sx, sy;
+    sx = hx = hx_;
+    sy = hy = hy_;
+    grid.hexToScreen( sx, sy );
+    sprite.SetPosition( 0.5 + (double)sx, 0.5 + (double) sy );
+}
+
+void HexSprite::draw(sf::RenderWindow& win) const {
+    win.Draw( sprite );
+}
+
+HexSprite::~HexSprite(void) {
+    if( image ) {
+        delete image;
     }
 }

@@ -10,9 +10,11 @@
 int main(int argc, char *argv[]) {
     using namespace std;
 
-    int sx = -400, sy = -300;
+    int sx = 0, sy = 0;
 
     ScreenGrid grid ( "./data/hexproto1.png" );
+
+    HexSprite blue ( "./data/hexblue1.png", grid );
 
     sf::RenderWindow win ( sf::VideoMode(800,600,32),
                            "521 HexFML" );
@@ -35,10 +37,8 @@ int main(int argc, char *argv[]) {
 
         while( win.GetEvent( ev ) ) switch( ev.Type ) {
             case sf::Event::Resized:
-                win.SetView( sf::View( sf::FloatRect( 0,
-                                                      0,
-                                                      ev.Size.Width,
-                                                      ev.Size.Height ) ) );
+                win.SetView( sf::View( sf::Vector2f( 0, 0 ),
+                                       sf::Vector2f( ev.Size.Width / 2, ev.Size.Height / 2 ) ) );
                 break;
             case sf::Event::Closed:
                 win.Close();
@@ -47,8 +47,12 @@ int main(int argc, char *argv[]) {
                 {
                     int x = win.GetInput().GetMouseX(),
                         y = win.GetInput().GetMouseY();
-                    grid.screenToHex( x, y, sx, sy );
-                    int hx = x, hy = y;
+                    if( x < 0 ) x = 0;
+                    if( y < 0 ) y = 0;
+                    sf::Vector2f p = win.ConvertCoords( x, y );
+                    cerr << "p:" << p.x << " " << p.y << endl;
+                    int hx = (int)(0.5+p.x), hy = (int)(0.5+p.y);
+                    grid.screenToHex( hx, hy, sx, sy );
                     grid.hexToScreen( hx, hy );
                     currentHexX = hx;
                     currentHexY = hy;
@@ -57,6 +61,8 @@ int main(int argc, char *argv[]) {
         }
 
         win.Clear( sf::Color(0,0,0) );
+
+        blue.draw( win );
 
         hexBorder.SetPosition( currentHexX - sx + 0.5,
                                currentHexY - sy + 0.5 );

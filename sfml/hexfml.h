@@ -1,7 +1,7 @@
 #ifndef H_HEXFML
 #define H_HEXFML
 
-#include <SFML/Graphics/Image.hpp>
+#include <SFML/Graphics.hpp>
 
 #include <stdint.h>
 
@@ -44,8 +44,34 @@ class ScreenGrid {
         ~ScreenGrid(void);
 
         void screenToHex( int&, int&, int, int );
-        void hexToScreen( int&, int& );
+        void hexToScreen( int&, int& ) const;
 
+        int getHexWidth(void) const { return width; }
+        int getHexHeight(void) const { return height; }
+};
+
+class HexSprite {
+    private:
+        const ScreenGrid& grid;
+
+        sf::Image *image;
+        sf::Sprite sprite;
+
+        int offsetX, offsetY;
+
+        int hx, hy;
+
+        void loadSpriteFrom(const sf::Image&);
+
+    public:
+        HexSprite(const std::string&, const ScreenGrid&);
+        HexSprite(const sf::Image&, const ScreenGrid&);
+        ~HexSprite(void);
+
+        void setPosition(int,int);
+        void getPosition(int&,int&) const;
+
+        void draw(sf::RenderWindow&) const;
 };
 
 #endif
