@@ -15,6 +15,7 @@ int main(int argc, char *argv[]) {
     ScreenGrid grid ( "./data/hexproto1.png" );
 
     HexSprite blue ( "./data/hexblue1.png", grid );
+    HexSprite ball ( "./data/ball.png", grid );
 
     sf::RenderWindow win ( sf::VideoMode(800,600,32),
                            "521 HexFML" );
@@ -69,6 +70,7 @@ int main(int argc, char *argv[]) {
         win.Clear( sf::Color(100,100,255) );
 
         blue.draw( win );
+        ball.draw( win );
 
         hexBorder.SetPosition( currentHexX - sx + 0.5,
                                currentHexY - sy + 0.5 );
