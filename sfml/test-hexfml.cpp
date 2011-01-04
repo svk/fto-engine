@@ -57,6 +57,7 @@ int main(int argc, char *argv[]) {
     MyHexBlitter blitter;
 
     HexViewport viewport (grid, 10,10,700,800);
+    HexViewport viewport2 (grid, 10,10,700,800);
 
     sf::RenderWindow win ( sf::VideoMode(800,600,32),
                            "521 HexFML" );
@@ -85,7 +86,14 @@ int main(int argc, char *argv[]) {
 
         while( win.GetEvent( ev ) ) switch( ev.Type ) {
             case sf::Event::Resized:
-                viewport.setRectangle( 10, 150, ev.Size.Width - 20, ev.Size.Height - 160 );
+                viewport.setRectangle( 10,
+                                       10,
+                                       (ev.Size.Width - 40)/2,
+                                       (ev.Size.Height - 40)/2 );
+                viewport2.setRectangle( (((ev.Size.Width-40)/2) + 20) + 10,
+                                        (((ev.Size.Height-40)/2) + 20) + 10,
+                                        (ev.Size.Width - 40)/2,
+                                        (ev.Size.Height - 40)/2 );
                 mainView.SetHalfSize( sf::Vector2f( ev.Size.Width / 2, ev.Size.Height / 2 ) );
                 break;
             case sf::Event::Closed:
@@ -111,8 +119,10 @@ int main(int argc, char *argv[]) {
 
         win.Clear( sf::Color(0,0,0) );
 
-        viewport.center( 0, 0 );
+        viewport.center( 128, 128 );
         viewport.draw( blitter, win, mainView );
+        viewport2.center( 0, 0 );
+        viewport2.draw( blitter, win, mainView );
         
         usleep( 10000 );
 

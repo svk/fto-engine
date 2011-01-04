@@ -312,9 +312,9 @@ void HexViewport::draw(HexBlitter& blitter, sf::RenderWindow& win, sf::View& vie
     // correctly
 
     int hwx0 = centerX - screenWidth/2,
-        hwy0 = centerY - screenHeight/2,
-        hwx1 = centerX + screenWidth - 1,
-        hwy1 = centerY + screenHeight - 1;
+        hwy0 = centerY - screenHeight/2;
+    int hwx1 = hwx0 + screenWidth - 1,
+        hwy1 = hwy0 + screenHeight - 1;
 
     glScissor( screenXOffset, win.GetHeight() - (screenYOffset + screenHeight), screenWidth, screenHeight );
     glEnable( GL_SCISSOR_TEST );
@@ -323,6 +323,7 @@ void HexViewport::draw(HexBlitter& blitter, sf::RenderWindow& win, sf::View& vie
 
     grid.screenToHex( hwx0, hwy0, 0, 0 );
     grid.screenToHex( hwx1, hwy1, 0, 0 );
+
     hwx0 /= 3;
     hwx1 /= 3;
     hwx0--;
@@ -330,12 +331,18 @@ void HexViewport::draw(HexBlitter& blitter, sf::RenderWindow& win, sf::View& vie
     hwx1++;
     hwy1--;
 
+    int rsw = win.GetWidth(), rsh = win.GetHeight();
+    int htw = grid.getHexWidth()/2, hth = grid.getHexHeight()/2;
+    int hw = screenWidth/2, hh = screenHeight/2;
     for(int i=hwx0;i<=hwx1;i++) {
         for(int j=hwy1;j<=hwy0;j++) {
             if( ((i%2)!=0) != ((j%2)!=0) ) continue;
             int sx = 3 * i, sy = j;
             grid.hexToScreen( sx, sy );
-            view.SetCenter( -((double) sx - centerX), -((double) sy - centerY) );
+            view.SetCenter( -((double) sx - centerX + screenXOffset - hw), // add to move left
+                            -((double) sy - centerY + screenYOffset - hh)); // add to move up
+            view.SetCenter( (rsw/2) - screenXOffset - hw + htw - sx + centerX,
+                            (rsh/2) - screenYOffset - hh + hth - sy + centerY);
             blitter.drawHex( 3 * i, j, win );
         }
     }
