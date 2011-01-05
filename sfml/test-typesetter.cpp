@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
     }
 
     FreetypeLibrary lib;
-    FreetypeFace myFont ("./data/Vera.ttf", 20);
+    FreetypeFace myFont ("./data/TeenBd.otf", 20);
     int spacing = myFont.getWidthOf(' ');
     DebugLineRenderer dlr (0, 300, spacing);
     WordWrapper wrapper ( dlr, 640, spacing );
