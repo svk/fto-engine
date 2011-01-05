@@ -280,9 +280,9 @@ int FreetypeFace::getWidthOf(uint32_t ch) {
 }
 
 int FreetypeFace::getHeightOf(uint32_t ch) {
-    int error = FT_Load_Char( face, ch, FT_LOAD_RENDER );
-    if( error ) return 0;
-    return face->glyph->bitmap.rows;
+    using namespace std;
+    cerr << "blah : " << face->size->metrics.height << endl;
+    return face->size->metrics.height / 64;
 }
 
 std::string FormattedLine::getRawText(void) const {
@@ -308,7 +308,10 @@ std::string FormattedWord::getRawText(void) const {
 int FormattedCharacter::render(int x, int y, ImageBuffer& buffer) const {
     int error = FT_Load_Char( face->getFace(), character, FT_LOAD_RENDER );
     if( error ) return 0;
-    buffer.putFTGraymap(x, y, &face->getFace()->glyph->bitmap, colour );
+    buffer.putFTGraymap(x + face->getFace()->glyph->bitmap_left,
+                        y - face->getFace()->glyph->bitmap_top,
+                        &face->getFace()->glyph->bitmap,
+                        colour );
     return face->getFace()->glyph->advance.x / 64;
 }
 
