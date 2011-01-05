@@ -25,10 +25,14 @@ class DebugLineRenderer : public LineRenderer {
         {
         }
 
-        void render(const FormattedLine& line) {
+        void render(const FormattedLine& line, bool brokenAbnormally) {
             using namespace std;
             cerr << "line " << line.getRawText() << " of length " << line.getWidthWithSpacing(spacing) << endl;
-            line.renderLeftJustified( x, y, spacing, *buffy );
+            if( brokenAbnormally ) {
+                line.renderLeftJustified( x, y, spacing, *buffy );
+            } else {
+                line.renderPadded( x, y, spacing, 640, *buffy );
+            }
             y += line.getHeight();
         }
 };

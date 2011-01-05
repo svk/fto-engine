@@ -137,12 +137,14 @@ class FormattedLine {
         std::string getRawText(void) const;
 
         void renderLeftJustified(int,int,int,ImageBuffer&) const;
+        void renderCentered(int,int,int,int,ImageBuffer&) const;
+        void renderPadded(int,int,int,int,ImageBuffer&) const;
         int getWidthWithSpacing(int) const;
 };
 
 class LineRenderer {
     public:
-        virtual void render(const FormattedLine&) = 0;
+        virtual void render(const FormattedLine&, bool) = 0;
 };
 
 class WordWrapper {
@@ -155,7 +157,7 @@ class WordWrapper {
         int widthBound;
         int minimumWordSpacing;
 
-        void endCurrentLine(void);
+        void endCurrentLine(bool);
         void handleNewWord(void);
     public:
         WordWrapper(LineRenderer&, int, int);

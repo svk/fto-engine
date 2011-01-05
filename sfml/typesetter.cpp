@@ -6,6 +6,7 @@
 #include <iostream>
 
 #define MAX(a,b) (((a)>(b))?(a):(b))
+#define MIN(a,b) (((a)<(b))?(a):(b))
 
 ImageBuffer::ImageBuffer(int width, int height) :
     width ( width ),
@@ -233,7 +234,7 @@ void WordWrapper::feed(const FormattedCharacter& ch) {
         case TSCT_IGNORE:
             break;
         case TSCT_NEWLINE:
-            endCurrentLine();
+            endCurrentLine(false);
             break;
         case TSCT_BREAK:
             handleNewWord();
@@ -243,11 +244,11 @@ void WordWrapper::feed(const FormattedCharacter& ch) {
 
 void WordWrapper::end(void) {
     handleNewWord();
-    endCurrentLine();
+    endCurrentLine(false);
 }
 
-void WordWrapper::endCurrentLine(void) {
-    renderer.render( currentLine );
+void WordWrapper::endCurrentLine(bool broken) {
+    renderer.render( currentLine, !broken );
     currentLine.clear();
 }
 
@@ -266,7 +267,7 @@ void WordWrapper::handleNewWord(void) {
         currentWord.clear();
         return;
     }
-    endCurrentLine();
+    endCurrentLine(true);
     currentLine.addWord( currentWord );
     currentWord.clear();
 }
@@ -281,7 +282,6 @@ int FreetypeFace::getWidthOf(uint32_t ch) {
 
 int FreetypeFace::getHeightOf(uint32_t ch) {
     using namespace std;
-    cerr << "blah : " << face->size->metrics.height << endl;
     return face->size->metrics.height / 64;
 }
 
@@ -306,10 +306,11 @@ std::string FormattedWord::getRawText(void) const {
 }
 
 int FormattedCharacter::render(int x, int y, ImageBuffer& buffer) const {
+    using namespace std;
     int error = FT_Load_Char( face->getFace(), character, FT_LOAD_RENDER );
     if( error ) return 0;
     buffer.putFTGraymap(x + face->getFace()->glyph->bitmap_left,
-                        y - face->getFace()->glyph->bitmap_top,
+                        y + (face->getFace()->size->metrics.ascender/64) - face->getFace()->glyph->bitmap_top,
                         &face->getFace()->glyph->bitmap,
                         colour );
     return face->getFace()->glyph->advance.x / 64;
@@ -328,5 +329,29 @@ void FormattedLine::renderLeftJustified(int x, int y, int spacing,ImageBuffer& b
     for(FWList::const_iterator i = components.begin(); i != components.end(); i++) {
         dx += i->render( x + dx, y, buffer );
         dx += spacing;
+    }
+}
+
+void FormattedLine::renderCentered(int x, int y, int spacing, int width, ImageBuffer& buffer) const {
+    int surplus = MAX(0, width - getWidthWithSpacing(spacing) );
+    renderLeftJustified(x + surplus/2, y, spacing, buffer );
+}
+
+void FormattedLine::renderPadded(int x, int y, int spacing, int width, ImageBuffer& buffer) const {
+    int surplus = MAX(0, width - getWidthWithSpacing(spacing) );
+    int low = surplus / getBreaks(), high = (surplus + getBreaks() - 1) / getBreaks();
+    int dx = 0;
+    int index = 0;
+    for(FWList::const_iterator i = components.begin(); i != components.end(); i++) {
+        dx += i->render( x + dx, y, buffer );
+        dx += spacing;
+        if( (index%2) == 0 ) {
+            dx += MIN( surplus, low );
+            surplus -= low;
+        } else {
+            dx += MIN( surplus, high );
+            surplus -= high;
+        }
+        index++;
     }
 }
