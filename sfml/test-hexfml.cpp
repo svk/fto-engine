@@ -8,6 +8,8 @@
 
 #include <stdexcept>
 
+#include "anisprite.h"
+
 ScreenGrid *gridp;
 int selectedHexX, selectedHexY;
 HexSprite *blue;
@@ -81,9 +83,18 @@ int main(int argc, char *argv[]) {
     if( !kittenImage.LoadFromFile( "./data/minikitten.png" ) ) {
         throw std::runtime_error( "unable to find kitten" );
     }
+    sf::Image kittenRednoseImage;
+    if( !kittenRednoseImage.LoadFromFile( "./data/minikitten-clownnose.png" ) ) {
+        throw std::runtime_error( "unable to find kitten-clown" );
+    }
     sf::Sprite kittenSprite;
     kittenSprite.SetImage( kittenImage );
     kittenSprite.SetColor( sf::Color(255,255,255,225) );
+
+    AnimatedSprite kittenBlink ( 1.0, true );
+    kittenBlink.addImage( kittenImage );
+    kittenBlink.addImage( kittenRednoseImage );
+    kittenBlink.SetColor( sf::Color(255,255,255,225) );
 
     ViewportMouseScroller * vpMouseScroller = 0;
 
@@ -91,6 +102,8 @@ int main(int argc, char *argv[]) {
         sf::Event ev;
         const double dt = clock.GetElapsedTime();
         clock.Reset();
+
+        kittenBlink.animate( dt );
 
         while( win.GetEvent( ev ) ) switch( ev.Type ) {
             case sf::Event::Resized:
@@ -136,8 +149,7 @@ int main(int argc, char *argv[]) {
                         if( flattenHexCoordinate( selectedHexX, selectedHexY ) == 42 ) {
                             sf::FloatRect rect = fitRectangleAt( x, y, sf::FloatRect( 0, 0, win.GetWidth(), win.GetHeight() ), kittenImage.GetWidth(), kittenImage.GetHeight() );
                             showingKitten = true;
-                            cerr << "mouse finds kitten!" << rect.Left << " " << rect.Top <<  endl;
-                            kittenSprite.SetPosition( rect.Left, rect.Top );
+                            kittenBlink.SetPosition( rect.Left, rect.Top );
                         } else {
                             showingKitten = false;
                         }
@@ -153,7 +165,7 @@ int main(int argc, char *argv[]) {
         mainView.SetFromRect( sf::FloatRect( 0, 0, win.GetWidth(), win.GetHeight() ) );
 
         if( showingKitten ) {
-            win.Draw( kittenSprite );
+            win.Draw( kittenBlink );
         }
         
         usleep( 10000 );

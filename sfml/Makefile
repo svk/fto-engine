@@ -1,7 +1,7 @@
 CC=g++
 CPPFLAGS=-g
 
-test-hexfml: test-hexfml.o hexfml.o
+test-hexfml: test-hexfml.o hexfml.o anisprite.o
 	$(CC) $(CPPFLAGS) -lsfml-system -lsfml-graphics $^ -o $@
 
 test-coords: test-coords.o hexfml.o
