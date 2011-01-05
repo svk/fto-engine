@@ -28,6 +28,7 @@ void ImageBuffer::putFTGraymap(int x0, int y0, FT_Bitmap *bitmap, const sf::Colo
         for(int col=0;col<bitmap->width;col++) {
             uint8_t gray = static_cast<uint8_t>( buffer[col] );
             uint32_t notGray = MAKE_COL( colour.r, colour.g, colour.b, gray );
+            if( gray == 0 ) continue; // hax! not true blending
             setPixel( x0 + col, y0 + row, notGray );
         }
         buffer += bitmap->pitch;
