@@ -50,12 +50,12 @@ int main(int argc, char *argv[]) {
     }
 
     FreetypeLibrary lib;
-    FreetypeFace myFont ("./data/Vera.ttf", 70);
+    FreetypeFace myFont ("./data/Vera.ttf", 20);
     int spacing = myFont.getWidthOf(' ');
     DebugLineRenderer dlr (0, 300, spacing);
     WordWrapper wrapper ( dlr, 640, spacing );
     sf::Color white (255,255,255);
-    std::string text ("One does not simply ROCK into Mordor" );
+    std::string text ("Each size object also contains a scaled versions of some of the global metrics described above. They can be accessed directly through the face->size->metrics structure. Note that these values correspond to scaled versions of the design global metrics, with no rounding or grid-fitting performed. They are also completely independent of any hinting process. In other words, don't rely on them to get exact metrics at the pixel level. They are expressed in 26.6 pixel format." );
 
     buffy = &buffer;
 
