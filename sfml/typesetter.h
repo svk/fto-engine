@@ -31,19 +31,12 @@ class ImageBuffer {
         int width, height;
         ColRGBA *data;
 
-        typedef std::vector<PixelFilter*> FilterList;
-        FilterList filters;
-
-        ColRGBA applyFilters( ColRGBA ) const;
-
     public:
         ImageBuffer(int,int);
         ~ImageBuffer(void);
 
-        void addFilter( PixelFilter* );
-
         void setPixel(int,int, ColRGBA);
-        void putFTGraymap(int, int, FT_Bitmap*);
+        void putFTGraymap(int, int, FT_Bitmap*, const sf::Color&);
 
         void writeP6(FILE *);
 };
@@ -71,6 +64,8 @@ class FreetypeFace {
 
         int getWidthOf(uint32_t);
         int getHeightOf(uint32_t);
+
+        FT_Face getFace(void) const { return face; }
 };
 
 /* There's a lot of copying coming up -- not optimized
@@ -96,6 +91,8 @@ struct FormattedCharacter {
 
     int getWidth(void);
     int getHeight(void);
+
+    int render(int,int,ImageBuffer&) const;
 };
 
 class FormattedWord {
@@ -117,6 +114,8 @@ class FormattedWord {
         void clear(void);
 
         std::string getRawText(void) const;
+
+        int render(int,int,ImageBuffer&) const;
 };
 
 class FormattedLine {
@@ -136,6 +135,9 @@ class FormattedLine {
         void addWord(const FormattedWord&);
 
         std::string getRawText(void) const;
+
+        void renderLeftJustified(int,int,int,ImageBuffer&) const;
+        int getWidthWithSpacing(int) const;
 };
 
 class LineRenderer {

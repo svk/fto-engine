@@ -10,38 +10,24 @@
 ImageBuffer::ImageBuffer(int width, int height) :
     width ( width ),
     height ( height ),
-    data ( new ColRGBA [width*height] ),
-    filters ()
+    data ( new ColRGBA [width*height] )
 {
-}
-
-void ImageBuffer::addFilter(PixelFilter* filter) {
-    filters.push_back( filter );
-}
-
-ColRGBA ImageBuffer::applyFilters(ColRGBA col) const {
-    FilterList::const_iterator i = filters.begin();
-    while( i != filters.end() ) {
-        col = (**i)(col);
-        i++;
-    }
-    return col;
 }
 
 void ImageBuffer::setPixel(int x, int y, ColRGBA col) {
     if( x < 0 || y < 0 || x >= width || y >= height ) {
         return;
     }
-    data[x + y * width] = applyFilters( col );
+    data[x + y * width] = col;
 }
 
-void ImageBuffer::putFTGraymap(int x0, int y0, FT_Bitmap *bitmap) {
+void ImageBuffer::putFTGraymap(int x0, int y0, FT_Bitmap *bitmap, const sf::Color& colour ) {
     unsigned char *buffer = (bitmap->pitch < 0) ? &bitmap->buffer[(-bitmap->pitch)*(bitmap->rows-1)] : bitmap->buffer;
     for(int row=0;row<bitmap->rows;row++) {
         for(int col=0;col<bitmap->width;col++) {
             uint8_t gray = static_cast<uint8_t>( buffer[col] );
-            uint32_t richGray = MAKE_COL( gray, gray, gray, 255 );
-            setPixel( x0 + col, y0 + row, richGray );
+            uint32_t notGray = MAKE_COL( colour.r, colour.g, colour.b, gray );
+            setPixel( x0 + col, y0 + row, notGray );
         }
         buffer += bitmap->pitch;
     }
@@ -66,9 +52,9 @@ void ImageBuffer::writeP6(FILE *f) {
     for(int y=0;y<height;y++) {
         for(int x=0;x<width;x++) {
             ColRGBA col = data[x + y * width];
-            buffer[0] = COL_RED( col );
-            buffer[1] = COL_GREEN( col );
-            buffer[2] = COL_BLUE( col );
+            buffer[0] = (COL_RED( col ) * COL_ALPHA(col)) / 255;
+            buffer[1] = (COL_GREEN( col ) * COL_ALPHA(col)) / 255;
+            buffer[2] = (COL_BLUE( col ) * COL_ALPHA(col)) / 255;
             fwrite_all( buffer, f, 3 );
         }
     }
@@ -256,13 +242,18 @@ void WordWrapper::feed(const FormattedCharacter& ch) {
 }
 
 void WordWrapper::end(void) {
-    currentLine.addWord( currentWord );
+    handleNewWord();
     endCurrentLine();
 }
 
 void WordWrapper::endCurrentLine(void) {
     renderer.render( currentLine );
     currentLine.clear();
+}
+
+int FormattedLine::getWidthWithSpacing(int spacing) const {
+    return getWordWidth() +
+           spacing * getBreaks();
 }
 
 void WordWrapper::handleNewWord(void) {
@@ -312,4 +303,27 @@ std::string FormattedWord::getRawText(void) const {
         oss << (char) i->character;
     }
     return oss.str();
+}
+
+int FormattedCharacter::render(int x, int y, ImageBuffer& buffer) const {
+    int error = FT_Load_Char( face->getFace(), character, FT_LOAD_RENDER );
+    if( error ) return 0;
+    buffer.putFTGraymap(x, y, &face->getFace()->glyph->bitmap, colour );
+    return face->getFace()->glyph->advance.x / 64;
+}
+
+int FormattedWord::render(int x, int y, ImageBuffer& buffer) const {
+    int dx = 0;
+    for(FCList::const_iterator i = components.begin(); i != components.end(); i++) {
+        dx += i->render( x + dx, y, buffer );
+    }
+    return dx;
+}
+
+void FormattedLine::renderLeftJustified(int x, int y, int spacing,ImageBuffer& buffer) const {
+    int dx = 0;
+    for(FWList::const_iterator i = components.begin(); i != components.end(); i++) {
+        dx += i->render( x + dx, y, buffer );
+        dx += spacing;
+    }
 }

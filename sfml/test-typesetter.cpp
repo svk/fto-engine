@@ -7,6 +7,8 @@
 
 #include <SFML/Graphics.hpp>
 
+ImageBuffer *buffy;
+
 class RedFilter : public PixelFilter {
     ColRGBA operator()(ColRGBA col) const {
         return MAKE_COL( COL_RED(col), 0, 0, COL_ALPHA(col) );
@@ -14,10 +16,20 @@ class RedFilter : public PixelFilter {
 };
 
 class DebugLineRenderer : public LineRenderer {
+    private:
+        int x, y;
+        int spacing;
     public:
+        DebugLineRenderer(int x, int y, int spacing) :
+            x(x),y(y),spacing(spacing)
+        {
+        }
+
         void render(const FormattedLine& line) {
             using namespace std;
-            cout << line.getRawText() << endl;
+            cerr << "line " << line.getRawText() << " of length " << line.getWidthWithSpacing(spacing) << endl;
+            line.renderLeftJustified( x, y, spacing, *buffy );
+            y += line.getHeight();
         }
 };
 
@@ -27,27 +39,32 @@ int main(int argc, char *argv[]) {
                              MAKE_COL(128,128,128,255),
                              MAKE_COL(0,0,0,0) };
     ImageBuffer buffer (640, 480);
-    buffer.addFilter( &filter ); 
     for(int i=0;i<640;i++) {
         for(int j=0;j<480;j++) {
             int v = 0;
             if( i < j ) ++v;
             if( ((i-320)*(i-320) + (j-240)*(j-240)) < 10000 ) ++v; 
+            if( j > 300 ) v = 2;
             buffer.setPixel( i, j, vals[v] );
         }
     }
 
     FreetypeLibrary lib;
-    FreetypeFace myFont ("./data/Vera.ttf", 60);
-    DebugLineRenderer dlr;
-    WordWrapper wrapper ( dlr, 400, myFont.getWidthOf(' ') );
+    FreetypeFace myFont ("./data/Vera.ttf", 70);
+    int spacing = myFont.getWidthOf(' ');
+    DebugLineRenderer dlr (0, 300, spacing);
+    WordWrapper wrapper ( dlr, 640, spacing );
     sf::Color white (255,255,255);
     std::string text ("One does not simply ROCK into Mordor" );
+
+    buffy = &buffer;
 
     for(int i=0;i<text.size();i++) {
         wrapper.feed( FormattedCharacter( myFont, white, (uint32_t)text[i] ) );
     }
     wrapper.end();
+
+    buffer.writeP6( stdout );
 
     return 0;
 }
