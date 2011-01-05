@@ -3,10 +3,22 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#include <iostream>
+
+#include <SFML/Graphics.hpp>
+
 class RedFilter : public PixelFilter {
     ColRGBA operator()(ColRGBA col) const {
         return MAKE_COL( COL_RED(col), 0, 0, COL_ALPHA(col) );
     }
+};
+
+class DebugLineRenderer : public LineRenderer {
+    public:
+        void render(const FormattedLine& line) {
+            using namespace std;
+            cout << line.getRawText() << endl;
+        }
 };
 
 int main(int argc, char *argv[]) {
@@ -25,29 +37,17 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    FT_Library library;
-    FT_Init_FreeType( &library );
+    FreetypeLibrary lib;
+    FreetypeFace myFont ("./data/Vera.ttf", 60);
+    DebugLineRenderer dlr;
+    WordWrapper wrapper ( dlr, 400, myFont.getWidthOf(' ') );
+    sf::Color white (255,255,255);
+    std::string text ("One does not simply ROCK into Mordor" );
 
-    FT_Face face;
-    FT_New_Face( library,
-                 "./data/Vera.ttf",
-                 0,
-                 &face );
-    FT_Set_Pixel_Sizes( face,
-                        0,
-                        300 );
-    int x = 0, y = 300;
-    FT_Load_Char( face, 'K', FT_LOAD_RENDER );
-    buffer.putFTGraymap( x + face->glyph->bitmap_left,
-                         y - face->glyph->bitmap_top,
-                         &face->glyph->bitmap );
-    x += face->glyph->advance.x >> 6;
-    fprintf( stderr, "%d", x );
-    FT_Load_Char( face, 'a', FT_LOAD_RENDER );
-    buffer.putFTGraymap( x + face->glyph->bitmap_left,
-                         y - face->glyph->bitmap_top,
-                         &face->glyph->bitmap );
+    for(int i=0;i<text.size();i++) {
+        wrapper.feed( FormattedCharacter( myFont, white, (uint32_t)text[i] ) );
+    }
+    wrapper.end();
 
-
-    buffer.writeP6( stdout );
+    return 0;
 }

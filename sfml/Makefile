@@ -8,4 +8,4 @@ test-coords: test-coords.o hexfml.o
 	$(CC) $(CPPFLAGS) -lsfml-system -lsfml-graphics $^ -o $@
 
 test-typesetter: test-typesetter.o typesetter.o
-	$(CC) `freetype-config --libs` $(CPPFLAGS) $^ -o $@
+	$(CC) -lsfml-graphics `freetype-config --libs` $(CPPFLAGS) $^ -o $@

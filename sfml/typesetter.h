@@ -8,6 +8,10 @@
 #include <vector>
 #include <stdint.h>
 
+#include <string>
+
+#include <SFML/Graphics.hpp>
+
 typedef uint32_t ColRGBA;
 #define COL_RED(col)   ((col&0xff000000)>>24)
 #define COL_GREEN(col) ((col&0x00ff0000)>>16)
@@ -43,5 +47,129 @@ class ImageBuffer {
 
         void writeP6(FILE *);
 };
+
+class FreetypeLibrary {
+    private:
+        FT_Library library;
+        static FreetypeLibrary *singleton;
+    public:
+        FreetypeLibrary(void);
+        ~FreetypeLibrary(void);
+
+        static FT_Library getSingleton(void);
+};
+
+class FreetypeFace {
+    // not thread-safe!
+    private:
+        FT_Face face;
+        int pixelSize;
+
+    public:
+        FreetypeFace(const std::string&, int);
+        ~FreetypeFace(void);
+
+        int getWidthOf(uint32_t);
+        int getHeightOf(uint32_t);
+};
+
+/* There's a lot of copying coming up -- not optimized
+   for large amounts of text, and ESPECIALLY not for
+   storing them in this form. Store either rendered,
+   or non-wrapped.
+*/
+
+struct FormattedCharacter {
+    // For efficient usage, only construct these at the
+    // last moment from the more space-efficient state-delta
+    // stream.
+    // This contains sufficient information to actually paint
+    // the character to a texture (and adjust the pen position).
+
+    FreetypeFace* face;
+    sf::Color colour;
+    uint32_t character;
+
+    FormattedCharacter(FreetypeFace&, sf::Color&, uint32_t);
+    FormattedCharacter(const FormattedCharacter&);
+    const FormattedCharacter& operator=(const FormattedCharacter&);
+
+    int getWidth(void);
+    int getHeight(void);
+};
+
+class FormattedWord {
+    private:
+        int width, height;
+        typedef std::vector<FormattedCharacter> FCList;
+        FCList components;
+    
+    public:
+        FormattedWord(void);
+        FormattedWord(const FormattedWord&);
+
+        const FormattedWord& operator=(const FormattedWord&);
+
+        void addCharacter(const FormattedCharacter&);
+
+        int getWidth(void) const { return width; }
+        int getHeight(void) const { return height; }
+        void clear(void);
+
+        std::string getRawText(void) const;
+};
+
+class FormattedLine {
+    private:
+        int wordWidth, height;
+        typedef std::vector<FormattedWord> FWList;
+        FWList components;
+
+    public:
+        FormattedLine(void);
+
+        int getWordWidth(void) const { return wordWidth; }
+        int getHeight(void) const { return height; }
+        int getBreaks(void) const;
+        void clear(void);
+
+        void addWord(const FormattedWord&);
+
+        std::string getRawText(void) const;
+};
+
+class LineRenderer {
+    public:
+        virtual void render(const FormattedLine&) = 0;
+};
+
+class WordWrapper {
+    private:
+        LineRenderer& renderer;
+
+        FormattedLine currentLine;
+        FormattedWord currentWord;
+
+        int widthBound;
+        int minimumWordSpacing;
+
+        void endCurrentLine(void);
+        void handleNewWord(void);
+    public:
+        WordWrapper(LineRenderer&, int, int);
+
+        void feed(const FormattedCharacter&);
+        void end(void);
+};
+
+enum TsChartype {
+    TSCT_NORMAL,
+    TSCT_BREAK,
+    TSCT_IGNORE,
+    TSCT_NEWLINE
+};
+
+TsChartype classifyCharacter( uint32_t );
+
 
 #endif
