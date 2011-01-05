@@ -56,6 +56,8 @@ int main(int argc, char *argv[]) {
 
     MyHexBlitter blitter;
 
+    bool showingKitten = false;
+
     HexViewport viewport (grid, 10,10,700,800);
 
     sf::RenderWindow win ( sf::VideoMode(800,600,32),
@@ -74,6 +76,14 @@ int main(int argc, char *argv[]) {
                         sf::Vector2f( 400, 300 ) );
 
     win.SetView( mainView );
+
+    sf::Image kittenImage;
+    if( !kittenImage.LoadFromFile( "./data/minikitten.png" ) ) {
+        throw std::runtime_error( "unable to find kitten" );
+    }
+    sf::Sprite kittenSprite;
+    kittenSprite.SetImage( kittenImage );
+    kittenSprite.SetColor( sf::Color(255,255,255,225) );
 
     ViewportMouseScroller * vpMouseScroller = 0;
 
@@ -123,6 +133,14 @@ int main(int argc, char *argv[]) {
                         grid.screenToHex( ix, iy, 0, 0 );
                         selectedHexX = ix;
                         selectedHexY = iy;
+                        if( flattenHexCoordinate( selectedHexX, selectedHexY ) == 42 ) {
+                            sf::FloatRect rect = fitRectangleAt( x, y, sf::FloatRect( 0, 0, win.GetWidth(), win.GetHeight() ), kittenImage.GetWidth(), kittenImage.GetHeight() );
+                            showingKitten = true;
+                            cerr << "mouse finds kitten!" << rect.Left << " " << rect.Top <<  endl;
+                            kittenSprite.SetPosition( rect.Left, rect.Top );
+                        } else {
+                            showingKitten = false;
+                        }
                     }
                 }
                 break;
@@ -131,6 +149,12 @@ int main(int argc, char *argv[]) {
         win.Clear( sf::Color(128,128,128) );
 
         viewport.draw( blitter, win, mainView );
+
+        mainView.SetFromRect( sf::FloatRect( 0, 0, win.GetWidth(), win.GetHeight() ) );
+
+        if( showingKitten ) {
+            win.Draw( kittenSprite );
+        }
         
         usleep( 10000 );
 

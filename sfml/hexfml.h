@@ -5,6 +5,8 @@
 
 #include <stdint.h>
 
+sf::FloatRect fitRectangleAt(double, double, const sf::FloatRect&, double, double);
+
 int hexCircleSize(int);
 int flattenHexCoordinate(int,int);
 void inflateHexCoordinate(int,int&,int&);

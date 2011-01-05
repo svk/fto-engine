@@ -323,6 +323,8 @@ void HexViewport::draw(HexBlitter& blitter, sf::RenderWindow& win, sf::View& vie
     translateCoordinates( hwx0, hwy0 );
     translateCoordinates( hwx1, hwy1 );
 
+    sf::View originalView = view;
+
     glScissor( screenXOffset, win.GetHeight() - (screenYOffset + screenHeight), screenWidth, screenHeight );
     glEnable( GL_SCISSOR_TEST );
 
@@ -355,6 +357,8 @@ void HexViewport::draw(HexBlitter& blitter, sf::RenderWindow& win, sf::View& vie
     }
 
     glDisable( GL_SCISSOR_TEST );
+
+    view = originalView;
 }
 
 void ScreenGrid::centerRectangle(sf::FloatRect& rect) {
@@ -393,4 +397,15 @@ void ViewportMouseScroller::scroll(void) {
     const int multiplier = 2;
     using namespace std;
     vp.center( vpX0 + multiplier * dx, vpY0 + multiplier * dy );
+}
+
+sf::FloatRect fitRectangleAt(double x, double y, const sf::FloatRect& host, double width, double height) {
+    assert( host.Contains( x, y ) );
+    if((y+height) >= host.Bottom) {
+        y -= height;
+    }
+    if((x+width) >= host.Right) {
+        x -= width;
+    }
+    return sf::FloatRect( x, y, x + width, y + height );
 }
