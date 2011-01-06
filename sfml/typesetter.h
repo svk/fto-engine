@@ -91,6 +91,7 @@ struct FormattedCharacter {
 
     int getWidth(void);
     int getHeight(void);
+    int getAscender(void);
 
     int render(int,int,ImageBuffer&) const;
 };
@@ -98,6 +99,7 @@ struct FormattedCharacter {
 class FormattedWord {
     private:
         int width, height;
+        int maxAscender;
         typedef std::vector<FormattedCharacter> FCList;
         FCList components;
     
@@ -111,16 +113,19 @@ class FormattedWord {
 
         int getWidth(void) const { return width; }
         int getHeight(void) const { return height; }
+        int getAscender(void) const { return maxAscender; }
         void clear(void);
 
         std::string getRawText(void) const;
 
         int render(int,int,ImageBuffer&) const;
+
 };
 
 class FormattedLine {
     private:
         int wordWidth, height;
+        int maxAscender;
         typedef std::vector<FormattedWord> FWList;
         FWList components;
 

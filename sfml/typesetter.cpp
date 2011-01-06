@@ -157,6 +157,7 @@ TsChartype classifyCharacter( uint32_t ch ) {
 FormattedLine::FormattedLine(void) :
     wordWidth ( 0 ),
     height ( 0 ),
+    maxAscender ( 0 ),
     components ()
 {
 }
@@ -164,6 +165,7 @@ FormattedLine::FormattedLine(void) :
 FormattedWord::FormattedWord(void) :
     width ( 0 ),
     height ( 0 ),
+    maxAscender ( 0 ),
     components ()
 {
 }
@@ -171,6 +173,7 @@ FormattedWord::FormattedWord(void) :
 FormattedWord::FormattedWord(const FormattedWord& that) :
     width ( that.width ),
     height ( that.height ),
+    maxAscender ( that.maxAscender ),
     components ( that.components )
 {
 }
@@ -180,6 +183,7 @@ const FormattedWord& FormattedWord::operator=(const FormattedWord& that) {
         width = that.width;
         height = that.height;
         components = that.components;
+        maxAscender = that.maxAscender;
     }
     return *this;
 }
@@ -188,21 +192,23 @@ void FormattedWord::addCharacter(const FormattedCharacter& ch) {
     components.push_back( ch );
     width += components.back().getWidth();
     height = MAX( height, components.back().getHeight() );
+    maxAscender = MAX( maxAscender, components.back().getAscender() );
 }
 
 void FormattedLine::addWord(const FormattedWord& wo) {
     components.push_back( wo );
     wordWidth += wo.getWidth();
     height = MAX( height, wo.getHeight() );
+    maxAscender = MAX( maxAscender, wo.getAscender() );
 }
 
 void FormattedLine::clear(void) {
-    wordWidth = height = 0;
+    wordWidth = height = maxAscender = 0;
     components.clear();
 }
 
 void FormattedWord::clear(void) {
-    width = height = 0;
+    width = height = maxAscender = 0;
     components.clear();
 }
 
@@ -213,6 +219,10 @@ int FormattedLine::getBreaks(void) const {
 
 int FormattedCharacter::getWidth(void) {
     return face->getWidthOf( character );
+}
+
+int FormattedCharacter::getAscender(void) {
+    return (face->getFace()->size->metrics.ascender/64);
 }
 
 int FormattedCharacter::getHeight(void) {
@@ -281,6 +291,7 @@ int FreetypeFace::getWidthOf(uint32_t ch) {
     return face->glyph->advance.x / 64;
 }
 
+
 int FreetypeFace::getHeightOf(uint32_t ch) {
     using namespace std;
     return face->size->metrics.height / 64;
@@ -311,7 +322,7 @@ int FormattedCharacter::render(int x, int y, ImageBuffer& buffer) const {
     int error = FT_Load_Char( face->getFace(), character, FT_LOAD_RENDER );
     if( error ) return 0;
     buffer.putFTGraymap(x + face->getFace()->glyph->bitmap_left,
-                        y + (face->getFace()->size->metrics.ascender/64) - face->getFace()->glyph->bitmap_top,
+                        y - face->getFace()->glyph->bitmap_top,
                         &face->getFace()->glyph->bitmap,
                         colour );
     return face->getFace()->glyph->advance.x / 64;
@@ -328,14 +339,14 @@ int FormattedWord::render(int x, int y, ImageBuffer& buffer) const {
 void FormattedLine::renderLeftJustified(int x, int y, int spacing,ImageBuffer& buffer) const {
     int dx = 0;
     for(FWList::const_iterator i = components.begin(); i != components.end(); i++) {
-        dx += i->render( x + dx, y, buffer );
+        dx += i->render( x + dx, y + maxAscender, buffer );
         dx += spacing;
     }
 }
 
 void FormattedLine::renderCentered(int x, int y, int spacing, int width, ImageBuffer& buffer) const {
     int surplus = MAX(0, width - getWidthWithSpacing(spacing) );
-    renderLeftJustified(x + surplus/2, y, spacing, buffer );
+    renderLeftJustified(x + surplus/2, y + maxAscender, spacing, buffer );
 }
 
 void FormattedLine::renderPadded(int x, int y, int spacing, int width, ImageBuffer& buffer) const {
@@ -344,7 +355,7 @@ void FormattedLine::renderPadded(int x, int y, int spacing, int width, ImageBuff
     int dx = 0;
     int index = 0;
     for(FWList::const_iterator i = components.begin(); i != components.end(); i++) {
-        dx += i->render( x + dx, y, buffer );
+        dx += i->render( x + dx, y + maxAscender, buffer );
         dx += spacing;
         if( (index%2) == 0 ) {
             dx += MIN( surplus, low );
