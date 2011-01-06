@@ -74,6 +74,7 @@ class HexViewport {
 
         int centerX, centerY;
 
+        bool drawBackground;
         sf::Color bgColor;
 
     public:
@@ -90,6 +91,7 @@ class HexViewport {
         bool translateCoordinates(int&, int&) const;
         
         void setBackgroundColour( const sf::Color& );
+        void setNoBackgroundColour(void);
 };
 
 class HexSprite {

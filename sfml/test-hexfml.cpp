@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
     bool showingKitten = false;
 
     HexViewport viewport (grid, 10,10,700,800);
-    viewport.setBackgroundColour( sf::Color(0,100,0) );
+    viewport.setNoBackgroundColour();
 
     sf::RenderWindow win ( sf::VideoMode(800,600,32),
                            "521 HexFML" );
@@ -241,7 +241,15 @@ int main(int argc, char *argv[]) {
                 win.Close();
                 break;
             case sf::Event::KeyPressed:
-                showNumbers = !showNumbers;
+                switch( ev.Key.Code ) {
+                    case sf::Key::Escape:
+                    case sf::Key::Q:
+                        win.Close();
+                        break;
+                    case sf::Key::N:
+                        showNumbers = !showNumbers;
+                        break;
+                }
                 break;
             case sf::Event::MouseButtonReleased:
                 if( ev.MouseButton.Button == sf::Mouse::Right ) {
@@ -290,7 +298,7 @@ int main(int argc, char *argv[]) {
                 break;
         }
 
-        win.Clear( sf::Color(128,128,128) );
+        win.Clear( sf::Color(0,100,0) );
 
         viewport.draw( blitter, win, mainView );
 
