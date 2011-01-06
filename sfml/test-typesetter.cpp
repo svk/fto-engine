@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
     buffy = &buffer;
 
     for(int i=0;i<text.size();i++) {
-        wrapper.feed( FormattedCharacter( myFont, white, (uint32_t)text[i] ) );
+        wrapper.feed( FormattedCharacter( myFont, sf::Color(255,255,255), (uint32_t)text[i] ) );
     }
     for(int i=0;i<moreText.size();i++) {
         wrapper.feed( FormattedCharacter( mySecondFont, red, (uint32_t)moreText[i] ) );

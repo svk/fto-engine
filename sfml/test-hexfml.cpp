@@ -3,6 +3,8 @@
 #include <SFML/System.hpp>
 #include <SFML/Graphics.hpp>
 
+#include "typesetter.h"
+
 #include <cstdio>
 #include <iostream>
 
@@ -91,12 +93,65 @@ int main(int argc, char *argv[]) {
     kittenSprite.SetImage( kittenImage );
     kittenSprite.SetColor( sf::Color(255,255,255,225) );
 
+    ViewportMouseScroller * vpMouseScroller = 0;
+
+    FreetypeLibrary freetypeLib;
+    FreetypeFace myFtFont ("./data/CrimsonText-Bold.otf", 20);
+
+    sf::Image *textPopup = 0;
+    {
+        int popupWidth = 320;
+        int spacing = 8;
+
+        SfmlRectangularRenderer rr ( popupWidth, spacing, TJM_PAD );
+        WordWrapper wrap ( rr, popupWidth, spacing );
+        std::string texts[] = {
+            "I have never had a way with ",
+            "women",
+            ", but the hills of ",
+            "Iowa",
+            " make me wish that I could. And I have never found a way to say ",
+            "\"I love you\"",
+            ", but if the chance came by, oh I, I ",
+            "would",
+            ". But way back where I come from, we never mean to bother, we " \
+            "don't like to make our passions other people's concern, " \
+            "and we walk in the world of safe people, " \
+            "and at night we walk into our houses and burn."
+        };
+        sf::Color colours[] = {
+            sf::Color(255,255,255),
+            sf::Color(255,0,0),
+            sf::Color(255,255,255),
+            sf::Color(0,0,255),
+            sf::Color(255,255,255),
+            sf::Color(255,0,0),
+            sf::Color(255,255,255),
+            sf::Color(0,0,255),
+            sf::Color(255,255,255)
+        };
+        for(int i=0;i<9;i++) {
+            const char *s = texts[i].c_str();
+            for(int j=0;j<strlen(s);j++) {
+                wrap.feed( FormattedCharacter( myFtFont, colours[i], (uint32_t) s[j] ) );
+            }
+        }
+        wrap.end();
+
+        textPopup = rr.createImage();
+    }
+
     AnimatedSprite kittenBlink ( 1.0, true );
     kittenBlink.addImage( kittenImage );
     kittenBlink.addImage( kittenRednoseImage );
     kittenBlink.SetColor( sf::Color(255,255,255,225) );
 
-    ViewportMouseScroller * vpMouseScroller = 0;
+    sf::Sprite textSprite;
+    textSprite.SetImage( *textPopup );
+
+    sf::Shape textBackgroundBox;
+
+    bool kittenMode = false;
 
     while( win.IsOpened() ) {
         sf::Event ev;
@@ -123,6 +178,8 @@ int main(int argc, char *argv[]) {
                         vpMouseScroller = 0;
                         win.ShowMouseCursor(true);
                     }
+                } else if( ev.MouseButton.Button == sf::Mouse::Left ) {
+                    kittenMode = !kittenMode;
                 }
                 break;
             case sf::Event::MouseButtonPressed:
@@ -150,6 +207,9 @@ int main(int argc, char *argv[]) {
                             sf::FloatRect rect = fitRectangleAt( x, y, sf::FloatRect( 0, 0, win.GetWidth(), win.GetHeight() ), kittenImage.GetWidth(), kittenImage.GetHeight() );
                             showingKitten = true;
                             kittenBlink.SetPosition( rect.Left, rect.Top );
+                            rect = fitRectangleAt( x, y, sf::FloatRect( 0, 0, win.GetWidth(), win.GetHeight() ), textPopup->GetWidth(), textPopup->GetHeight() );
+                            textSprite.SetPosition( rect.Left, rect.Top );
+                            textBackgroundBox = sf::Shape::Rectangle( rect.Left, rect.Top, rect.Right, rect.Bottom, sf::Color(64,64,64) );
                         } else {
                             showingKitten = false;
                         }
@@ -165,13 +225,20 @@ int main(int argc, char *argv[]) {
         mainView.SetFromRect( sf::FloatRect( 0, 0, win.GetWidth(), win.GetHeight() ) );
 
         if( showingKitten ) {
-            win.Draw( kittenBlink );
+            if( kittenMode ) {
+                win.Draw( kittenBlink );
+            } else {
+                win.Draw( textBackgroundBox );
+                win.Draw( textSprite );
+            }
         }
         
         usleep( 10000 );
 
         win.Display();
     }
+
+    delete textPopup;
 
     return 0;
 }

@@ -35,6 +35,11 @@ class ImageBuffer {
         ImageBuffer(int,int);
         ~ImageBuffer(void);
 
+        int getWidth(void) { return width; }
+        int getHeight(void) { return height; }
+        
+        sf::Color getColourAt(int,int);
+
         void setPixel(int,int, ColRGBA);
         void putFTGraymap(int, int, FT_Bitmap*, const sf::Color&);
 
@@ -85,7 +90,7 @@ struct FormattedCharacter {
     sf::Color colour;
     uint32_t character;
 
-    FormattedCharacter(FreetypeFace&, sf::Color&, uint32_t);
+    FormattedCharacter(FreetypeFace&, const sf::Color&, uint32_t);
     FormattedCharacter(const FormattedCharacter&);
     const FormattedCharacter& operator=(const FormattedCharacter&);
 
@@ -169,6 +174,8 @@ class WordWrapper {
 
         void feed(const FormattedCharacter&);
         void end(void);
+
+        void setWidthBound(int wB) { widthBound = wB; }
 };
 
 enum TsChartype {
@@ -180,5 +187,28 @@ enum TsChartype {
 
 TsChartype classifyCharacter( uint32_t );
 
+enum TextJustifyMode {
+    TJM_LEFT,
+    TJM_PAD,
+    TJM_CENTER
+};
+
+class SfmlRectangularRenderer : public LineRenderer {
+    private:
+        int x, totalHeight;
+        int width;
+        int spacing;
+        TextJustifyMode mode;
+
+        typedef std::vector<ImageBuffer*> LineList;
+        LineList lines;
+
+    public:
+        SfmlRectangularRenderer(int,int,TextJustifyMode);
+        ~SfmlRectangularRenderer(void);
+
+        void render(const FormattedLine&, bool);
+        sf::Image* createImage(void);
+};
 
 #endif

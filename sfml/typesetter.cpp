@@ -4,6 +4,8 @@
 
 #include <sstream>
 #include <iostream>
+#include <cstdlib>
+#include <cstring>
 
 #define MAX(a,b) (((a)>(b))?(a):(b))
 #define MIN(a,b) (((a)<(b))?(a):(b))
@@ -13,6 +15,7 @@ ImageBuffer::ImageBuffer(int width, int height) :
     height ( height ),
     data ( new ColRGBA [width*height] )
 {
+    memset( data, 0, width * height * sizeof *data );
 }
 
 void ImageBuffer::setPixel(int x, int y, ColRGBA col) {
@@ -116,7 +119,7 @@ FreetypeFace::~FreetypeFace(void) {
     FT_Done_Face( face );
 }
 
-FormattedCharacter::FormattedCharacter(FreetypeFace& face, sf::Color& colour, uint32_t character) :
+FormattedCharacter::FormattedCharacter(FreetypeFace& face, const sf::Color& colour, uint32_t character) :
     face (&face),
     colour (colour),
     character (character)
@@ -366,4 +369,60 @@ void FormattedLine::renderPadded(int x, int y, int spacing, int width, ImageBuff
         }
         index++;
     }
+}
+
+sf::Color ImageBuffer::getColourAt(int x, int y) {
+    if( x < 0 || y < 0 || x >= width || y >= height ) {
+        throw std::out_of_range( "pixel position out of image buffer range" );
+    }
+    uint32_t rgba = data[ x + y * width ];
+    return sf::Color( COL_RED(rgba), COL_GREEN(rgba), COL_BLUE(rgba), COL_ALPHA(rgba) );
+}
+
+SfmlRectangularRenderer::SfmlRectangularRenderer(int width, int spacing, TextJustifyMode mode) :
+    x ( 0 ),
+    totalHeight ( 0 ),
+    width ( width ),
+    spacing ( spacing ),
+    mode ( mode )
+{
+}
+
+SfmlRectangularRenderer::~SfmlRectangularRenderer(void) {
+    for(LineList::iterator i = lines.begin(); i != lines.end(); i++) {
+        delete *i;
+    }
+}
+
+sf::Image* SfmlRectangularRenderer::createImage(void) {
+    int y = 0;
+    sf::Image *rv = new sf::Image( width, totalHeight );
+    for(LineList::const_iterator i = lines.begin(); i != lines.end(); i++) {
+        int h = (*i)->getHeight();
+        for(int x=0;x<width;x++) for(int dy=0;dy<h;dy++) {
+            rv->SetPixel(x, y+dy, (*i)->getColourAt(x,dy) );
+        }
+        y += h;
+    }
+    return rv;
+}
+
+void SfmlRectangularRenderer::render(const FormattedLine& line, bool brokenAbnormally) {
+    ImageBuffer *rv = new ImageBuffer(width, line.getHeight());
+    switch( mode ) {
+        case TJM_PAD:
+            if( !brokenAbnormally ) {
+                line.renderPadded( x, 0, spacing, width, *rv );
+                break;
+            }
+            // fallthrough to left-justified for non-wrapped lines
+        case TJM_LEFT:
+            line.renderLeftJustified( x, 0, spacing, *rv );
+            break;
+        case TJM_CENTER:
+            line.renderCentered( x, 0, spacing, width, *rv );
+            break;
+    }
+    totalHeight += line.getHeight();
+    lines.push_back( rv );
 }
