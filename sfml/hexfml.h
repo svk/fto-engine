@@ -74,6 +74,8 @@ class HexViewport {
 
         int centerX, centerY;
 
+        sf::Color bgColor;
+
     public:
         HexViewport(const ScreenGrid&,int,int,int,int);
 
@@ -86,6 +88,8 @@ class HexViewport {
         void draw(HexBlitter&, sf::RenderWindow&, sf::View&) const;
 
         bool translateCoordinates(int&, int&) const;
+        
+        void setBackgroundColour( const sf::Color& );
 };
 
 class HexSprite {
@@ -124,6 +128,33 @@ class ViewportMouseScroller {
         ViewportMouseScroller( HexViewport&, const sf::Input& );
 
         void scroll(void);
+};
+
+template<class T>
+class HexMap {
+    private:
+        int radius, size;
+        T defaultTile;
+        T *tiles;
+    
+    public:
+        HexMap(const int radius) :
+            radius ( radius ),
+            size ( hexCircleSize(radius) ),
+            tiles( new T [ size ] )
+        {
+        }
+
+        ~HexMap(void) {
+            delete [] tiles;
+        }
+
+        T& getDefault(void) { return defaultTile; }
+        T& get(int x, int y) {
+            int k = flattenHexCoordinate( x, y );
+            if( k < 0 || k >= size ) return getDefault();
+            return tiles[k];
+        }
 };
 
 #endif

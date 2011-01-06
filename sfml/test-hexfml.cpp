@@ -12,11 +12,35 @@
 
 #include "anisprite.h"
 
+struct MyTile {
+    enum MyColour {
+        NEUTRAL,
+        WHITE,
+        BLACK,
+        WHITE_EDGE,
+        BLACK_EDGE,
+        OFF_MAP
+    };
+
+    MyColour tileType;
+    
+    MyTile(void) :
+        tileType( OFF_MAP )
+    {
+    }
+};
+
+HexMap<MyTile> *myMap;
+
+bool showNumbers = false;
 ScreenGrid *gridp;
 int selectedHexX, selectedHexY;
 HexSprite *blue;
 HexSprite *red;
 HexSprite *ball;
+HexSprite *rainbow;
+
+HexSprite *black, *white, *gray;
 
 class MyHexBlitter : public HexBlitter {
     public:
@@ -29,17 +53,32 @@ class MyHexBlitter : public HexBlitter {
             sf::FloatRect rect = text.GetRect();
             gridp->centerRectangle( rect );
 
-            if( (rr%2) == 0 ) {
-                blue->draw( win );
-            } else {
-                red->draw( win );
+            switch( myMap->get(x,y).tileType ) {
+                case MyTile::WHITE:
+                case MyTile::WHITE_EDGE:
+                    white->draw( win );
+                    break;
+                case MyTile::NEUTRAL:
+                    gray->draw( win );
+                    break;
+                case MyTile::BLACK:
+                case MyTile::BLACK_EDGE:
+                    black->draw( win );
+                    break;
+                case MyTile::OFF_MAP:
+                    return;
             }
+
             if( x == selectedHexX && y == selectedHexY ) {
                 ball->draw( win );
             }
 
-            text.SetPosition( rect.Left, rect.Top );
-            win.Draw( text );
+            if( showNumbers && !(myMap->get(x,y).tileType == MyTile::WHITE_EDGE
+                                 || myMap->get(x,y).tileType == MyTile::BLACK_EDGE )) {
+                text.SetPosition( rect.Left, rect.Top );
+                text.SetColor( sf::Color( 200, 0, 0 ) );
+                win.Draw( text );
+            }
         }
 };
 
@@ -50,6 +89,14 @@ int main(int argc, char *argv[]) {
 
     ScreenGrid grid ( "./data/hexproto1.png" );
 
+    HexSprite blackv ( "./data/hexblack1.png", grid );
+    HexSprite whitev ( "./data/hexwhite1.png", grid );
+    HexSprite grayv ( "./data/hexgray1.png", grid );
+    black = &blackv;
+    white = &whitev;
+    gray = &grayv;
+
+    HexSprite rainbowv ( "./data/hexrainbow1.png", grid );
     HexSprite bluev ( "./data/hexblue1.png", grid );
     HexSprite redv ( "./data/hexred1.png", grid );
     HexSprite ballv ( "./data/hexborder1.png", grid );
@@ -57,12 +104,14 @@ int main(int argc, char *argv[]) {
     blue = &bluev;
     red = &redv;
     ball = &ballv;
+    rainbow = &rainbowv;
 
     MyHexBlitter blitter;
 
     bool showingKitten = false;
 
     HexViewport viewport (grid, 10,10,700,800);
+    viewport.setBackgroundColour( sf::Color(0,100,0) );
 
     sf::RenderWindow win ( sf::VideoMode(800,600,32),
                            "521 HexFML" );
@@ -141,6 +190,21 @@ int main(int argc, char *argv[]) {
         textPopup = rr.createImage();
     }
 
+    // The radial HexMap shape is actually incredibly unsuitable
+    // for this map shape. Radial was of course written with other
+    // applications in mind (e.g. a scrollable game map where
+    // rectangularity is just awkward).
+    myMap = new HexMap<MyTile>( 11 );
+    myMap->getDefault().tileType = MyTile::OFF_MAP;
+    for(int i=-6;i<=6;i++) for(int j=-6;j<=6;j++) {
+        int x = i * 3, y = 2 * j - i;
+        MyTile::MyColour type = MyTile::NEUTRAL;
+        if( abs(i) == 6 && abs(j) == 6 ) continue;
+        if( abs(i) == 6 ) type = MyTile::WHITE_EDGE;
+        if( abs(j) == 6 ) type = MyTile::BLACK_EDGE;
+        myMap->get(x,y).tileType = type;
+    }
+
     AnimatedSprite kittenBlink ( 1.0, true );
     kittenBlink.addImage( kittenImage );
     kittenBlink.addImage( kittenRednoseImage );
@@ -175,6 +239,9 @@ int main(int argc, char *argv[]) {
                 break;
             case sf::Event::Closed:
                 win.Close();
+                break;
+            case sf::Event::KeyPressed:
+                showNumbers = !showNumbers;
                 break;
             case sf::Event::MouseButtonReleased:
                 if( ev.MouseButton.Button == sf::Mouse::Right ) {

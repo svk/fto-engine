@@ -287,7 +287,8 @@ HexViewport::HexViewport(const ScreenGrid& grid, int x0, int y0, int w, int h) :
     screenWidth (w),
     screenHeight (h),
     centerX (0),
-    centerY (0)
+    centerY (0),
+    bgColor (255,255,255)
 {
 }
 
@@ -328,7 +329,7 @@ void HexViewport::draw(HexBlitter& blitter, sf::RenderWindow& win, sf::View& vie
     glScissor( screenXOffset, win.GetHeight() - (screenYOffset + screenHeight), screenWidth, screenHeight );
     glEnable( GL_SCISSOR_TEST );
 
-    win.Clear( sf::Color(255,255,255) );
+    win.Clear( bgColor );
 
     grid.screenToHex( hwx0, hwy0, 0, 0 );
     grid.screenToHex( hwx1, hwy1, 0, 0 );
@@ -408,4 +409,8 @@ sf::FloatRect fitRectangleAt(double x, double y, const sf::FloatRect& host, doub
         x -= width;
     }
     return sf::FloatRect( x, y, x + width, y + height );
+}
+
+void HexViewport::setBackgroundColour( const sf::Color& bgColor_ ) {
+    bgColor = bgColor_;
 }
