@@ -54,17 +54,22 @@ int main(int argc, char *argv[]) {
     }
 
     FreetypeLibrary lib;
-    FreetypeFace myFont ("./data/Vera.ttf", 20);
+    FreetypeFace myFont ("./data/CrimsonText-Italic.otf", 20);
+    FreetypeFace mySecondFont ("./data/NeutonReg-2010.9.28-12.46.ttf", 20);
     int spacing = myFont.getWidthOf(' ');
     DebugLineRenderer dlr (0, 300, spacing);
     WordWrapper wrapper ( dlr, 640, spacing );
     sf::Color white (255,255,255);
-    std::string text ("Each size object also contains a scaled versions of some of the global metrics described above. They can be accessed directly through the face->size->metrics structure. Note that these values correspond to scaled versions of the design global metrics, with no rounding or grid-fitting performed. They are also completely independent of any hinting process. In other words, don't rely on them to get exact metrics at the pixel level. They are expressed in 26.6 pixel format." );
+    std::string text ("Each size object also contains a scaled versions of some of the global metrics described above.");
+    std::string moreText ("They can be accessed directly through the face->size->metrics structure. Note that these values correspond to scaled versions of the design global metrics, with no rounding or grid-fitting performed. They are also completely independent of any hinting process. In other words, don't rely on them to get exact metrics at the pixel level. They are expressed in 26.6 pixel format." );
 
     buffy = &buffer;
 
     for(int i=0;i<text.size();i++) {
         wrapper.feed( FormattedCharacter( myFont, white, (uint32_t)text[i] ) );
+    }
+    for(int i=0;i<text.size();i++) {
+        wrapper.feed( FormattedCharacter( mySecondFont, white, (uint32_t)text[i] ) );
     }
     wrapper.end();
 
