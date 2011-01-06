@@ -1,6 +1,14 @@
 CC=g++
 CPPFLAGS=-g `freetype-config --cflags`
 
+EXECUTABLES=test-hexfml test-coords test-typesetter
+
+all: $(EXECUTABLES)
+
+clean:
+	rm -f *.o
+	rm -f $(EXECUTABLES)
+
 test-hexfml: test-hexfml.o hexfml.o anisprite.o typesetter.o
 	$(CC) $(CPPFLAGS) `freetype-config --libs` -lsfml-system -lsfml-graphics $^ -o $@
 

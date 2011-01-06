@@ -153,7 +153,12 @@ int main(int argc, char *argv[]) {
 
     bool kittenMode = false;
 
+    win.SetFramerateLimit( 60 );
+    win.UseVerticalSync( true );
+
     while( win.IsOpened() ) {
+        using namespace std;
+
         sf::Event ev;
         const double dt = clock.GetElapsedTime();
         clock.Reset();
@@ -233,8 +238,6 @@ int main(int argc, char *argv[]) {
             }
         }
         
-        usleep( 10000 );
-
         win.Display();
     }
 
