@@ -1,6 +1,11 @@
 #include "Angelic.h"
 
 namespace Angelic {
+    Coordinate::Coordinate(void) :
+        x ( 1 ),
+        y ( 0 )
+    {
+    }
 
     Coordinate::Coordinate(int x, int y) :
         x ( x ),

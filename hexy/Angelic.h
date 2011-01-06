@@ -5,6 +5,7 @@ namespace Angelic {
 
     struct Coordinate {
         int x, y;
+        Coordinate();
         Coordinate(int,int);
 
         bool operator>(const Coordinate&) const;
