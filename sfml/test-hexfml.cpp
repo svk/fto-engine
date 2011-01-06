@@ -12,6 +12,8 @@
 
 #include "anisprite.h"
 
+#include "sftools.h"
+
 struct MyTile {
     enum MyColour {
         NEUTRAL,
@@ -30,20 +32,35 @@ struct MyTile {
     }
 };
 
-HexMap<MyTile> *myMap;
-
-bool showNumbers = false;
-ScreenGrid *gridp;
-int selectedHexX, selectedHexY;
-HexSprite *blue;
-HexSprite *red;
-HexSprite *ball;
-HexSprite *rainbow;
-
-HexSprite *black, *white, *gray;
-
 class MyHexBlitter : public HexBlitter {
+    private:
+        const ScreenGrid& grid;
+        ResourceManager<HexSprite>& hexSprites;
+        HexMap<MyTile>& myMap;
+
+        int selectedHexX, selectedHexY;
+        bool showNumbers;
+
     public:
+        MyHexBlitter( const ScreenGrid& grid, ResourceManager<HexSprite>& hexSprites, HexMap<MyTile>& myMap ) :
+            grid ( grid ),
+            hexSprites ( hexSprites ),
+            myMap (myMap ),
+            selectedHexX (-1000),
+            selectedHexY (-1000),
+            showNumbers (false)
+        {
+        }
+
+        void toggleShowNumbers(void) {
+            showNumbers = !showNumbers;
+        }
+
+        void setSelected(int x, int y) {
+            selectedHexX = x;
+            selectedHexX = y;
+        }
+
         void drawHex(int x, int y, sf::RenderWindow& win) {
             int ri, rj, rr;
             polariseHexCoordinate( x, y, ri, rj, rr );
@@ -51,30 +68,30 @@ class MyHexBlitter : public HexBlitter {
             sprintf( buf, "%d", flattenHexCoordinate(x,y) );
             sf::String text ( buf );
             sf::FloatRect rect = text.GetRect();
-            gridp->centerRectangle( rect );
+            grid.centerRectangle( rect );
 
-            switch( myMap->get(x,y).tileType ) {
+            switch( myMap.get(x,y).tileType ) {
                 case MyTile::WHITE:
                 case MyTile::WHITE_EDGE:
-                    white->draw( win );
+                    hexSprites["white"].draw( win );
                     break;
                 case MyTile::NEUTRAL:
-                    gray->draw( win );
+                    hexSprites["gray"].draw( win );
                     break;
                 case MyTile::BLACK:
                 case MyTile::BLACK_EDGE:
-                    black->draw( win );
+                    hexSprites["black"].draw( win );
                     break;
                 case MyTile::OFF_MAP:
                     return;
             }
 
             if( x == selectedHexX && y == selectedHexY ) {
-                ball->draw( win );
+                hexSprites["yellow-border"].draw( win );
             }
 
-            if( showNumbers && !(myMap->get(x,y).tileType == MyTile::WHITE_EDGE
-                                 || myMap->get(x,y).tileType == MyTile::BLACK_EDGE )) {
+            if( showNumbers && !(myMap.get(x,y).tileType == MyTile::WHITE_EDGE
+                                 || myMap.get(x,y).tileType == MyTile::BLACK_EDGE )) {
                 text.SetPosition( rect.Left, rect.Top );
                 text.SetColor( sf::Color( 200, 0, 0 ) );
                 win.Draw( text );
@@ -87,26 +104,17 @@ int main(int argc, char *argv[]) {
 
     int sx = 0, sy = 0;
 
+    ResourceManager<sf::Image> images;
+    ResourceManager<HexSprite> hexSprites;
+
     ScreenGrid grid ( "./data/hexproto1.png" );
-
-    HexSprite blackv ( "./data/hexblack1.png", grid );
-    HexSprite whitev ( "./data/hexwhite1.png", grid );
-    HexSprite grayv ( "./data/hexgray1.png", grid );
-    black = &blackv;
-    white = &whitev;
-    gray = &grayv;
-
-    HexSprite rainbowv ( "./data/hexrainbow1.png", grid );
-    HexSprite bluev ( "./data/hexblue1.png", grid );
-    HexSprite redv ( "./data/hexred1.png", grid );
-    HexSprite ballv ( "./data/hexborder1.png", grid );
-    gridp = &grid;
-    blue = &bluev;
-    red = &redv;
-    ball = &ballv;
-    rainbow = &rainbowv;
-
-    MyHexBlitter blitter;
+    hexSprites.bind( "black", new HexSprite( "./data/hexblack1.png", grid ) );
+    hexSprites.bind( "white", new HexSprite( "./data/hexwhite1.png", grid ) );
+    hexSprites.bind( "gray", new HexSprite( "./data/hexgray1.png", grid ) );
+    hexSprites.bind( "red", new HexSprite( "./data/hexred1.png", grid ) );
+    hexSprites.bind( "blue", new HexSprite( "./data/hexblue1.png", grid ) );
+    hexSprites.bind( "rainbow", new HexSprite( "./data/hexrainbow1.png", grid ) );
+    hexSprites.bind( "yellow-border", new HexSprite( "./data/hexborder1.png", grid ) );
 
     bool showingKitten = false;
 
@@ -194,15 +202,15 @@ int main(int argc, char *argv[]) {
     // for this map shape. Radial was of course written with other
     // applications in mind (e.g. a scrollable game map where
     // rectangularity is just awkward).
-    myMap = new HexMap<MyTile>( 11 );
-    myMap->getDefault().tileType = MyTile::OFF_MAP;
+    HexMap<MyTile> myMap( 11 );
+    myMap.getDefault().tileType = MyTile::OFF_MAP;
     for(int i=-6;i<=6;i++) for(int j=-6;j<=6;j++) {
         int x = i * 3, y = 2 * j - i;
         MyTile::MyColour type = MyTile::NEUTRAL;
         if( abs(i) == 6 && abs(j) == 6 ) continue;
         if( abs(i) == 6 ) type = MyTile::WHITE_EDGE;
         if( abs(j) == 6 ) type = MyTile::BLACK_EDGE;
-        myMap->get(x,y).tileType = type;
+        myMap.get(x,y).tileType = type;
     }
 
     AnimatedSprite kittenBlink ( 1.0, true );
@@ -216,6 +224,8 @@ int main(int argc, char *argv[]) {
     sf::Shape textBackgroundBox;
 
     bool kittenMode = false;
+
+    MyHexBlitter blitter (grid, hexSprites, myMap);
 
     win.SetFramerateLimit( 60 );
     win.UseVerticalSync( true );
@@ -247,7 +257,7 @@ int main(int argc, char *argv[]) {
                         win.Close();
                         break;
                     case sf::Key::N:
-                        showNumbers = !showNumbers;
+                        blitter.toggleShowNumbers();
                         break;
                 }
                 break;
@@ -281,8 +291,8 @@ int main(int argc, char *argv[]) {
                     iy = y;
                     if( viewport.translateCoordinates( ix, iy ) ) {
                         grid.screenToHex( ix, iy, 0, 0 );
-                        selectedHexX = ix;
-                        selectedHexY = iy;
+                        blitter.setSelected( ix, iy );
+                        int selectedHexX = ix, selectedHexY = iy;
                         if( flattenHexCoordinate( selectedHexX, selectedHexY ) == 42 ) {
                             sf::FloatRect rect = fitRectangleAt( x, y, sf::FloatRect( 0, 0, win.GetWidth(), win.GetHeight() ), kittenImage.GetWidth(), kittenImage.GetHeight() );
                             showingKitten = true;

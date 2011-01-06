@@ -51,7 +51,7 @@ class ScreenGrid {
         int getHexWidth(void) const { return width; }
         int getHexHeight(void) const { return height; }
 
-        void centerRectangle(sf::FloatRect&);
+        void centerRectangle(sf::FloatRect&) const;
 };
 
 class HexBlitter {

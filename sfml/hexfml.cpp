@@ -365,7 +365,7 @@ void HexViewport::draw(HexBlitter& blitter, sf::RenderWindow& win, sf::View& vie
     view = originalView;
 }
 
-void ScreenGrid::centerRectangle(sf::FloatRect& rect) {
+void ScreenGrid::centerRectangle(sf::FloatRect& rect) const {
     int hoffset = (width - rect.GetWidth())/2,
         voffset = (height - rect.GetHeight())/2;
     // Note -- the use of integers here is NOT an error.
