@@ -346,7 +346,7 @@ void FormattedLine::renderLeftJustified(int x, int y, int spacing,ImageBuffer& b
 
 void FormattedLine::renderCentered(int x, int y, int spacing, int width, ImageBuffer& buffer) const {
     int surplus = MAX(0, width - getWidthWithSpacing(spacing) );
-    renderLeftJustified(x + surplus/2, y + maxAscender, spacing, buffer );
+    renderLeftJustified(x + surplus/2, y, spacing, buffer );
 }
 
 void FormattedLine::renderPadded(int x, int y, int spacing, int width, ImageBuffer& buffer) const {

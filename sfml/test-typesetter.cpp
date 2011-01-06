@@ -31,7 +31,7 @@ class DebugLineRenderer : public LineRenderer {
             if( brokenAbnormally ) {
                 line.renderLeftJustified( x, y, spacing, *buffy );
             } else {
-                line.renderPadded( x, y, spacing, 640, *buffy );
+                line.renderPadded( x, y, spacing, 600, *buffy );
             }
             y += line.getHeight();
         }
@@ -54,16 +54,16 @@ int main(int argc, char *argv[]) {
     }
 
     FreetypeLibrary lib;
-//    FreetypeFace myFont ("./data/CrimsonText-Italic.otf", 20);
-    FreetypeFace myFont ("./data/NeutonReg-2010.9.28-12.46.ttf", 16);
-    FreetypeFace mySecondFont ("./data/NeutonReg-2010.9.28-12.46.ttf", 20);
+    FreetypeFace myFont ("./data/CrimsonText-Roman.otf", 20);
+    FreetypeFace mySecondFont ("./data/CrimsonText-Bold.otf", 20);
     int spacing = myFont.getWidthOf(' ');
-    DebugLineRenderer dlr (0, 300, spacing);
-    WordWrapper wrapper ( dlr, 640, spacing );
+    DebugLineRenderer dlr (20, 300, spacing);
+    WordWrapper wrapper ( dlr, 600, spacing );
     sf::Color white (255,255,255);
     sf::Color red (200,64,64);
-    std::string text ("Each size object also contains a scaled versions of some of the global metrics described above.");
-    std::string moreText ("They can be accessed directly through the face->size->metrics structure. Note that these values correspond to scaled versions of the design global metrics, with no rounding or grid-fitting performed. They are also completely independent of any hinting process. In other words, don't rely on them to get exact metrics at the pixel level. They are expressed in 26.6 pixel format." );
+    std::string text ("Each size object also contains a scaled versions of some of the global metrics described above. ");
+    std::string moreText ("They can be accessed directly through the face->size->metrics structure. " );
+    std::string evenMoreText ("Note that these values correspond to scaled versions of the design global metrics, with no rounding or grid-fitting performed. They are also completely independent of any hinting process. In other words, don't rely on them to get exact metrics at the pixel level. They are expressed in 26.6 pixel format." );
 
     buffy = &buffer;
 
@@ -72,6 +72,9 @@ int main(int argc, char *argv[]) {
     }
     for(int i=0;i<moreText.size();i++) {
         wrapper.feed( FormattedCharacter( mySecondFont, red, (uint32_t)moreText[i] ) );
+    }
+    for(int i=0;i<evenMoreText.size();i++) {
+        wrapper.feed( FormattedCharacter( myFont, white, (uint32_t)evenMoreText[i] ) );
     }
     wrapper.end();
 
