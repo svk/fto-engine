@@ -9,7 +9,7 @@ clean:
 	rm -f *.o
 	rm -f $(EXECUTABLES)
 
-test-hexfml: test-hexfml.o hexfml.o anisprite.o typesetter.o
+test-hexfml: test-hexfml.o hexfml.o anisprite.o typesetter.o sftools.o
 	$(CC) $(CPPFLAGS) `freetype-config --libs` -lsfml-system -lsfml-graphics $^ -o $@
 
 test-coords: test-coords.o hexfml.o
