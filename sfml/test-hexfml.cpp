@@ -21,6 +21,8 @@ struct MyTile {
         BLACK,
         WHITE_EDGE,
         BLACK_EDGE,
+        WHITEBLACK_EDGE,
+        BLACKWHITE_EDGE,
         OFF_MAP
     };
 
@@ -71,6 +73,12 @@ class MyHexBlitter : public HexBlitter {
             grid.centerRectangle( rect );
 
             switch( myMap.get(x,y).tileType ) {
+                case MyTile::WHITEBLACK_EDGE:
+                    hexSprites["white-black-edge"].draw( win );
+                    break;
+                case MyTile::BLACKWHITE_EDGE:
+                    hexSprites["black-white-edge"].draw( win );
+                    break;
                 case MyTile::WHITE:
                 case MyTile::WHITE_EDGE:
                     hexSprites["white"].draw( win );
@@ -90,8 +98,7 @@ class MyHexBlitter : public HexBlitter {
                 hexSprites["yellow-border"].draw( win );
             }
 
-            if( showNumbers && !(myMap.get(x,y).tileType == MyTile::WHITE_EDGE
-                                 || myMap.get(x,y).tileType == MyTile::BLACK_EDGE )) {
+            if( showNumbers && myMap.get(x,y).tileType == MyTile::NEUTRAL ) {
                 text.SetPosition( rect.Left, rect.Top );
                 text.SetColor( sf::Color( 200, 0, 0 ) );
                 win.Draw( text );
@@ -115,6 +122,8 @@ int main(int argc, char *argv[]) {
     hexSprites.bind( "blue", new HexSprite( "./data/hexblue1.png", grid ) );
     hexSprites.bind( "rainbow", new HexSprite( "./data/hexrainbow1.png", grid ) );
     hexSprites.bind( "yellow-border", new HexSprite( "./data/hexborder1.png", grid ) );
+    hexSprites.bind( "white-black-edge", new HexSprite( "./data/hexwhiteblack1.png", grid ) );
+    hexSprites.bind( "black-white-edge", new HexSprite( "./data/hexblackwhite1.png", grid ) );
 
     bool showingKitten = false;
 
@@ -205,13 +214,18 @@ int main(int argc, char *argv[]) {
     HexMap<MyTile> myMap( 11 );
     myMap.getDefault().tileType = MyTile::OFF_MAP;
     for(int i=-6;i<=6;i++) for(int j=-6;j<=6;j++) {
-        int x = i * 3, y = 2 * j - i;
+        int x = i * 3, y = 2 * j + i;
         MyTile::MyColour type = MyTile::NEUTRAL;
-        if( abs(i) == 6 && abs(j) == 6 ) continue;
+        if( abs(i) == 6 && abs(j) == 6 ) {
+            cerr << x << " " << y << endl;
+            continue;
+        }
         if( abs(i) == 6 ) type = MyTile::WHITE_EDGE;
         if( abs(j) == 6 ) type = MyTile::BLACK_EDGE;
         myMap.get(x,y).tileType = type;
     }
+    myMap.get(-18,6).tileType = MyTile::BLACKWHITE_EDGE;
+    myMap.get(18,-6).tileType = MyTile::WHITEBLACK_EDGE;
 
     AnimatedSprite kittenBlink ( 1.0, true );
     kittenBlink.addImage( kittenImage );
