@@ -41,6 +41,7 @@ void SfmlApplication::processIteration(void) {
         handleEvent( ev );
     }
     if( currentScreen ) {
+        window.SetView( sf::View( sf::FloatRect( 0, 0, width, height ) ) );
         currentScreen->draw( window );
     }
     window.Display();
@@ -88,6 +89,8 @@ SfmlApplication::SfmlApplication(std::string title, int width, int height) :
     window ( sf::VideoMode( width, height, 32 ), title ),
     currentScreen ( 0 )
 {
+    window.SetFramerateLimit( 60 );
+    window.UseVerticalSync( true );
 }
 
 SfmlApplication::~SfmlApplication(void) {

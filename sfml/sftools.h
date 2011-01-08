@@ -69,9 +69,6 @@ class CompositeEventHandler : public SfmlEventHandler {
 class SfmlApplication;
 
 class SfmlScreen : public SfmlEventHandler {
-    private:
-        SfmlApplication& app;
-
     public:
         virtual void draw(sf::RenderWindow&) = 0;
         virtual bool handleEvent(const sf::Event&) = 0;

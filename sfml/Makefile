@@ -9,6 +9,9 @@ clean:
 	rm -f *.o
 	rm -f $(EXECUTABLES)
 
+test-sftools: test-sftools.o hexfml.o anisprite.o typesetter.o sftools.o
+	$(CC) $(CPPFLAGS) `freetype-config --libs` -lsfml-system -lsfml-graphics $^ -o $@
+
 test-hexfml: test-hexfml.o hexfml.o anisprite.o typesetter.o sftools.o
 	$(CC) $(CPPFLAGS) `freetype-config --libs` -lsfml-system -lsfml-graphics $^ -o $@
 
