@@ -14,6 +14,8 @@
    quick and dirty.
 */
 
+#include <ostream>
+
 #include <string>
 
 namespace SiSExp {
@@ -48,24 +50,30 @@ namespace SiSExp {
 
             bool isType(Type) const;
             Cons* asCons(void);
+
+            virtual void output(std::ostream&) = 0;
     };
 
-    class Cons {
+    class Cons : public SExp {
         SExp *carPtr;
         SExp *cdrPtr;
 
         public:
             Cons(void);
+            Cons(SExp*);
+            Cons(SExp*, SExp*);
             ~Cons(void);
 
             SExp *getcar(void);
             SExp *getcdr(void);
             void setcar(SExp*);
             void setcdr(SExp*);
+
+            void output(std::ostream&);
     };
 
     template <class T, Type X>
-    class PodType : public SExp{
+    class PodType : public SExp {
         protected:
             const T data;
 
@@ -77,11 +85,15 @@ namespace SiSExp {
     class Int : public PodType<int,TYPE_INT> {
         public:
             Int(int data) : PodType<int,TYPE_INT>(data) {}
+
+            void output(std::ostream&);
     };
 
     class String : public PodType<std::string,TYPE_STRING> {
         public:
             String(std::string data) : PodType<std::string,TYPE_STRING>(data) {}
+
+            void output(std::ostream&);
     };
     
 };
