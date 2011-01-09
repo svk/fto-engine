@@ -74,6 +74,7 @@ bool SfmlApplication::handleEvent(const sf::Event& ev) {
         default:
             return delegate(ev);
     }
+    return true;
 }
 
 void SfmlApplication::setScreen(SfmlScreen* screen) {

@@ -59,7 +59,6 @@ HtGoTile& HexTorusGoMap::getIJR(int i,int j,int r) {
 
 HtGoTile& HexTorusGoMap::get(int x, int y) {
     int guard = 100;
-    const int ox = x, oy = y;
     int i, j, r;
     polariseHexCoordinate( x, y, i, j, r );
     if( r < radius ||

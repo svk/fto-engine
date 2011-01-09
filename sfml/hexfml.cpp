@@ -308,11 +308,6 @@ void HexViewport::setRectangle(int x0, int y0, int w, int h) {
 void HexViewport::draw(HexBlitter& blitter, sf::RenderWindow& win, sf::View& view) const {
     using namespace std;
 
-    int hxw = grid.getHexWidth(),
-        hxh = grid.getHexHeight();
-    // may want to add padding to hxw,hxh to draw larger-than-hex sprites
-    // correctly
-
     int hwx0 = centerX - screenWidth/2,
         hwy0 = centerY - screenHeight/2;
     int hwx1 = hwx0 + screenWidth - 1,

@@ -157,8 +157,6 @@ class MyHexBlitter : public HexBlitter {
 int main(int argc, char *argv[]) {
     using namespace std;
 
-    int sx = 0, sy = 0;
-
     ResourceManager<sf::Image> images;
     ResourceManager<HexSprite> hexSprites;
 
@@ -246,7 +244,7 @@ int main(int argc, char *argv[]) {
         };
         for(int i=0;i<9;i++) {
             const char *s = texts[i].c_str();
-            for(int j=0;j<strlen(s);j++) {
+            for(int j=0;j<(int)strlen(s);j++) {
                 wrap.feed( FormattedCharacter( myFtFont, colours[i], (uint32_t) s[j] ) );
             }
         }
@@ -328,6 +326,7 @@ int main(int argc, char *argv[]) {
                     case sf::Key::N:
                         blitter.toggleShowNumbers();
                         break;
+                    default: break;
                 }
                 break;
             case sf::Event::MouseButtonReleased:
@@ -387,6 +386,7 @@ int main(int argc, char *argv[]) {
                     }
                 }
                 break;
+            default: break; // shuts up g++
         }
 
         win.Clear( sf::Color(0,100,0) );
