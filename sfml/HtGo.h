@@ -85,11 +85,12 @@ class HexTorusGoMap {
         HtGoTile& getNeighbourOf(const HtGoTile&,int);
 
     public:
-        HexTorusGoMap(int);
+        explicit HexTorusGoMap(int);
+        HexTorusGoMap(const HexTorusGoMap&);
+
         HtGoTile& get(int,int);
         HtGoTile& get(std::pair<int,int>);
 
-        HexTorusGoMap(const HexTorusGoMap&);
         const HexTorusGoMap& operator=(const HexTorusGoMap&);
 
         PointSet groupOf(int,int);

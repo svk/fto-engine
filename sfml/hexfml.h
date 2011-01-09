@@ -44,7 +44,7 @@ class ScreenGrid {
         void analysePrototype(void);
 
     public:
-        ScreenGrid( const std::string& );
+        explicit ScreenGrid( const std::string& );
         ~ScreenGrid(void);
 
         void screenToHex( int&, int&, int, int ) const;
@@ -142,7 +142,7 @@ class HexMap {
         T *tiles;
     
     public:
-        HexMap(const int radius) :
+        explicit HexMap(const int radius) :
             radius ( radius ),
             size ( hexCircleSize(radius) ),
             tiles( new T [ size ] )

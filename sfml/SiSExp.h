@@ -40,7 +40,7 @@ namespace SiSExp {
         int refcount;
 
         protected:
-            SExp(Type);
+            explicit SExp(Type);
 
         public:
             virtual ~SExp(void);
@@ -60,7 +60,7 @@ namespace SiSExp {
 
         public:
             Cons(void);
-            Cons(SExp*);
+            explicit Cons(SExp*);
             Cons(SExp*, SExp*);
             ~Cons(void);
 
@@ -78,20 +78,20 @@ namespace SiSExp {
             const T data;
 
         public:
-            PodType(T data) : SExp(X), data ( data ) {}
+            explicit PodType(T data) : SExp(X), data ( data ) {}
             T get(void) const { return data; }
     };
 
     class Int : public PodType<int,TYPE_INT> {
         public:
-            Int(int data) : PodType<int,TYPE_INT>(data) {}
+            explicit Int(int data) : PodType<int,TYPE_INT>(data) {}
 
             void output(std::ostream&);
     };
 
     class String : public PodType<std::string,TYPE_STRING> {
         public:
-            String(std::string data) : PodType<std::string,TYPE_STRING>(data) {}
+            explicit String(std::string data) : PodType<std::string,TYPE_STRING>(data) {}
 
             void output(std::ostream&);
     };
