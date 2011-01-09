@@ -12,7 +12,7 @@ clean:
 test-sftools: test-sftools.o hexfml.o anisprite.o typesetter.o sftools.o
 	$(CC) $(CPPFLAGS) `freetype-config --libs` -lsfml-system -lsfml-graphics $^ -o $@
 
-test-hexfml: test-hexfml.o hexfml.o anisprite.o typesetter.o sftools.o
+test-hexfml: test-hexfml.o hexfml.o anisprite.o typesetter.o sftools.o HtGo.o
 	$(CC) $(CPPFLAGS) `freetype-config --libs` -lsfml-system -lsfml-graphics $^ -o $@
 
 test-coords: test-coords.o hexfml.o

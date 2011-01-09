@@ -14,6 +14,8 @@
 
 #include "sftools.h"
 
+#include "HtGo.h"
+
 struct MyTile {
     enum MyColour {
         NEUTRAL,
@@ -39,19 +41,27 @@ class MyHexBlitter : public HexBlitter {
         const ScreenGrid& grid;
         ResourceManager<HexSprite>& hexSprites;
         HexMap<MyTile>& myMap;
+        HexTorusGoMap& tgMap;
 
         int selectedHexX, selectedHexY;
         bool showNumbers;
+        bool tgMode;
 
     public:
-        MyHexBlitter( const ScreenGrid& grid, ResourceManager<HexSprite>& hexSprites, HexMap<MyTile>& myMap ) :
+        MyHexBlitter( const ScreenGrid& grid, ResourceManager<HexSprite>& hexSprites, HexMap<MyTile>& myMap, HexTorusGoMap& tgMap ) :
             grid ( grid ),
             hexSprites ( hexSprites ),
             myMap (myMap ),
+            tgMap (tgMap ),
             selectedHexX (-1000),
             selectedHexY (-1000),
-            showNumbers (false)
+            showNumbers (false),
+            tgMode (false)
         {
+        }
+
+        void toggleTGMode(void) {
+            tgMode = !tgMode;
         }
 
         void toggleShowNumbers(void) {
@@ -59,11 +69,34 @@ class MyHexBlitter : public HexBlitter {
         }
 
         void setSelected(int x, int y) {
-            selectedHexX = x;
-            selectedHexX = y;
+            if( !tgMode ) {
+                selectedHexX = x;
+                selectedHexY = y;
+            } else {
+                HtGoTile& tile = tgMap.get( x, y );
+                selectedHexX = tile.coreX;
+                selectedHexY = tile.coreY;
+            }
+        }
+
+        void drawHexTG(int x, int y, sf::RenderWindow& win) {
+            HtGoTile& tile = tgMap.get(x,y);
+            sf::String text ( tile.positionalLabel );
+            sf::FloatRect rect = text.GetRect();
+            grid.centerRectangle( rect );
+            text.SetPosition( rect.Left, rect.Top );
+            text.SetColor( sf::Color( 200, 0, 0 ) );
+            win.Draw( text );
+            if( tile.coreX == selectedHexX && tile.coreY == selectedHexY ) {
+                hexSprites["yellow-border"].draw( win );
+            }
         }
 
         void drawHex(int x, int y, sf::RenderWindow& win) {
+            if( tgMode ) {
+                drawHexTG(x,y,win);
+                return;
+            }
             int ri, rj, rr;
             polariseHexCoordinate( x, y, ri, rj, rr );
             char buf[1024];
@@ -239,7 +272,10 @@ int main(int argc, char *argv[]) {
 
     bool kittenMode = false;
 
-    MyHexBlitter blitter (grid, hexSprites, myMap);
+    HexTorusGoMap myTorusMap(1);
+    myTorusMap.debugLabelCore();
+
+    MyHexBlitter blitter (grid, hexSprites, myMap, myTorusMap);
 
     win.SetFramerateLimit( 60 );
     win.UseVerticalSync( true );
@@ -269,6 +305,9 @@ int main(int argc, char *argv[]) {
                     case sf::Key::Escape:
                     case sf::Key::Q:
                         win.Close();
+                        break;
+                    case sf::Key::T:
+                        blitter.toggleTGMode();
                         break;
                     case sf::Key::N:
                         blitter.toggleShowNumbers();
