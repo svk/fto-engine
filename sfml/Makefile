@@ -20,3 +20,6 @@ test-coords: test-coords.o hexfml.o
 
 test-typesetter: test-typesetter.o typesetter.o
 	$(CC) -lsfml-graphics `freetype-config --libs` $(CPPFLAGS) $^ -o $@
+
+test-sexp: test-sexp.o SiSExp.o
+	$(CC) -lsfml-graphics `freetype-config --libs` $(CPPFLAGS) $^ -o $@
