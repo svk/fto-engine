@@ -19,6 +19,8 @@ HexTorusGoMap::HexTorusGoMap(int radius) :
             }
         }
     }
+    coreMap.get(0,0).coreX = 0;
+    coreMap.get(0,0).coreY = 0;
 }
 
 void HexTorusGoMap::debugLabelCore(void) {
@@ -109,4 +111,164 @@ HtGoTile& HexTorusGoMap::get(int x, int y) {
             throw std::logic_error( "illegal state - probably looping infinitely");
         }
     } while(true);
+}
+
+void PointSet::add(const HtGoTile& tile) {
+    ips.insert( std::pair<int,int>( tile.coreX, tile.coreY ) );
+}
+
+void PointSet::remove(const HtGoTile& tile) {
+    InternalPointSet::iterator i = ips.find( std::pair<int,int>( tile.coreX, tile.coreY ) );
+    if( i != ips.end() ) {
+        ips.erase( i );
+    }
+}
+
+bool PointSet::has(const HtGoTile& tile) const {
+    InternalPointSet::const_iterator i = ips.find( std::pair<int,int>( tile.coreX, tile.coreY ) );
+    return i != ips.end();
+}
+
+HtGoTile& HexTorusGoMap::getNeighbourOf(int x,int y,int i) {
+    const static int dx[] = { 3, 0, -3, -3, 0, 3 },
+                     dy[] = { 1, 2, 1, -1, -2, -1 };
+    return get(x + dx[i%6], y + dy[i%6]);
+}
+
+HtGoTile& HexTorusGoMap::get(std::pair<int,int> xy) {
+    return get( xy.first, xy.second );
+}
+
+HtGoTile& HexTorusGoMap::getNeighbourOf(const HtGoTile& tile, int i) {
+    return getNeighbourOf(tile.coreX, tile.coreY, i );
+}
+
+PointSet HexTorusGoMap::libertiesOf(const PointSet& group) {
+    PointSet rv;
+    for(PointSet::const_iterator i = group.begin(); i != group.end(); i++) {
+        const HtGoTile& tile = get( *i );
+        for(int i=0;i<6;i++) {
+            HtGoTile& nb = getNeighbourOf( tile, i );
+            if( nb.state == HtGoTile::BLANK ) {
+                rv.add( nb );
+            }
+        }
+    }
+    return rv;
+}
+
+PointSet HexTorusGoMap::groupOf(int x, int y) {
+    using namespace std;
+    HtGoTile& tile = get(x,y);
+    return groupOf( tile );
+}
+
+PointSet HexTorusGoMap::groupOf(const HtGoTile& tile) {
+    using namespace std;
+    PointSet rv, open;
+    open.add( tile );
+    rv.add( tile );
+    while( !open.empty() ) {
+        std::pair<int,int> coords = open.pop();
+        HtGoTile& tile = get( coords );
+
+        for(int i=0;i<6;i++) {
+            HtGoTile& nb = getNeighbourOf( tile, i );
+            if( nb.state == tile.state ) {
+                if( !rv.has( nb ) ) {
+                    open.add( nb );
+                    rv.add( nb );
+                }
+            }
+        }
+    }
+    return rv;
+}
+
+std::pair<int,int> PointSet::pop(void) {
+    InternalPointSet::iterator i = ips.begin();
+    if( i == ips.end() ) {
+        throw std::runtime_error( "popping from empty set" );
+    }
+    std::pair<int,int> rv = *i;
+    ips.erase( i );
+    return rv;
+}
+
+int HexTorusGoMap::removeGroup(const PointSet& xys) {
+    int rv = xys.size();
+    for(PointSet::const_iterator i = xys.begin(); i != xys.end(); i++) {
+        get( i->first, i->second ).state = HtGoTile::BLANK;
+    }
+    return rv;
+}
+
+int HexTorusGoMap::put(int x,int y, HtGoTile::TileState st) {
+    using namespace std;
+    int enemyCaptures = 0, selfCaptures = 0;
+    int singleCaptureX, singleCaptureY;
+    get(x,y).state = st;
+    for(int i=0;i<6;i++) {
+        HtGoTile& tile = getNeighbourOf( x, y, i );
+        if( tile.state == st ) continue;
+        if( tile.state == HtGoTile::BLANK ) continue;
+        PointSet group = groupOf( tile );
+        PointSet libs = libertiesOf( group );
+        if( libs.empty() ) {
+            singleCaptureX = tile.coreX;
+            singleCaptureY = tile.coreY;
+            enemyCaptures += removeGroup( group );
+        }
+    }
+    PointSet selfGroup = groupOf( x, y );
+    if( libertiesOf( selfGroup ).empty() ) {
+        selfCaptures += removeGroup( selfGroup );
+    }
+    if( enemyCaptures == 1 && selfCaptures == 0 ) {
+        koActive = true;
+        koCoreX = singleCaptureX;
+        koCoreY = singleCaptureY;
+    } else {
+        koActive = false;
+    }
+    return enemyCaptures;
+}
+
+HexTorusGoMap::HexTorusGoMap(const HexTorusGoMap& that) :
+    radius ( that.radius ),
+    coreMap ( that.coreMap ),
+    koActive ( that.koActive ),
+    koCoreX ( that.koCoreX ),
+    koCoreY ( that.koCoreY )
+{
+}
+
+const HexTorusGoMap& HexTorusGoMap::operator=(const HexTorusGoMap& that) {
+    if( this != &that ) {
+        radius = that.radius;
+        coreMap = that.coreMap;
+        koActive = that.koActive;
+        koCoreX = that.koCoreX;
+        koCoreY = that.koCoreY;
+    }
+    return *this;
+}
+
+bool HexTorusGoMap::putWouldBeLegal(int x,int y, HtGoTile::TileState st) {
+    // TODO constify hax
+    if( st == HtGoTile::BLANK ) return false;
+
+    HtGoTile& tile = get(x,y);
+
+    if( tile.state != HtGoTile::BLANK ) return false;
+
+    if( koActive && koCoreX == tile.coreX && koCoreY == tile.coreY ) {
+        return false;
+    }
+    
+    HexTorusGoMap copy = *this;
+    copy.put( x, y, st );
+    if( copy.get(x,y).state != st ) return false; // suicide is illegal
+    
+    return true;
 }

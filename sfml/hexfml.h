@@ -3,6 +3,8 @@
 
 #include <SFML/Graphics.hpp>
 
+#include <iostream>
+
 #include <stdint.h>
 
 sf::FloatRect fitRectangleAt(double, double, const sf::FloatRect&, double, double);
@@ -145,6 +147,35 @@ class HexMap {
             size ( hexCircleSize(radius) ),
             tiles( new T [ size ] )
         {
+        }
+
+        HexMap(const HexMap& h) :
+            radius ( h.radius ),
+            size ( h.size ),
+            defaultTile ( h.defaultTile ),
+            tiles ( new T [ size ] )
+        {
+            for(int i=0;i<size;i++) {
+                using namespace std;
+                tiles[i] = h.tiles[i];
+            }
+        }
+
+        const HexMap<T>& operator=(const HexMap<T>& that) {
+            using namespace std;
+            if( this != &that ) {
+                radius = that.radius;
+                size = that.radius;
+                defaultTile = that.defaultTile;
+                if( tiles ) {
+                    delete [] tiles;
+                }
+                tiles = new T [ size ];
+                for(int i=0;i<size;i++) {
+                    tiles[i] = that.tiles[i];
+                }
+            }
+            return *this;
         }
 
         ~HexMap(void) {

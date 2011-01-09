@@ -86,10 +86,25 @@ class MyHexBlitter : public HexBlitter {
             grid.centerRectangle( rect );
             text.SetPosition( rect.Left, rect.Top );
             text.SetColor( sf::Color( 200, 0, 0 ) );
-            win.Draw( text );
+//            win.Draw( text );
+            switch( tile.state ) {
+                case HtGoTile::BLACK:
+                    hexSprites["black"].draw( win );
+                    break;
+                case HtGoTile::WHITE:
+                    hexSprites["white"].draw( win );
+                    break;
+                case HtGoTile::BLANK:
+                    hexSprites["gray"].draw( win );
+                    break;
+            }
             if( tile.coreX == selectedHexX && tile.coreY == selectedHexY ) {
                 hexSprites["yellow-border"].draw( win );
             }
+        }
+
+        bool getTGMode(void) {
+            return tgMode;
         }
 
         void drawHex(int x, int y, sf::RenderWindow& win) {
@@ -250,7 +265,6 @@ int main(int argc, char *argv[]) {
         int x = i * 3, y = 2 * j + i;
         MyTile::MyColour type = MyTile::NEUTRAL;
         if( abs(i) == 6 && abs(j) == 6 ) {
-            cerr << x << " " << y << endl;
             continue;
         }
         if( abs(i) == 6 ) type = MyTile::WHITE_EDGE;
@@ -272,10 +286,12 @@ int main(int argc, char *argv[]) {
 
     bool kittenMode = false;
 
-    HexTorusGoMap myTorusMap(1);
+    HexTorusGoMap myTorusMap(5);
     myTorusMap.debugLabelCore();
 
     MyHexBlitter blitter (grid, hexSprites, myMap, myTorusMap);
+
+    HtGoTile::TileState myCurrentColour = HtGoTile::BLACK;
 
     win.SetFramerateLimit( 60 );
     win.UseVerticalSync( true );
@@ -330,6 +346,18 @@ int main(int argc, char *argv[]) {
                     if( !vpMouseScroller ) {
                         win.ShowMouseCursor(false);
                         vpMouseScroller = new ViewportMouseScroller( viewport, win.GetInput() );
+                    }
+                } else if( ev.MouseButton.Button == sf::Mouse::Left ) {
+                    if( blitter.getTGMode() ) {
+                        int x = win.GetInput().GetMouseX(),
+                            y = win.GetInput().GetMouseY();
+                        if( viewport.translateCoordinates( x, y ) ) {
+                            grid.screenToHex( x, y, 0, 0 );
+                            if( myTorusMap.putWouldBeLegal( x, y, myCurrentColour ) ) {
+                                myTorusMap.put( x, y, myCurrentColour );
+                                myCurrentColour = ( myCurrentColour == HtGoTile::BLACK ) ? HtGoTile::WHITE : HtGoTile::BLACK;
+                            }
+                        }
                     }
                 }
                 break;
