@@ -14,7 +14,11 @@
    quick and dirty.
 */
 
+#include <list>
+
 #include <ostream>
+#include <sstream>
+#include <queue>
 
 #include <string>
 
@@ -95,7 +99,82 @@ namespace SiSExp {
 
             void output(std::ostream&);
     };
-    
+
+    class SExpParser {
+        public:
+            virtual bool feed(char) = 0;
+            virtual bool done(void) const = 0;
+            virtual SExp *get(void) = 0;
+    };
+
+    class NumberParser : public SExpParser {
+        // expects everything
+        private:
+            char buffer[128];
+            int length;
+            bool isDone;
+
+        public:
+            NumberParser(void);
+            bool feed(char);
+            bool done(void) const;
+            SExp *get(void);
+    };
+
+    class StringParser : public SExpParser {
+        // expects initial " cut off
+        private:
+            bool quoted, isDone;
+            std::ostringstream oss;
+
+        public:
+            StringParser(void);
+
+            bool feed(char);
+            bool done(void) const;
+            SExp *get(void);
+    };
+
+    class ListParser : public SExpParser {
+        // expects initial ( cut off
+        private:
+            enum Phase {
+                LIST_ITEMS,
+                CDR_ITEM,
+                WAITING_FOR_TERMINATION,
+                DONE
+            };
+
+            Phase phase;
+            std::list<SExp*> elements;
+            SExp * terminatingCdr;
+
+            SExpParser *subparser;
+
+        public:
+            ListParser(void);
+            ~ListParser(void);
+
+            bool feed(char);
+            bool done(void) const;
+            SExp *get(void);
+    };
+
+    class SExpStreamParser {
+        private:
+            std::queue<SExp*> rvs;
+            SExpParser *parser;
+
+        public:
+            SExpStreamParser(void);
+            ~SExpStreamParser(void);
+
+            SExp *pop(void);
+            bool empty(void) const;
+            void feed(char);
+    };
+
+    SExpParser *makeSExpParser(char);
 };
 
 #endif

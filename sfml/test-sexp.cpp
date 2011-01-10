@@ -5,11 +5,20 @@
 int main(int argc, char *argv[]) {
     using namespace SiSExp;
     using namespace std;
-    Cons *list = 0;
-    list = new Cons( new Int(1337), list );
-    list = new Cons( new Int(1336), list );
-    list = new Cons( new Int(1335), list );
-    list = new Cons( new String("numbers sorted in ascending order:"), list );
-    list->output( cout );
+    SExpStreamParser sp;
+    std::string data ("1 2 3 \"hello\" () (1 2 3) (8 9 10 . 11)" );
+    for(int i=0;i<(int)data.length();i++) {
+        sp.feed( data[i] );
+    }
+    while( !sp.empty() ) {
+        SExp *rv = sp.pop();
+        if( rv ) {
+            rv->output( cout );
+        } else {
+            cout << "()";
+        }
+        cout << endl;
+        delete rv;
+    }
     return 0;
 }
