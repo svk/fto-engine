@@ -23,3 +23,6 @@ test-typesetter: test-typesetter.o typesetter.o
 
 test-sexp: test-sexp.o SiSExp.o
 	$(CC) -lsfml-graphics `freetype-config --libs` $(CPPFLAGS) $^ -o $@
+
+test-sisenet: test-sisenet.o SiSeNet.o SiSExp.o
+	$(CC) -lsfml-graphics `freetype-config --libs` $(CPPFLAGS) $^ -o $@

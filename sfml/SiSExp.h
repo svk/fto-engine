@@ -22,7 +22,14 @@
 
 #include <string>
 
+#include <stdexcept>
+
 namespace SiSExp {
+
+    struct ParseError : public std::runtime_error {
+        ParseError(std::string s) : std::runtime_error(s) {}
+    };
+
     enum Type {
         TYPE_CONS,
         TYPE_INT,
@@ -38,6 +45,8 @@ namespace SiSExp {
 
 
     struct Cons;
+    struct Int;
+    struct String;
 
     class SExp {
         Type type;
@@ -50,6 +59,8 @@ namespace SiSExp {
 
             bool isType(Type) const;
             Cons* asCons(void);
+            String* asString(void);
+            Int* asInt(void);
 
             virtual void output(std::ostream&) = 0;
     };
@@ -64,8 +75,8 @@ namespace SiSExp {
             Cons(SExp*, SExp*);
             ~Cons(void);
 
-            SExp *getcar(void);
-            SExp *getcdr(void);
+            SExp *getcar(void) const;
+            SExp *getcdr(void) const;
             void setcar(SExp*);
             void setcdr(SExp*);
 
@@ -171,6 +182,8 @@ namespace SiSExp {
     };
 
     SExpParser *makeSExpParser(char);
+
+    void outputSExp(SExp*,std::ostream&);
 };
 
 #endif

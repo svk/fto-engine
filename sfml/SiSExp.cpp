@@ -21,6 +21,18 @@ SExp::SExp(Type type) :
 SExp::~SExp(void) {
 }
 
+Int* SExp::asInt(void) {
+    const Type t = TYPE_INT;
+    if( !isType( t ) ) throw SExpTypeError( t, type );
+    return dynamic_cast<Int*>( this );
+}
+
+String* SExp::asString(void) {
+    const Type t = TYPE_STRING;
+    if( !isType( t ) ) throw SExpTypeError( t, type );
+    return dynamic_cast<String*>( this );
+}
+
 Cons* SExp::asCons(void) {
     const Type t = TYPE_CONS;
     if( !isType( t ) ) throw SExpTypeError( t, type );
@@ -88,11 +100,7 @@ void Cons::output(std::ostream& os) {
     Cons *c = this;
     os.put( '(' );
     while( c ) {
-        if( !c->carPtr ) {
-            os.write( "NIL", 3 );
-        } else {
-            c->carPtr->output( os );
-        }
+        outputSExp( c->carPtr, os );
         if( !c->cdrPtr ) {
             c = 0;
         } else if( c->cdrPtr->isType( TYPE_CONS ) ){
@@ -102,7 +110,7 @@ void Cons::output(std::ostream& os) {
             os.put( ' ' );
             os.put( '.' );
             os.put( ' ' );
-            c->cdrPtr->output( os );
+            outputSExp( c->cdrPtr, os );
             c = 0;
         }
     }
@@ -162,7 +170,7 @@ bool NumberParser::done(void) const {
 
 bool NumberParser::feed(char ch) {
     if( length >= (int) sizeof buffer ) {
-        throw std::runtime_error( "parse error / buffer overflow -- expected smallint" );
+        throw ParseError( "parse error / buffer overflow -- expected smallint" );
     }
     if( isdigit( ch ) ) {
         buffer[length++] = ch;
@@ -192,7 +200,7 @@ SExpParser *makeSExpParser(char ch) {
     } else if( ch == '(' ) {
         rv = new ListParser();
     } else {
-        throw std::runtime_error( "oh noes -- symbols aren't implemented yet so no parser for you" );
+        throw ParseError( "oh noes -- symbols aren't implemented yet so no parser for you" );
     }
     return rv;
 }
@@ -233,7 +241,7 @@ bool ListParser::feed(char ch) {
                     phase = WAITING_FOR_TERMINATION;
                     break;
                 default:
-                    throw std::runtime_error( "parse or internal error -- unexpected atom" );
+                    throw ParseError( "parse or internal error -- unexpected atom" );
             }
         }
     }
@@ -243,13 +251,13 @@ bool ListParser::feed(char ch) {
                 phase = DONE;
                 break;
             }
-            throw std::runtime_error( "parse error -- unexpected end of cons" );
+            throw ParseError( "parse error -- unexpected end of cons" );
         case '.':
             if( phase == LIST_ITEMS ) {
                 phase = CDR_ITEM;
                 break;
             }
-            throw std::runtime_error( "parse error -- unexpected dot in cons" );
+            throw ParseError( "parse error -- unexpected dot in cons" );
         default:
             subparser = makeSExpParser( ch );
             break;
@@ -312,6 +320,23 @@ void SExpStreamParser::feed(char ch) {
     } else {
         parser = makeSExpParser( ch );
     }
+}
+
+void outputSExp(SExp* sexp, std::ostream& os) {
+    if( sexp ) {
+        sexp->output( os );
+    } else {
+        os.put( '(' );
+        os.put( ')' );
+    }
+}
+
+SExp *Cons::getcar(void) const {
+    return carPtr;
+}
+
+SExp *Cons::getcdr(void) const {
+    return cdrPtr;
 }
 
 };
