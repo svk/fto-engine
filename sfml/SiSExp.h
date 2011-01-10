@@ -41,16 +41,12 @@ namespace SiSExp {
 
     class SExp {
         Type type;
-        int refcount;
 
         protected:
             explicit SExp(Type);
 
         public:
             virtual ~SExp(void);
-
-            void incref(void);
-            void decref(void);
 
             bool isType(Type) const;
             Cons* asCons(void);

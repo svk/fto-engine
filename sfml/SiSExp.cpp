@@ -14,23 +14,11 @@
 namespace SiSExp {
 
 SExp::SExp(Type type) :
-    type ( type ),
-    refcount ( 0 )
+    type ( type )
 {
 }
 
 SExp::~SExp(void) {
-}
-
-void SExp::decref(void) {
-    assert( refcount > 0 );
-    if( !--refcount ) {
-        delete this;
-    }
-}
-
-void SExp::incref(void) {
-    ++refcount;
 }
 
 Cons* SExp::asCons(void) {
@@ -50,18 +38,15 @@ bool SExp::isType(Type t) const {
 }
 
 void Cons::setcar(SExp *car) {
-    if( car ) {
-        car->incref();
-    }
     if( carPtr ) {
-        carPtr->decref();
+        delete carPtr;
     }
     carPtr = car;
 }
 
 void Cons::setcdr(SExp *cdr) {
-    if( cdr ) {
-        cdr->incref();
+    if( cdrPtr ) {
+        delete cdrPtr;
     }
     cdrPtr = cdr;
 }
@@ -92,10 +77,10 @@ Cons::Cons(void) :
 
 Cons::~Cons(void) {
     if( carPtr ) {
-        carPtr->decref();
+        delete carPtr;
     }
     if( cdrPtr ) {
-        cdrPtr->decref();
+        delete cdrPtr;
     }
 }
 
