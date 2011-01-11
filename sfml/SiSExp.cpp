@@ -27,6 +27,12 @@ Int* SExp::asInt(void) {
     return dynamic_cast<Int*>( this );
 }
 
+Symbol* SExp::asSymbol(void) {
+    const Type t = TYPE_SYMBOL;
+    if( !isType( t ) ) throw SExpTypeError( t, type );
+    return dynamic_cast<Symbol*>( this );
+}
+
 String* SExp::asString(void) {
     const Type t = TYPE_STRING;
     if( !isType( t ) ) throw SExpTypeError( t, type );
@@ -123,6 +129,12 @@ void Int::output(std::ostream& os) {
     os.write( buffer, strlen( buffer ) );
 }
 
+void Symbol::output(std::ostream& os) {
+    int sz = data.size();
+    // these are simple symbols -- no quoting. all chars assumed legal without such
+    os.write( data.data(), sz );
+}
+
 void String::output(std::ostream& os) {
     int sz = data.size();
     os.put( '"' );
@@ -137,12 +149,35 @@ void String::output(std::ostream& os) {
     os.put( '"' );
 }
 
+SExp* SymbolParser::get(void) {
+    return new Symbol( oss.str() );
+}
+
 SExp* StringParser::get(void) {
     return new String( oss.str() );
 }
 
+bool SymbolParser::done(void) const {
+    return isDone;
+}
+
+
 bool StringParser::done(void) const {
     return isDone;
+}
+
+bool SymbolParser::feed(char ch) {
+    if( isspace( ch ) ) {
+        isDone = true;
+    } else if( ch == ')' ) {
+        isDone = true;
+        return false;
+    } else if( !isprint( ch ) ) {
+        throw ParseError( "unexpected char in symbol" );
+    } else {
+        oss << ch;
+    }
+    return true;
 }
 
 bool StringParser::feed(char ch) {
@@ -199,8 +234,11 @@ SExpParser *makeSExpParser(char ch) {
         rv = new StringParser();
     } else if( ch == '(' ) {
         rv = new ListParser();
+    } else if( isprint( ch ) ) {
+        rv = new SymbolParser();
+        rv->feed( ch );
     } else {
-        throw ParseError( "oh noes -- symbols aren't implemented yet so no parser for you" );
+        throw ParseError( "oh noes -- I am just a few commits old and what is this" );
     }
     return rv;
 }
@@ -270,6 +308,12 @@ ListParser::ListParser(void) :
     elements (),
     terminatingCdr ( 0 ),
     subparser ( 0 )
+{
+}
+
+SymbolParser::SymbolParser(void) :
+    isDone ( false ),
+    oss ()
 {
 }
 

@@ -33,7 +33,8 @@ namespace SiSExp {
     enum Type {
         TYPE_CONS,
         TYPE_INT,
-        TYPE_STRING
+        TYPE_STRING,
+        TYPE_SYMBOL
     };
 
     struct SExpTypeError {
@@ -47,6 +48,7 @@ namespace SiSExp {
     struct Cons;
     struct Int;
     struct String;
+    struct Symbol;
 
     class SExp {
         Type type;
@@ -61,6 +63,7 @@ namespace SiSExp {
             Cons* asCons(void);
             String* asString(void);
             Int* asInt(void);
+            Symbol* asSymbol(void);
 
             virtual void output(std::ostream&) = 0;
     };
@@ -100,6 +103,13 @@ namespace SiSExp {
             void output(std::ostream&);
     };
 
+    class Symbol : public PodType<std::string,TYPE_SYMBOL> {
+        public:
+            explicit Symbol(std::string data) : PodType<std::string,TYPE_SYMBOL>(data) {}
+
+            void output(std::ostream&);
+    };
+
     class String : public PodType<std::string,TYPE_STRING> {
         public:
             explicit String(std::string data) : PodType<std::string,TYPE_STRING>(data) {}
@@ -123,6 +133,20 @@ namespace SiSExp {
 
         public:
             NumberParser(void);
+            bool feed(char);
+            bool done(void) const;
+            SExp *get(void);
+    };
+
+    class SymbolParser : public SExpParser {
+        // expects initial " cut off
+        private:
+            bool isDone;
+            std::ostringstream oss;
+
+        public:
+            SymbolParser(void);
+
             bool feed(char);
             bool done(void) const;
             SExp *get(void);
