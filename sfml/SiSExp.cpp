@@ -383,4 +383,15 @@ SExp *Cons::getcdr(void) const {
     return cdrPtr;
 }
 
+void SExpStreamParser::end(void) {
+    if( parser ) {
+        parser->feedEnd();
+        if( parser->done() ) {
+            rvs.push( parser->get() );
+            delete parser;
+            parser = 0;
+        }
+    }
+}
+
 };

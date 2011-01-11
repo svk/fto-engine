@@ -119,6 +119,7 @@ namespace SiSExp {
 
     class SExpParser {
         public:
+            virtual void feedEnd(void) {}
             virtual bool feed(char) = 0;
             virtual bool done(void) const = 0;
             virtual SExp *get(void) = 0;
@@ -133,6 +134,7 @@ namespace SiSExp {
 
         public:
             NumberParser(void);
+            void feedEnd(void) { isDone = true; }
             bool feed(char);
             bool done(void) const;
             SExp *get(void);
@@ -147,6 +149,7 @@ namespace SiSExp {
         public:
             SymbolParser(void);
 
+            void feedEnd(void) { isDone = true; }
             bool feed(char);
             bool done(void) const;
             SExp *get(void);
@@ -203,6 +206,7 @@ namespace SiSExp {
             SExp *pop(void);
             bool empty(void) const;
             void feed(char);
+            void end(void);
     };
 
     SExpParser *makeSExpParser(char);

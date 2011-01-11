@@ -12,6 +12,7 @@ int main(int argc, char *argv[]) {
         for(int i=0;i<(int)data.length();i++) {
             sp.feed( data[i] );
         }
+        sp.end();
         while( !sp.empty() ) {
             SExp *rv = sp.pop();
             if( rv ) {
