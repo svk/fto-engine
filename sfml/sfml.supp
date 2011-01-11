@@ -1,0 +1,88 @@
+{
+    sfml_leak1
+   Memcheck:Leak
+   fun:malloc
+   fun:XInitExtension
+   fun:XextAddDisplay
+}
+
+{
+    sfml_leak2
+   Memcheck:Leak
+   fun:malloc
+   fun:XInitExtension
+   fun:XRenderFindDisplay
+   fun:XRenderQueryExtension
+   fun:_XcursorGetDisplayInfo
+   fun:XcursorSupportsARGB
+   fun:XcursorNoticeCreateBitmap
+   fun:_XNoticeCreateBitmap
+   fun:XCreatePixmap
+   fun:_ZN2sf4priv13WindowImplX1118CreateHiddenCursorEv
+   fun:_ZN2sf4priv13WindowImplX1110InitializeEv
+   fun:_ZN2sf4priv13WindowImplX11C1ENS_9VideoModeERKSsmRNS_14WindowSettingsE
+}
+
+{
+    sfml_leak3
+   Memcheck:Leak
+   fun:malloc
+   fun:XInitExtension
+   fun:XkbUseExtension
+   fun:XOpenDisplay
+   fun:_ZN2sf4priv13WindowImplX1111OpenDisplayEb
+   fun:_ZN2sf4priv13WindowImplX11C1Ev
+   fun:_ZN2sf4priv10WindowImpl3NewEv
+   fun:_ZN2sf7ContextC1Ev
+   fun:_ZN2sf7Context9GetGlobalEv
+}
+
+{
+   sfml_leak4
+   Memcheck:Leak
+   fun:malloc
+   obj:/usr/lib/nvidia-current/libGL.so.260.19.06
+}
+
+{
+    sfml_leak5
+   Memcheck:Leak
+   fun:calloc
+   fun:XInitExtension
+   fun:XkbUseExtension
+   fun:XOpenDisplay
+   fun:_ZN2sf4priv13WindowImplX1111OpenDisplayEb
+   fun:_ZN2sf4priv13WindowImplX11C1Ev
+   fun:_ZN2sf4priv10WindowImpl3NewEv
+   fun:_ZN2sf7ContextC1Ev
+   fun:_ZN2sf7Context9GetGlobalEv
+   obj:/usr/lib/libsfml-window.so.1.6
+   obj:/usr/lib/libsfml-window.so.1.6
+   obj:/usr/lib/libsfml-window.so.1.6
+}
+
+{
+    sfml_leak6
+   Memcheck:Leak
+   fun:calloc
+   fun:XInitExtension
+   fun:XextAddDisplay
+}
+
+{
+   sfml_leak7
+   Memcheck:Leak
+   fun:calloc
+   fun:XAddExtension
+   fun:_XcursorGetDisplayInfo
+   fun:XcursorSupportsARGB
+   fun:XcursorNoticeCreateBitmap
+   fun:_XNoticeCreateBitmap
+   fun:XCreatePixmap
+   fun:_ZN2sf4priv13WindowImplX1118CreateHiddenCursorEv
+   fun:_ZN2sf4priv13WindowImplX1110InitializeEv
+   fun:_ZN2sf4priv13WindowImplX11C1ENS_9VideoModeERKSsmRNS_14WindowSettingsE
+   fun:_ZN2sf4priv10WindowImpl3NewENS_9VideoModeERKSsmRNS_14WindowSettingsE
+   fun:_ZN2sf6Window6CreateENS_9VideoModeERKSsmRKNS_14WindowSettingsE
+}
+
