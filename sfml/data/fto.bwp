@@ -1,0 +1,16 @@
+f_staircase_desc: linear_interpolation{initial=1.0,data=[(0.3,1.0),(0.3,0.0)]};
+f_smooth: 0.5 + 0.5 * phase_shift{shift=0.25,wave=sine{freq=0.63}};
+cutoff: linear_interpolation{initial=1.0,data=[(0.9,1.0),(0.1,0.0)]};
+startsmoother: 1 - expdecay{speed=30.0};
+
+bwomp1_env: f_smooth * cutoff;
+bwomp1_freq: 220 + 110 * f_staircase_desc;
+bwomp1: startsmoother * bwomp1_env * sine{freq=bwomp1_freq};
+bwomp2: speed_shift{wave=startsmoother*bwomp1_env,speed=4.0} * sine{freq=bwomp1_freq*expdecay{speed=0.5}};
+export1: bwomp2;
+export2: speed_shift{wave=startsmoother*bwomp1_env,speed=4.0} * sine{freq=bwomp1_freq*(2-expdecay{speed=0.5})};
+export3: speed_shift{wave=startsmoother*bwomp1_env,speed=4.0} * sine{freq=bwomp1_freq*expdecay{speed=3}};
+export4: speed_shift{wave=startsmoother*bwomp1_env,speed=4.0} * sine{freq=bwomp1_freq};
+
+chechee1_env: cutoff * linear_interpolation{initial=0.0, data=[(0.15,1.0),(0.01,0.0),(0.15,1.0)]};
+chechee1: 0.25 * chechee1_env * square{freq=440*expdecay{speed=3}};
