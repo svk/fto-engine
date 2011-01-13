@@ -125,6 +125,19 @@ namespace SiSeNet {
             SocketSet debugGetSockets(void);
     };
 
+    class ConsSocket : public Socket {
+        public:
+            ConsSocket( RawSocket x ) : Socket(x) {}
+
+            virtual void handle( const std::string&,  SiSExp::SExp* ) = 0;
+            void pump(void);
+    };
+
+    class ConsSocketManager : public SocketManager {
+        public:
+            void manage(int);
+    };
+
 };
 
 #endif

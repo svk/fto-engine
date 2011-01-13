@@ -1,7 +1,7 @@
 CC=g++
 CPPFLAGS=-g `freetype-config --cflags` -Wall
 
-EXECUTABLES=test-hexfml test-coords test-typesetter test-sexp
+EXECUTABLES=test-hexfml test-coords test-typesetter test-sexp test-sisenet
 
 all: $(EXECUTABLES)
 

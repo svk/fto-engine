@@ -340,5 +340,31 @@ int SocketManager::numberOfWatchedSockets(void) {
     return watched.size();
 }
 
+void ConsSocket::pump(void) {
+    using namespace SiSExp;
+    while( !in().empty() ) {
+        SExp *sexp = in().pop();
+        using namespace std;
+        try {
+            Cons *cons = sexp->asCons();
+            Symbol *sym = cons->getcar()->asSymbol();
+            handle( sym->get(), cons->getcdr() );
+            delete sexp;
+        }
+        catch(...) {
+            delete sexp;
+            throw;
+        }
+    }
+}
+
+void ConsSocketManager::manage(int ms) {
+    SocketSet socks;
+    pump( ms, &socks );
+    for(SocketSet::iterator i = socks.begin(); i != socks.end(); i++) {
+        dynamic_cast<ConsSocket*>((*i))->pump();
+    }
+}
+
 }
 
