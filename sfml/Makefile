@@ -13,7 +13,7 @@ test-sftools: test-sftools.o hexfml.o anisprite.o typesetter.o sftools.o
 	$(CC) $(CPPFLAGS) `freetype-config --libs` -lsfml-system -lsfml-graphics $^ -o $@
 
 test-hexfml: test-hexfml.o hexfml.o anisprite.o typesetter.o sftools.o HtGo.o
-	$(CC) $(CPPFLAGS) `freetype-config --libs` -lsfml-system -lsfml-graphics $^ -o $@
+	$(CC) $(CPPFLAGS) `freetype-config --libs` -lsfml-system -lsfml-graphics -lsfml-audio $^ -o $@
 
 test-coords: test-coords.o hexfml.o
 	$(CC) $(CPPFLAGS) -lsfml-system -lsfml-graphics $^ -o $@

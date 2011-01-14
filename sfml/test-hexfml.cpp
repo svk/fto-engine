@@ -2,6 +2,7 @@
 
 #include <SFML/System.hpp>
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 
 #include "typesetter.h"
 
@@ -159,6 +160,7 @@ int main(int argc, char *argv[]) {
 
     ResourceManager<sf::Image> images;
     ResourceManager<HexSprite> hexSprites;
+    ResourceManager<sf::SoundBuffer> soundBuffers;
 
     ScreenGrid grid ( "./data/hexproto1.png" );
     hexSprites.bind( "black", new HexSprite( "./data/hexblack1.png", grid ) );
@@ -170,6 +172,9 @@ int main(int argc, char *argv[]) {
     hexSprites.bind( "yellow-border", new HexSprite( "./data/hexborder1.png", grid ) );
     hexSprites.bind( "white-black-edge", new HexSprite( "./data/hexwhiteblack1.png", grid ) );
     hexSprites.bind( "black-white-edge", new HexSprite( "./data/hexblackwhite1.png", grid ) );
+
+    soundBuffers.bind( "fail-sound", new sf::SoundBuffer() );
+    soundBuffers["fail-sound"].LoadFromFile( "./data/fail.wav" );
 
     bool showingKitten = false;
 
@@ -294,6 +299,8 @@ int main(int argc, char *argv[]) {
     win.SetFramerateLimit( 60 );
     win.UseVerticalSync( true );
 
+    sf::Sound failSound( soundBuffers["fail-sound"] );
+
     while( win.IsOpened() ) {
         using namespace std;
 
@@ -355,6 +362,8 @@ int main(int argc, char *argv[]) {
                             if( myTorusMap.putWouldBeLegal( x, y, myCurrentColour ) ) {
                                 myTorusMap.put( x, y, myCurrentColour );
                                 myCurrentColour = ( myCurrentColour == HtGoTile::BLACK ) ? HtGoTile::WHITE : HtGoTile::BLACK;
+                            } else {
+                                failSound.Play();
                             }
                         }
                     }
