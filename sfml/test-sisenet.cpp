@@ -1,4 +1,4 @@
-#include "SiSeNet.h"
+#include "Sise.h"
 
 #include <iostream>
 #include <ostream>
@@ -24,13 +24,13 @@ class Broadcaster {
         void sendChatMessage(const std::string& username, const std::string& message);
 };
 
-struct LabelledSocket : public SiSeNet::ConsSocket {
+struct LabelledSocket : public Sise::ConsSocket {
     std::string name;
     Broadcaster& broadcaster;
     std::vector<LabelledSocket*>& list;
 
-    LabelledSocket(std::string name, SiSeNet::RawSocket r, Broadcaster& broadcaster, std::vector<LabelledSocket*>& list ) :
-        SiSeNet::ConsSocket( r ),
+    LabelledSocket(std::string name, Sise::RawSocket r, Broadcaster& broadcaster, std::vector<LabelledSocket*>& list ) :
+        Sise::ConsSocket( r ),
         name ( name ),
         broadcaster( broadcaster ),
         list ( list )
@@ -44,7 +44,7 @@ struct LabelledSocket : public SiSeNet::ConsSocket {
         list.erase( remove( list.begin(), list.end(), this ), list.end() );
     }
 
-    void handle( const std::string& event,  SiSExp::SExp* data ) {
+    void handle( const std::string& event,  Sise::SExp* data ) {
         if( event == "chat-message" ) {
             broadcaster.sendChatMessage( name, data->asString()->get() );
         } else if( event == "nick-change" ) {
@@ -54,7 +54,7 @@ struct LabelledSocket : public SiSeNet::ConsSocket {
 };
 
 void Broadcaster::sendChatMessage(const std::string& username, const std::string& message) {
-    using namespace SiSExp;
+    using namespace Sise;
     SExp *bc = List()( new Symbol( "chat-message" ) )
                      ( new String( username ) )
                      ( new String( message ) )
@@ -68,7 +68,7 @@ void Broadcaster::sendChatMessage(const std::string& username, const std::string
 
 
 
-struct MyGreeter : public SiSeNet::SocketGreeter {
+struct MyGreeter : public Sise::SocketGreeter {
     private:
         std::vector<LabelledSocket*>& list;
         Broadcaster broadcaster;
@@ -76,7 +76,7 @@ struct MyGreeter : public SiSeNet::SocketGreeter {
     public:
         MyGreeter(std::vector<LabelledSocket*>& list) : list ( list ), broadcaster( list )  {}
 
-        SiSeNet::Socket* greet(SiSeNet::RawSocket rs, struct sockaddr_storage* foo, socklen_t bar) {
+        Sise::Socket* greet(Sise::RawSocket rs, struct sockaddr_storage* foo, socklen_t bar) {
             char buffer[1024];
             snprintf( buffer, sizeof buffer, "user%d", list.size() + 1 );
             LabelledSocket *rv = new LabelledSocket( buffer, rs, broadcaster, list );
@@ -86,8 +86,7 @@ struct MyGreeter : public SiSeNet::SocketGreeter {
 
 int main(int argc, char *argv[]) {
     using namespace std;
-    using namespace SiSeNet;
-    using namespace SiSExp;
+    using namespace Sise;
     const int port = 1337;
 
     ConsSocketManager man;

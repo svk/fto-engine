@@ -21,8 +21,8 @@ test-coords: test-coords.o hexfml.o
 test-typesetter: test-typesetter.o typesetter.o
 	$(CC) -lsfml-graphics `freetype-config --libs` $(CPPFLAGS) $^ -o $@
 
-test-sexp: test-sexp.o SiSExp.o
+test-sexp: test-sexp.o Sise.o
 	$(CC) -lsfml-graphics `freetype-config --libs` $(CPPFLAGS) $^ -o $@
 
-test-sisenet: test-sisenet.o SiSeNet.o SiSExp.o
+test-sisenet: test-sisenet.o Sise.o
 	$(CC) -lsfml-graphics `freetype-config --libs` $(CPPFLAGS) $^ -o $@

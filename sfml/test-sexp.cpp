@@ -1,9 +1,9 @@
-#include "SiSExp.h"
+#include "Sise.h"
 
 #include <iostream>
 
 int main(int argc, char *argv[]) {
-    using namespace SiSExp;
+    using namespace Sise;
     using namespace std;
     SExpStreamParser sp;
     std::string data;
