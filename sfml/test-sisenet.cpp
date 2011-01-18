@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <ostream>
+#include <algorithm>
 
 #include <string>
 
@@ -26,15 +27,21 @@ class Broadcaster {
 struct LabelledSocket : public SiSeNet::ConsSocket {
     std::string name;
     Broadcaster& broadcaster;
+    std::vector<LabelledSocket*>& list;
 
-    LabelledSocket(std::string name, SiSeNet::RawSocket r, Broadcaster& broadcaster ) :
+    LabelledSocket(std::string name, SiSeNet::RawSocket r, Broadcaster& broadcaster, std::vector<LabelledSocket*>& list ) :
         SiSeNet::ConsSocket( r ),
         name ( name ),
-        broadcaster( broadcaster )
+        broadcaster( broadcaster ),
+        list ( list )
     {
+        using namespace std;
+        list.push_back( this );
     }
 
     ~LabelledSocket(void) {
+        using namespace std;
+        list.erase( remove( list.begin(), list.end(), this ), list.end() );
     }
 
     void handle( const std::string& event,  SiSExp::SExp* data ) {
@@ -48,9 +55,11 @@ struct LabelledSocket : public SiSeNet::ConsSocket {
 
 void Broadcaster::sendChatMessage(const std::string& username, const std::string& message) {
     using namespace SiSExp;
-    Cons *bc = new Cons( new Symbol( "chat-message" ),
-                         new Cons( new String( username ),
-                                   new Cons( new String( message ) ) ) );
+    SExp *bc = List()( new Symbol( "chat-message" ) )
+                     ( new String( username ) )
+                     ( new String( message ) )
+               .make();
+    using namespace std;
     for(std::vector<LabelledSocket*>::iterator i = list.begin(); i != list.end(); i++) {
         outputSExp( bc, (*i)->out() );
     }
@@ -70,8 +79,7 @@ struct MyGreeter : public SiSeNet::SocketGreeter {
         SiSeNet::Socket* greet(SiSeNet::RawSocket rs, struct sockaddr_storage* foo, socklen_t bar) {
             char buffer[1024];
             snprintf( buffer, sizeof buffer, "user%d", list.size() + 1 );
-            LabelledSocket *rv = new LabelledSocket( buffer, rs, broadcaster );
-            list.push_back( rv );
+            LabelledSocket *rv = new LabelledSocket( buffer, rs, broadcaster, list );
             return rv;
         }
 };
@@ -91,18 +99,6 @@ int main(int argc, char *argv[]) {
         man.setGreeter( &greeter );
         while( true ) {
             man.manage( 10000 );
-#if 0
-            for(SocketManager::SocketSet::iterator i = my.begin(); i != my.end(); i++) {
-                std::string name = dynamic_cast<LabelledSocket*>( *i )->name;
-                while( !(*i)->in().empty() ) {
-                    Cons *bc = new Cons( new String( name ), new Cons( (*i)->in().pop() ) );
-                    for(vector<LabelledSocket*>::iterator j = clients.begin(); j != clients.end(); j++) {
-                        outputSExp( bc, (*j)->out() );
-                    }
-                    delete bc;
-                }
-            }
-#endif
         }
     } else {
         Socket *conn = Socket::connectTo( argv[1], port );
@@ -126,8 +122,8 @@ int main(int argc, char *argv[]) {
             }
             while( !conn->in().empty() ) {
                 SExp *rv = conn->in().pop();
-                std::string name = rv->asCons()->getcdr()->asCons()->getcar()->asString()->get();
-                std::string message = rv->asCons()->getcdr()->asCons()->getcdr()->asCons()->getcar()->asString()->get();
+                std::string name = *rv->asCons()->nthcar(1)->asString();
+                std::string message = *rv->asCons()->nthcar(2)->asString();
                 cout << "[" << name << "] " << message << endl;
                 delete rv;
             }

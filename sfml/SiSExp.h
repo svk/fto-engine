@@ -97,6 +97,7 @@ namespace SiSExp {
         public:
             explicit PodType(T data) : SExp(X), data ( data ) {}
             T get(void) const { return data; }
+            operator T(void) { return data; }
     };
 
     class Int : public PodType<int,TYPE_INT> {
@@ -210,6 +211,35 @@ namespace SiSExp {
             bool empty(void) const;
             void feed(char);
             void end(void);
+    };
+
+    class List {
+        private:
+            std::vector<SExp*> list;
+            
+        public:
+            List(void) : list() {
+            }
+
+            ~List(void) {
+                for(std::vector<SExp*>::iterator i = list.begin(); i != list.end(); i++) {
+                    delete *i;
+                }
+            }
+
+            Cons *make(void) {
+                Cons *rv = 0;
+                for(std::vector<SExp*>::reverse_iterator i = list.rbegin(); i != list.rend(); i++) {
+                    rv = new Cons( *i, rv );
+                }
+                list.clear();
+                return rv;
+            }
+
+            List& operator()(SExp* val) {
+                list.push_back( val );
+                return *this;
+            }
     };
 
     SExpParser *makeSExpParser(char);
