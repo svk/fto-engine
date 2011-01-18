@@ -9,77 +9,57 @@
 #include <cstring>
 #include <cstdio>
 
-struct LabelledSocket;
-
-class Broadcaster {
-    private:
-        std::vector<LabelledSocket*>& list;
-
-    public:
-        Broadcaster( std::vector<LabelledSocket*>& list ) :
-            list ( list )
-        {
-        }
-
-        void sendChatMessage(const std::string& username, const std::string& message);
-};
-
 struct LabelledSocket : public Sise::ConsSocket {
     std::string name;
-    Broadcaster& broadcaster;
     std::vector<LabelledSocket*>& list;
 
-    LabelledSocket(std::string name, Sise::RawSocket r, Broadcaster& broadcaster, std::vector<LabelledSocket*>& list ) :
+    LabelledSocket(std::string name, Sise::RawSocket r, std::vector<LabelledSocket*>& list ) :
         Sise::ConsSocket( r ),
         name ( name ),
-        broadcaster( broadcaster ),
         list ( list )
     {
-        using namespace std;
         list.push_back( this );
     }
 
     ~LabelledSocket(void) {
-        using namespace std;
         list.erase( remove( list.begin(), list.end(), this ), list.end() );
     }
 
     void handle( const std::string& event,  Sise::SExp* data ) {
         if( event == "chat-message" ) {
-            broadcaster.sendChatMessage( name, data->asString()->get() );
+            sendChatMessage( name, data->asString()->get() );
         } else if( event == "nick-change" ) {
             name = data->asString()->get();
         }
     }
+
+    void sendChatMessage(const std::string& username, const std::string& message) {
+        using namespace Sise;
+        SExp *bc = List()( new Symbol( "chat-message" ) )
+                         ( new String( username ) )
+                         ( new String( message ) )
+                   .make();
+        for(std::vector<LabelledSocket*>::iterator i = list.begin(); i != list.end(); i++) {
+            outputSExp( bc, (*i)->out() );
+        }
+        delete bc;
+    }
 };
 
-void Broadcaster::sendChatMessage(const std::string& username, const std::string& message) {
-    using namespace Sise;
-    SExp *bc = List()( new Symbol( "chat-message" ) )
-                     ( new String( username ) )
-                     ( new String( message ) )
-               .make();
-    using namespace std;
-    for(std::vector<LabelledSocket*>::iterator i = list.begin(); i != list.end(); i++) {
-        outputSExp( bc, (*i)->out() );
-    }
-    delete bc;
-}
 
 
 
 struct MyGreeter : public Sise::SocketGreeter {
     private:
         std::vector<LabelledSocket*>& list;
-        Broadcaster broadcaster;
 
     public:
-        MyGreeter(std::vector<LabelledSocket*>& list) : list ( list ), broadcaster( list )  {}
+        MyGreeter(std::vector<LabelledSocket*>& list) : list ( list ) {}
 
         Sise::Socket* greet(Sise::RawSocket rs, struct sockaddr_storage* foo, socklen_t bar) {
             char buffer[1024];
             snprintf( buffer, sizeof buffer, "user%d", list.size() + 1 );
-            LabelledSocket *rv = new LabelledSocket( buffer, rs, broadcaster, list );
+            LabelledSocket *rv = new LabelledSocket( buffer, rs, list );
             return rv;
         }
 };
