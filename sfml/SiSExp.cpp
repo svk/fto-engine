@@ -394,4 +394,16 @@ void SExpStreamParser::end(void) {
     }
 }
 
+SExp* Cons::nthcar(int n) {
+    return nthcdr(n)->asCons()->getcar();
+}
+
+SExp* Cons::nthcdr(int n) {
+    assert( n >= 0 );
+    if( n == 0 ) return static_cast<SExp*>(this);
+    if( n == 1 ) return cdrPtr;
+    Cons *c = cdrPtr->asCons();
+    return c->nthcdr( n - 1 );
+}
+
 };

@@ -83,6 +83,9 @@ namespace SiSExp {
             void setcar(SExp*);
             void setcdr(SExp*);
 
+            SExp *nthcar(int);
+            SExp *nthcdr(int);
+
             void output(std::ostream&);
     };
 
