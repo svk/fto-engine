@@ -384,6 +384,7 @@ void SExpStreamParser::feed(char ch) {
 void outputSExp(SExp* sexp, std::ostream& os) {
     if( sexp ) {
         sexp->output( os );
+        os.put( ' ' );
     } else {
         os.put( '(' );
         os.put( ')' );
@@ -591,7 +592,6 @@ void SocketManager::pump(int ms, SocketSet* ready) {
         if( fatalParseError ||
             i->second->hasFatalError() ) {
             using namespace std;
-            cerr << "fatal (parse?) error oops" << endl;
             WatchedMap::iterator j = i;
             i++;
             Socket *deletable = j->second;
@@ -767,6 +767,45 @@ void ConsSocketManager::manage(int ms) {
     for(SocketSet::iterator i = socks.begin(); i != socks.end(); i++) {
         dynamic_cast<ConsSocket*>((*i))->pump();
     }
+}
+
+std::string getAddressString( struct sockaddr_storage *st, socklen_t sz ) {
+    char buffer[512];
+    switch( st->ss_family ) {
+        case AF_INET:
+            {
+                struct sockaddr_in *in = reinterpret_cast<struct sockaddr_in*>( st );
+                if( sz < sizeof *in ) break;
+                inet_ntop( st->ss_family, &in->sin_addr, buffer, sizeof buffer );
+                return buffer;
+            }
+        case AF_INET6:
+            {
+                struct sockaddr_in6 *in = reinterpret_cast<struct sockaddr_in6*>( st );
+                if( sz < sizeof *in ) break;
+                inet_ntop( st->ss_family, &in->sin6_addr, buffer, sizeof buffer );
+                return buffer;
+            }
+    }
+    throw std::runtime_error( "unknown or corrupt sockaddr_storage" );
+}
+
+int getPort( struct sockaddr_storage *st, socklen_t sz ) {
+    switch( st->ss_family ) {
+        case AF_INET:
+            {
+                struct sockaddr_in *in = reinterpret_cast<struct sockaddr_in*>( st );
+                if( sz < sizeof *in ) break;
+                return ntohs( in->sin_port );
+            }
+        case AF_INET6:
+            {
+                struct sockaddr_in6 *in = reinterpret_cast<struct sockaddr_in6*>( st );
+                if( sz < sizeof *in ) break;
+                return ntohs( in->sin6_port );
+            }
+    }
+    throw std::runtime_error( "unknown or corrupt sockaddr_storage" );
 }
 
 }
