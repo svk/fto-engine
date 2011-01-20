@@ -10,19 +10,25 @@
 #include <cstdio>
 
 struct LabelledSocket : public Sise::ConsSocket {
+    std::string netname;
     std::string name;
     std::vector<LabelledSocket*>& list;
 
     LabelledSocket(std::string name, Sise::RawSocket r, std::vector<LabelledSocket*>& list ) :
         Sise::ConsSocket( r ),
+        netname( name ),
         name ( name ),
         list ( list )
     {
+        using namespace std;
         list.push_back( this );
+        cerr << "[connect] " << netname << " as " << this << endl;
     }
 
     ~LabelledSocket(void) {
+        using namespace std;
         list.erase( remove( list.begin(), list.end(), this ), list.end() );
+        cerr << "[disconnect] " << netname << " as " << this << endl;
     }
 
     void handle( const std::string& event,  Sise::SExp* data ) {
@@ -47,8 +53,6 @@ struct LabelledSocket : public Sise::ConsSocket {
 };
 
 
-
-
 struct MyGreeter : public Sise::SocketGreeter {
     private:
         std::vector<LabelledSocket*>& list;
@@ -57,9 +61,10 @@ struct MyGreeter : public Sise::SocketGreeter {
         MyGreeter(std::vector<LabelledSocket*>& list) : list ( list ) {}
 
         Sise::Socket* greet(Sise::RawSocket rs, struct sockaddr_storage* foo, socklen_t bar) {
+            std::ostringstream oss;
             char buffer[1024];
-            snprintf( buffer, sizeof buffer, "user%d", list.size() + 1 );
-            LabelledSocket *rv = new LabelledSocket( buffer, rs, list );
+            oss << Sise::getAddressString( foo, bar ) << ":" << Sise::getPort( foo, bar );
+            LabelledSocket *rv = new LabelledSocket( oss.str(), rs, list );
             return rv;
         }
 };

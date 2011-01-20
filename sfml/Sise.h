@@ -378,6 +378,9 @@ namespace Sise {
         public:
             void manage(int);
     };
+
+    std::string getAddressString( struct sockaddr_storage*, socklen_t );
+    int getPort( struct sockaddr_storage*, socklen_t );
 };
 
 #endif
