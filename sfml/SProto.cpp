@@ -64,36 +64,38 @@ void RemoteClient::handle( const std::string& cmd, Sise::SExp *arg ) {
     server.handle( this, cmd, arg );
 }
 
-void Server::handle( RemoteClient *cli, const std::string& cmd, Sise::SExp *arg ) {
+bool AdminSubserver::handle( RemoteClient *cli, const std::string& cmd, Sise::SExp *arg ) {
     using namespace Sise;
-    SubServer *subserv = getSubServer( cmd );
-    if( subserv ) {
-        Cons *args = asProperCons( arg );
-        Symbol *cmdp = asSymbol( args->getcar() );
-        SExp *argp = args->getcdr();
-        subserv->handle( cli, *cmdp, argp );
-        return;
+    if( !cli->hasUsername() || !server.getUsers().isAdministrator( cli->getUsername() ) ) {
+        cli->delsendResponse( cmd, "permission-denied" );
+        return true;
     }
-    if( cmd == "hello" ) {
+    if( cmd == "shutdown" ) {
+        server.stopServer();
+    } else if( cmd == "save" ) {
+        server.save();
+    } else if( cmd == "change-any-password" ) {
         Cons *args = asProperCons( arg );
-        std::string protoName = *asSymbol( args->nthcar(0) );
-        int majorVersion = *asInt( args->nthcar(1) );
-        std::string clientName = *asString( args->nthcar(2) );
-        if( cli->getState() != RemoteClient::ST_SILENT ||
-            protoName != PROTOCOL_ID ||
-            majorVersion != PROTOCOL_VERSION ) {
-            cli->close();
-        } else {
-            cli->setState( RemoteClient::ST_VERSION_OK );
-            cli->delsendPacket( "hello",
-                List()( new String( PROTOCOL_SERVER_ID ) )
-                .make() );
+        std::string username = *asString( args->nthcar(0) );
+        std::string password = *asString( args->nthcar(1) );
+        try {
+            server.getUsers()[username].passwordhash = makePasswordHash( username, password );
+            cli->delsendResponse( "change-any-password", "ok" );
         }
-    } else if( cli->getState() == RemoteClient::ST_SILENT ) {
-        cli->close();
-    } if( cmd == "login-request" ) {
+        catch( NoSuchUserException& e ) {
+            cli->delsendResponse( "change-any-password", "no such user" );
+        }
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool UsersInfo::handle( RemoteClient *cli, const std::string& cmd, Sise::SExp *arg ) {
+    using namespace Sise;
+    if( cmd == "login-request" ) {
         Cons *args = asProperCons( arg );
-        std::string challenge = makeChallenge();
+        std::string challenge = server.makeChallenge();
         cli->setLoggingIn( *asString( args->nthcar(0) ),
                            challenge );
         cli->delsendPacket( "login-challenge",
@@ -151,7 +153,7 @@ void Server::handle( RemoteClient *cli, const std::string& cmd, Sise::SExp *arg 
         }
     } else if( cmd == "change-password" ) {
         if( !cli->hasUsername() ) {
-            cli->delsendPacket( "permission-denied", 0 );
+            cli->delsendResponse( cmd, "permission-denied" );
         } else {
             Cons *args = asProperCons( arg );
             std::string username = cli->getUsername();
@@ -159,9 +161,15 @@ void Server::handle( RemoteClient *cli, const std::string& cmd, Sise::SExp *arg 
             users[username].passwordhash = makePasswordHash( username, password );
             cli->delsendPacket( "change-password-ok", 0 );
         }
-    } else if( cmd == "goodbye" ) {
-        cli->close();
-    } else if( cmd == "debug-hash" ) {
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool DebugSubserver::handle( RemoteClient *cli, const std::string& cmd, Sise::SExp *arg ) {
+    using namespace Sise;
+    if( cmd == "hash" ) {
         Cons *args = asProperCons( arg );
         std::string data = *asString( args->nthcar(0) );
         cli->delsendPacket( "debug-reply",
@@ -170,14 +178,63 @@ void Server::handle( RemoteClient *cli, const std::string& cmd, Sise::SExp *arg 
     } else if( cmd == "who-am-i" ) {
         cli->delsendPacket( "debug-reply",
                        List()( new String( cli->getUsername() ) )
+                             ( new String( cli->getNetId() ) )
                        .make() );
-    } else if( cmd == "shutdown" ) {
-        if( !users.isAdministrator( cli->getUsername() ) ) {
-            cli->delsendPacket( "permission-denied", 0 );
-        } else {
-            stopServer();
-        }
+    } else if( cmd == "password-hash" ) {
+        // this is here for convenience in case the admin password is forgotten..
+        std::string username = *asString( asProperCons(arg)->nthcar(0) );
+        std::string password = *asString( asProperCons(arg)->nthcar(1) );
+        cli->delsend( List()( new Symbol( "response" ) )
+                            ( new Symbol( "password-hash" ) )
+                            ( new String( makePasswordHash( username, password ) ) )
+                      .make() );
+    } else {
+        return false;
     }
+    return true;
+}
+
+void Server::handle( RemoteClient *cli, const std::string& cmd, Sise::SExp *arg ) {
+    using namespace Sise;
+    if( cmd == "hello" ) {
+        Cons *args = asProperCons( arg );
+        std::string protoName = *asSymbol( args->nthcar(0) );
+        int majorVersion = *asInt( args->nthcar(1) );
+        std::string clientName = *asString( args->nthcar(2) );
+        if( cli->getState() != RemoteClient::ST_SILENT ||
+            protoName != PROTOCOL_ID ||
+            majorVersion != PROTOCOL_VERSION ) {
+            cli->close();
+        } else {
+            cli->setState( RemoteClient::ST_VERSION_OK );
+            cli->delsendPacket( "hello",
+                List()( new String( PROTOCOL_SERVER_ID ) )
+                .make() );
+        }
+    } else if( cli->getState() == RemoteClient::ST_SILENT ) {
+        cli->close();
+    } else if( getSubServer( cmd ) ) { 
+        SubServer *subserv = getSubServer( cmd );
+        Cons *args = asProperCons( arg );
+        Symbol *cmdp = asSymbol( args->getcar() );
+        SExp *argp = args->getcdr();
+        if( !subserv->handle( cli, *cmdp, argp ) ) {
+            cli->delsendResponse( cmd, "bad-command" );
+        }
+        return;
+    } else if( cmd == "goodbye" ) {
+        cli->close();
+    } else {
+        cli->delsendResponse( cmd, "bad-command" );
+    }
+}
+
+void SProtoSocket::delsendResponse( const std::string& name, const std::string& content ) {
+    using namespace Sise;
+    delsend( List()( new Symbol( "response" ) )
+                   ( new Symbol( name ) )
+                   ( new String( content ) )
+             .make() );
 }
 
 void SProtoSocket::delsendPacket( const std::string& name, Sise::SExp* cdr ) {
@@ -204,12 +261,20 @@ void Server::setSubServer(const std::string& name, SubServer* subserv) {
     subservers[ name ] = subserv;
 }
 
+SubServer::SubServer(const std::string& name, Server& server) :
+    server ( server )
+{
+    server.setSubServer( name, this );
+}
+
 Server::Server(void) :
     ConsSocketManager (),
     rclients (),
     subservers (),
     running ( true ),
-    users ()
+    users ( *this ),
+    ssDebug ( *this ),
+    ssAdmin ( *this )
 {
     setGreeter( this );
 
@@ -259,10 +324,14 @@ void Server::stopServer(void) {
     running = false;
 }
 
+void Server::save(void) {
+    users.save();
+}
+
 Server::~Server(void) {
     unwatchAll();
 
-    users.save();
+    save();
 }
 
 void Client::setCore(ClientCore *core) {
@@ -297,9 +366,10 @@ void Client::handle( const std::string& cmd, Sise::SExp *arg) {
         assert( idState == IDST_IDENTIFYING );
         std::string response = makeChallengeResponse( username, passwordhash, data );
 
-        delsendPacket( "login-response",
-                       List()( new String( response ) )
-                       .make() );
+        delsend( List()( new Symbol( "user" ) )
+                       ( new Symbol( "login-response" ) )
+                       ( new String( response ) )
+                 .make() );
     } else if( cmd == "login-ok" ) {
         Cons *args = asProperCons( arg );
         std::string data = *asString( args->nthcar(0) );
@@ -315,9 +385,10 @@ void Client::identify(const std::string& username_, const std::string& password)
     using namespace Sise;
     username = username_;
     passwordhash = makePasswordHash( username, password );
-    delsendPacket( "login-request",
-                   List()( new String( username ) )
-                   .make() );
+    delsend( List()( new Symbol( "user" ) )
+                   ( new Symbol( "login-request" ) )
+                   ( new String( username ) )
+             .make() );
     idState = IDST_IDENTIFYING;
 }
 

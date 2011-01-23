@@ -23,6 +23,7 @@ namespace SProto {
 
             void delsend( Sise::SExp* );
             void delsendPacket( const std::string&, Sise::SExp* );
+            void delsendResponse( const std::string&, const std::string& );
     };
 
     class ClientCore {
@@ -56,8 +57,13 @@ namespace SProto {
     class Server;
 
     class SubServer {
+        protected:
+            Server& server;
         public:
-            virtual void handle( RemoteClient*, const std::string&, Sise::SExp* ) = 0;
+            SubServer(const std::string&, Server&);
+            virtual ~SubServer(void) {};
+
+            virtual bool handle( RemoteClient*, const std::string&, Sise::SExp* ) = 0;
     };
 
     class RemoteClient : public SProtoSocket {
@@ -143,7 +149,8 @@ namespace SProto {
             void restore(void);
     };
 
-    class UsersInfo : public Persistable {
+    class UsersInfo : public Persistable,
+                      public SubServer {
         public:
             struct UserInfo {
                 std::string passwordhash;
@@ -161,8 +168,9 @@ namespace SProto {
             UserInfo& operator[](const std::string&);
             const UserInfo& operator[](const std::string&) const;
 
-            UsersInfo(void) :
-                Persistable( "./persist/users.lisp" )
+            UsersInfo(Server& server) :
+                Persistable( "./persist/users.lisp" ),
+                SubServer( "user", server )
             {}
 
             Sise::SExp* toSexp(void) const;
@@ -173,11 +181,28 @@ namespace SProto {
             std::string registerUsername( const std::string&, const std::string& );
 
             bool isAdministrator(const std::string&) const;
+
+            bool handle( RemoteClient*, const std::string&, Sise::SExp* );
+    };
+
+    class Server;
+
+    class AdminSubserver : public SubServer {
+        public:
+            AdminSubserver(Server& server) : SubServer("admin",server) {}
+
+            bool handle( RemoteClient*, const std::string&, Sise::SExp* );
+    };
+
+    class DebugSubserver : public SubServer {
+        public:
+            DebugSubserver(Server& server) : SubServer("debug",server) {}
+
+            bool handle( RemoteClient*, const std::string&, Sise::SExp* );
     };
 
     class Server : public Sise::ConsSocketManager,
-                   public Sise::SocketGreeter,
-                   public SubServer {
+                   public Sise::SocketGreeter {
         private:
             std::vector<RemoteClient*> rclients;
             typedef std::map<std::string,SubServer*> SubserverMap;
@@ -186,6 +211,11 @@ namespace SProto {
             bool running;
 
             UsersInfo users;
+
+            // not all the subservers are internally owned like this;
+            // it's fine to add more (games)
+            DebugSubserver ssDebug;
+            AdminSubserver ssAdmin;
 
         public:
             Server(void);
@@ -208,6 +238,8 @@ namespace SProto {
             const UsersInfo& getUsers(void) const { return users; }
 
             void handle( RemoteClient*, const std::string&, Sise::SExp* );
+
+            void save(void);
     };
 
     struct NoSuchUserException : public std::runtime_error {
