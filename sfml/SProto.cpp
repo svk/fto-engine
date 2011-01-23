@@ -8,6 +8,8 @@
 #include <cctype>
 #include <algorithm>
 
+#include <iomanip>
+
 #include <openssl/sha.h>
 
 #define CHALLENGE_SALT "123456789abcdefghi"
@@ -25,7 +27,6 @@ RemoteClient::RemoteClient(Sise::RawSocket sock,
     netId ( netId ),
     username ( "" ),
     subserver ( 0 ),
-    closing ( false ),
     rclients ( rclients )
 {
     rclients.push_back( this );
@@ -139,6 +140,12 @@ void RemoteClient::handle( const std::string& cmd, Sise::SExp *arg ) {
         }
     } else if( cmd == "goodbye" ) {
         close();
+    } else if( cmd == "debug-hash" ) {
+        Cons *args = arg->asCons();
+        std::string data = *args->nthcar(0)->asString();
+        delsendPacket( "debug-reply",
+                       List()( new String( getHash( data ) ) )
+                       .make() );;;;
     }
 }
 
@@ -195,9 +202,9 @@ std::string getHash(const std::string& data) {
     return oss.str();
 }
 
-std::string Server::makeChallenge(void) {
+std::string Server::makeChallenge(void) {
     std::ostringstream oss;
-    for(int i=0;i<64;i++) {
+    for(int i=0;i<64;i++) {
         oss << (char) ('a' + rand()%26);
     }
     return oss.str();
@@ -205,10 +212,10 @@ std::string Server::makeChallenge(void) {
 
 std::string Server::usernameAvailable(const std::string& username) {
     if( username.length() < 3 ) return "illegal";
-    for(int i=0;i<username.length();i++) {
+    for(int i=0;i<(int)username.length();i++) {
         if( !isalnum( username[i] ) ) return "illegal";
     }
-    if( find( users.begin(), users.end(), username ) != users.end() ) {
+    if( users.find( username ) != users.end() ) {
         return "taken";
     }
     return "ok";
@@ -226,7 +233,7 @@ std::string makePasswordHash( const std::string& username, const std::string& pa
     return getHash( oss.str() );
 }
 
-std::string registerUsername( const std::string& username, const std::string& password ) {
+std::string Server::registerUsername( const std::string& username, const std::string& password ) {
     std::string reason = usernameAvailable( username );
     if( reason == "ok" ) {
         users[ username ] = makePasswordHash( username, password );
@@ -234,13 +241,13 @@ std::string registerUsername( const std::string& username, const std::string& pa
     return reason;
 }
 
-std::string Server::solveChallenge( const std::string& username, const std::string& password ) {
+std::string Server::solveChallenge( const std::string& username, const std::string& challenge ) {
     UsersMap::iterator i = users.find( username );
     if( i == users.end() ) {
         throw NoSuchUserException();
     }
     std::string passwordhash = i->second;
-    return makeChallenge( username, passwordhash, challenge );
+    return makeChallengeResponse( username, passwordhash, challenge );
 }
 
 SProtoSocket::SProtoSocket( Sise::RawSocket dob ) :

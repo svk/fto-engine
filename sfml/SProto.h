@@ -3,6 +3,9 @@
 
 #include "Sise.h"
 
+#include <stdexcept>
+#include <string>
+
 // Sise protocol? Slow-game protocol?
 
 namespace SProto {
@@ -37,7 +40,7 @@ namespace SProto {
             virtual void leaving( RemoteClient* ) {}
     };
 
-    class RemoteClient : public Sise::ConsSocket {
+    class RemoteClient : public SProtoSocket {
         private:
             enum State {
                 ST_SILENT,
@@ -89,7 +92,9 @@ namespace SProto {
             std::string registerUsername( const std::string&, const std::string& );
     };
 
-    struct NoSuchUserException;
+    struct NoSuchUserException : public std::runtime_error {
+        NoSuchUserException(void) : std::runtime_error( "no such user" ) {}
+    };
     
     std::string getHash(const std::string&);
     std::string makeChallengeResponse( const std::string&, const std::string&, const std::string&);
