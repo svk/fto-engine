@@ -28,18 +28,30 @@ RemoteClient::RemoteClient(Sise::RawSocket sock,
     state ( ST_SILENT ),
     netId ( netId ),
     username ( "" ),
-    subserver ( 0 ),
     rclients ( rclients ),
     loggingIn ( false )
 {
     rclients.push_back( this );
 }
 
+void RemoteClient::setState(RemoteClient::State state_) {
+    state = state_;
+}
+
+RemoteClient::State RemoteClient::getState(void) const {
+    return state;
+}
+
+std::string RemoteClient::getUsername(void) const {
+    return username;
+}
+
+bool RemoteClient::hasUsername(void) const {
+    return username != "";
+}
+
 RemoteClient::~RemoteClient(void) {
     using namespace std;
-    if( subserver ) {
-        subserver->leaving( this );
-    }
     rclients.erase( remove( rclients.begin(), rclients.end(), this ) );
 }
 
@@ -48,128 +60,114 @@ void SProtoSocket::close(void) {
     gracefulShutdown();
 }
 
-void RemoteClient::leave(void) {
-    if( subserver ) {
-        subserver->leaving( this );
-        subserver = 0;
-    }
+void RemoteClient::handle( const std::string& cmd, Sise::SExp *arg ) {
+    server.handle( this, cmd, arg );
 }
 
-void RemoteClient::handle( const std::string& cmd, Sise::SExp *arg ) {
+void Server::handle( RemoteClient *cli, const std::string& cmd, Sise::SExp *arg ) {
     using namespace Sise;
-    const bool strictMode = true;
-    if( subserver ) {
-        subserver->handle( this, cmd, arg );
-        return;
-    }
     if( cmd == "hello" ) {
         Cons *args = asProperCons( arg );
         std::string protoName = *asSymbol( args->nthcar(0) );
         int majorVersion = *asInt( args->nthcar(1) );
         std::string clientName = *asString( args->nthcar(2) );
-        if( state != ST_SILENT ||
+        if( cli->getState() != RemoteClient::ST_SILENT ||
             protoName != PROTOCOL_ID ||
             majorVersion != PROTOCOL_VERSION ) {
-            close();
+            cli->close();
         } else {
-            state = ST_VERSION_OK;
-            delsendPacket( "hello",
+            cli->setState( RemoteClient::ST_VERSION_OK );
+            cli->delsendPacket( "hello",
                 List()( new String( PROTOCOL_SERVER_ID ) )
                 .make() );
         }
-    } else if( state == ST_SILENT && strictMode ) {
-        close();
+    } else if( cli->getState() == RemoteClient::ST_SILENT ) {
+        cli->close();
     } if( cmd == "login-request" ) {
         Cons *args = asProperCons( arg );
-        loggingIn = true;
-        desiredUsername = *asString( args->nthcar(0) );
-        loginChallenge = server.makeChallenge();
-        delsendPacket( "login-challenge",
-                       List()( new String( desiredUsername ) )
-                             ( new String( loginChallenge ) )
+        std::string challenge = makeChallenge();
+        cli->setLoggingIn( *asString( args->nthcar(0) ),
+                           challenge );
+        cli->delsendPacket( "login-challenge",
+                       List()( new String( *asString( args->nthcar(0) ) ) )
+                             ( new String( challenge ) )
                        .make() );
     } else if( cmd == "check-username" ) {
         Cons *args = asProperCons( arg );
         std::string uname = *asString( args->nthcar(0) );
-        delsendPacket( "check-username-response",
+        cli->delsendPacket( "check-username-response",
                        List()( new String(uname) )
-                             ( new String( server.usernameAvailable(uname) ) )
+                             ( new String( usernameAvailable(uname) ) )
                        .make() );
     } else if( cmd == "register" ) {
         Cons *args = asProperCons( arg );
         std::string uname = *asString( args->nthcar(0) );
         std::string pword = *asString( args->nthcar(1) );
-        std::string failureReason = server.registerUsername( uname, pword );
+        std::string failureReason = registerUsername( uname, pword );
         if( failureReason != "ok" ) {
-            delsendPacket( "register-failure",
+            cli->delsendPacket( "register-failure",
                            List()( new String( failureReason ))
                            .make() );
         } else {
-            delsendPacket( "register-ok",
+            cli->delsendPacket( "register-ok",
                            List()( new String( uname ) )
                            .make() );
         }
 
     } else if( cmd == "login-response" ) {
         Cons *args = asProperCons( arg );
-        if( !loggingIn ) {
-            close();
+        std::string desiredUsername, challenge;
+        if( !cli->getLoggingIn( desiredUsername, challenge ) ) {
+            cli->close();
         } else {
-            loggingIn = false;
+            cli->setNotLoggingIn();
             std::string response = *asString( args->nthcar(0) );
             try {
-                if( response == server.solveChallenge( desiredUsername,
-                                                       loginChallenge ) ) {
-                    username = desiredUsername;
-                    delsendPacket( "login-ok",
+                if( response == solveChallenge( desiredUsername,
+                                                       challenge ) ) {
+                    cli->setUsername( desiredUsername );
+                    cli->delsendPacket( "login-ok",
                                    List()( new String( desiredUsername ) )
                                    .make() );
                 } else {
-                    delsendPacket( "login-failure",
+                    cli->delsendPacket( "login-failure",
                                    List()( new String( "login failed" ))
                                    .make() );
                 }
             }
             catch( NoSuchUserException& e ) {
-                delsendPacket( "login-failure",
+                cli->delsendPacket( "login-failure",
                                List()( new String( "login failed" ))
                                .make() );
             }
         }
-    } else if( cmd == "select-server" ) {
-        Cons *args = asProperCons( arg );
-        std::string gameName = *asSymbol( args->nthcar(0) );
-        subserver = server.getSubServer( gameName );
-        if( !subserver || !subserver->entering( this ) ) {
-            subserver = 0;
-            close();
-        }
     } else if( cmd == "change-password" ) {
-        if( username == "" ) {
-            delsendPacket( "permission-denied", 0 );
+        if( !cli->hasUsername() ) {
+            cli->delsendPacket( "permission-denied", 0 );
         } else {
             Cons *args = asProperCons( arg );
+            std::string username = cli->getUsername();
             std::string password = *asString( args->nthcar(0) );
-            server.getUsers()[username].passwordhash = makePasswordHash( username, password );
-            delsendPacket( "change-password-ok", 0 );
+            users[username].passwordhash = makePasswordHash( username, password );
+            cli->delsendPacket( "change-password-ok", 0 );
         }
     } else if( cmd == "goodbye" ) {
-        close();
+        cli->close();
     } else if( cmd == "debug-hash" ) {
         Cons *args = asProperCons( arg );
         std::string data = *asString( args->nthcar(0) );
-        delsendPacket( "debug-reply",
+        cli->delsendPacket( "debug-reply",
                        List()( new String( getHash( data ) ) )
                        .make() );
     } else if( cmd == "who-am-i" ) {
-        delsendPacket( "debug-reply",
-                       List()( new String( username ) )
+        cli->delsendPacket( "debug-reply",
+                       List()( new String( cli->getUsername() ) )
                        .make() );
     } else if( cmd == "shutdown" ) {
-        if( !server.getUsers().isAdministrator( username ) ) {
-            delsendPacket( "permission-denied", 0 );
+        if( !users.isAdministrator( cli->getUsername() ) ) {
+            cli->delsendPacket( "permission-denied", 0 );
         } else {
-            server.stopServer();
+            stopServer();
         }
     }
 }

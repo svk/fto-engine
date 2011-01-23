@@ -63,31 +63,53 @@ namespace SProto {
     };
 
     class RemoteClient : public SProtoSocket {
-        private:
+        public:
             enum State {
                 ST_SILENT,
                 ST_VERSION_OK,
             };
+
+        private:
             Server& server;
             State state;
             const std::string netId;
             std::string username;
-            SubServer *subserver;
             std::vector<RemoteClient*>& rclients;
 
             bool loggingIn;
-            std::string desiredUsername, loginChallenge;
+            std::string desiredUsername, challenge;
 
 
         public:
             RemoteClient(Sise::RawSocket,Server&, const std::string&, std::vector<RemoteClient*>&);
             virtual ~RemoteClient(void);
 
+            bool hasUsername(void) const;
+            std::string getUsername(void) const;
+            void setUsername(const std::string& un) { username = un; }
+
+            bool getLoggingIn(std::string& du, std::string& ch) {
+                if( !loggingIn ) return false;
+                du = desiredUsername;
+                ch = challenge;
+                return true;
+            }
+            void setLoggingIn(const std::string& du, const std::string& ch) {
+                loggingIn = true;
+                desiredUsername = du;
+                challenge = ch;
+            }
+            void setNotLoggingIn(void) {
+                loggingIn = false;
+            }
+
+
             const std::string& getNetId(void) const { return netId; }
 
-            void leave(void);
-
             void handle( const std::string&, Sise::SExp* );
+
+            void setState(State);
+            State getState(void) const;
     };
 
     class Persistable {
@@ -185,6 +207,8 @@ namespace SProto {
 
             UsersInfo& getUsers(void) { return users; }
             const UsersInfo& getUsers(void) const { return users; }
+
+            void handle( RemoteClient*, const std::string&, Sise::SExp* );
     };
 
     struct NoSuchUserException : public std::runtime_error {
