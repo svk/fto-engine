@@ -27,6 +27,8 @@ class MyScreen : public SfmlScreen {
                         case sf::Key::B:
                             myColour = sf::Color(0,200,100);
                             break;
+                        default:
+                            break;
                     }
                     myRect.SetColor( myColour );
                     return true;
