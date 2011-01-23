@@ -33,9 +33,9 @@ struct LabelledSocket : public Sise::ConsSocket {
 
     void handle( const std::string& event,  Sise::SExp* data ) {
         if( event == "chat-message" ) {
-            sendChatMessage( name, data->asString()->get() );
+            sendChatMessage( name, asString(data)->get() );
         } else if( event == "nick-change" ) {
-            name = data->asString()->get();
+            name = asString(data)->get();
         }
     }
 
@@ -105,8 +105,8 @@ int main(int argc, char *argv[]) {
             }
             while( !conn->in().empty() ) {
                 SExp *rv = conn->in().pop();
-                std::string name = *rv->asCons()->nthcar(1)->asString();
-                std::string message = *rv->asCons()->nthcar(2)->asString();
+                std::string name = *asString( asProperCons(rv)->nthcar(1));
+                std::string message = *asString( asProperCons(rv)->nthcar(2));
                 cout << "[" << name << "] " << message << endl;
                 delete rv;
             }

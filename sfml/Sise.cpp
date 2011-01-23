@@ -38,28 +38,38 @@ SExp::SExp(Type type) :
 SExp::~SExp(void) {
 }
 
-Int* SExp::asInt(void) {
+Int* asInt(SExp* x) {
     const Type t = TYPE_INT;
-    if( !isType( t ) ) throw SExpTypeError( t, type );
-    return dynamic_cast<Int*>( this );
+    if( !x ) throw UnexpectedNilError();
+    if( !x->isType( t ) ) throw SExpTypeError( t, x->getType() );
+    return dynamic_cast<Int*>( x );
 }
 
-Symbol* SExp::asSymbol(void) {
+Symbol* asSymbol(SExp* x) {
     const Type t = TYPE_SYMBOL;
-    if( !isType( t ) ) throw SExpTypeError( t, type );
-    return dynamic_cast<Symbol*>( this );
+    if( !x ) throw UnexpectedNilError();
+    if( !x->isType( t ) ) throw SExpTypeError( t, x->getType() );
+    return dynamic_cast<Symbol*>( x );
 }
 
-String* SExp::asString(void) {
+String* asString(SExp *x) {
     const Type t = TYPE_STRING;
-    if( !isType( t ) ) throw SExpTypeError( t, type );
-    return dynamic_cast<String*>( this );
+    if( !x ) throw UnexpectedNilError();
+    if( !x->isType( t ) ) throw SExpTypeError( t, x->getType() );
+    return dynamic_cast<String*>( x );
 }
 
-Cons* SExp::asCons(void) {
+Cons* asProperCons(SExp* x) {
+    Cons *rv = asCons( x );
+    if( !rv ) throw UnexpectedNilError();
+    return rv;
+}
+
+Cons* asCons(SExp* x) {
     const Type t = TYPE_CONS;
-    if( !isType( t ) ) throw SExpTypeError( t, type );
-    return dynamic_cast<Cons*>( this );
+    if( !x ) return 0; // nil is a valid cons
+    if( !x->isType( t ) ) throw SExpTypeError( t, x->getType() );
+    return dynamic_cast<Cons*>( x );
 }
 
 bool SExp::isType(Type t) const {
@@ -122,7 +132,7 @@ void Cons::output(std::ostream& os) {
             c = 0;
         } else if( c->cdrPtr->isType( TYPE_CONS ) ){
             os.put( ' ' );
-            c = c->cdrPtr->asCons();
+            c = asCons( c->cdrPtr );
         } else {
             os.put( ' ' );
             os.put( '.' );
@@ -405,10 +415,12 @@ void outputSExp(SExp* sexp, std::ostream& os, bool terminateWithWhitespace) {
 }
 
 SExp *Cons::getcar(void) const {
+    assert( this );
     return carPtr;
 }
 
 SExp *Cons::getcdr(void) const {
+    assert( this );
     return cdrPtr;
 }
 
@@ -424,14 +436,21 @@ void SExpStreamParser::end(void) {
 }
 
 SExp* Cons::nthcar(int n) {
-    return nthcdr(n)->asCons()->getcar();
+    Cons *c = asCons( nthcdr(n) );
+    if( !c ) {
+        throw UnexpectedNilError();
+    }
+    return c->getcar();
 }
 
 SExp* Cons::nthcdr(int n) {
     assert( n >= 0 );
     if( n == 0 ) return static_cast<SExp*>(this);
     if( n == 1 ) return cdrPtr;
-    Cons *c = cdrPtr->asCons();
+    if( !cdrPtr ) {
+        throw UnexpectedNilError();
+    }
+    Cons *c = asCons( cdrPtr );
     return c->nthcdr( n - 1 );
 }
 
@@ -767,8 +786,8 @@ void ConsSocket::pump(void) {
         SExp *sexp = in().pop();
         using namespace std;
         try {
-            Cons *cons = sexp->asCons();
-            Symbol *sym = cons->getcar()->asSymbol();
+            Cons *cons = asCons( sexp );
+            Symbol *sym = asSymbol( cons->getcar() );
             handle( sym->get(), cons->getcdr() );
             delete sexp;
         }

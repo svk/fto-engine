@@ -63,10 +63,10 @@ void RemoteClient::handle( const std::string& cmd, Sise::SExp *arg ) {
         return;
     }
     if( cmd == "hello" ) {
-        Cons *args = arg->asCons();
-        std::string protoName = *args->nthcar(0)->asSymbol();
-        int majorVersion = *args->nthcar(1)->asInt();
-        std::string clientName = *args->nthcar(2)->asString();
+        Cons *args = asProperCons( arg );
+        std::string protoName = *asSymbol( args->nthcar(0) );
+        int majorVersion = *asInt( args->nthcar(1) );
+        std::string clientName = *asString( args->nthcar(2) );
         if( state != ST_SILENT ||
             protoName != PROTOCOL_ID ||
             majorVersion != PROTOCOL_VERSION ) {
@@ -80,25 +80,25 @@ void RemoteClient::handle( const std::string& cmd, Sise::SExp *arg ) {
     } else if( state == ST_SILENT && strictMode ) {
         close();
     } if( cmd == "login-request" ) {
-        Cons *args = arg->asCons();
+        Cons *args = asProperCons( arg );
         loggingIn = true;
-        desiredUsername = *args->nthcar(0)->asString();
+        desiredUsername = *asString( args->nthcar(0) );
         loginChallenge = server.makeChallenge();
         delsendPacket( "login-challenge",
                        List()( new String( desiredUsername ) )
                              ( new String( loginChallenge ) )
                        .make() );
     } else if( cmd == "check-username" ) {
-        Cons *args = arg->asCons();
-        std::string uname = *args->nthcar(0)->asString();
+        Cons *args = asProperCons( arg );
+        std::string uname = *asString( args->nthcar(0) );
         delsendPacket( "check-username-response",
                        List()( new String(uname) )
                              ( new String( server.usernameAvailable(uname) ) )
                        .make() );
     } else if( cmd == "register" ) {
-        Cons *args = arg->asCons();
-        std::string uname = *args->nthcar(0)->asString();
-        std::string pword = *args->nthcar(1)->asString();
+        Cons *args = asProperCons( arg );
+        std::string uname = *asString( args->nthcar(0) );
+        std::string pword = *asString( args->nthcar(1) );
         std::string failureReason = server.registerUsername( uname, pword );
         if( failureReason != "ok" ) {
             delsendPacket( "register-failure",
@@ -111,12 +111,12 @@ void RemoteClient::handle( const std::string& cmd, Sise::SExp *arg ) {
         }
 
     } else if( cmd == "login-response" ) {
-        Cons *args = arg->asCons();
+        Cons *args = asProperCons( arg );
         if( !loggingIn ) {
             close();
         } else {
             loggingIn = false;
-            std::string response = *args->nthcar(0)->asString();
+            std::string response = *asString( args->nthcar(0) );
             try {
                 if( response == server.solveChallenge( desiredUsername,
                                                        loginChallenge ) ) {
@@ -137,8 +137,8 @@ void RemoteClient::handle( const std::string& cmd, Sise::SExp *arg ) {
             }
         }
     } else if( cmd == "select-server" ) {
-        Cons *args = arg->asCons();
-        std::string gameName = *args->nthcar(0)->asSymbol();
+        Cons *args = asProperCons( arg );
+        std::string gameName = *asSymbol( args->nthcar(0) );
         subserver = server.getSubServer( gameName );
         if( !subserver || !subserver->entering( this ) ) {
             subserver = 0;
@@ -147,8 +147,8 @@ void RemoteClient::handle( const std::string& cmd, Sise::SExp *arg ) {
     } else if( cmd == "goodbye" ) {
         close();
     } else if( cmd == "debug-hash" ) {
-        Cons *args = arg->asCons();
-        std::string data = *args->nthcar(0)->asString();
+        Cons *args = asProperCons( arg );
+        std::string data = *asString( args->nthcar(0) );
         delsendPacket( "debug-reply",
                        List()( new String( getHash( data ) ) )
                        .make() );;;;
@@ -294,14 +294,14 @@ Client::Client( Sise::RawSocket sock, ClientCore* core ) :
 void Client::handle( const std::string& cmd, Sise::SExp *arg) {
     using namespace Sise;
     if( cmd == "echo" ) {
-        Cons *args = arg->asCons();
-        std::string data = *args->nthcar(0)->asString();
+        Cons *args = asProperCons( arg );
+        std::string data = *asString( args->nthcar(0) );
         delsendPacket( "echo-reply",
                        List()( new String( data ) )
                        .make() );
     } else if( cmd == "login-challenge" ) {
-        Cons *args = arg->asCons();
-        std::string data = *args->nthcar(0)->asString();
+        Cons *args = asProperCons( arg );
+        std::string data = *asString( args->nthcar(0) );
 
         assert( idState == IDST_IDENTIFYING );
         std::string response = makeChallengeResponse( username, passwordhash, data );
@@ -310,8 +310,8 @@ void Client::handle( const std::string& cmd, Sise::SExp *arg) {
                        List()( new String( response ) )
                        .make() );
     } else if( cmd == "login-ok" ) {
-        Cons *args = arg->asCons();
-        std::string data = *args->nthcar(0)->asString();
+        Cons *args = asProperCons( arg );
+        std::string data = *asString( args->nthcar(0) );
         username = data;
 
         idState = IDST_IDENTIFIED;

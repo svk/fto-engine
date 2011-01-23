@@ -57,6 +57,10 @@ namespace Sise {
         ParseError(std::string s) : SExpInterpretationError(s) {}
     };
 
+    struct UnexpectedNilError : public SExpInterpretationError {
+        UnexpectedNilError(void) : SExpInterpretationError("unexpected NIL") {}
+    };
+
     enum Type {
         TYPE_CONS,
         TYPE_INT,
@@ -89,13 +93,16 @@ namespace Sise {
             virtual ~SExp(void);
 
             bool isType(Type) const;
-            Cons* asCons(void);
-            String* asString(void);
-            Int* asInt(void);
-            Symbol* asSymbol(void);
+            Type getType(void) const { return type; }
 
             virtual void output(std::ostream&) = 0;
     };
+
+    Cons* asCons(SExp*);
+    Cons* asProperCons(SExp*);
+    String* asString(SExp*);
+    Int* asInt(SExp*);
+    Symbol* asSymbol(SExp*);
 
     class Cons : public SExp {
         SExp *carPtr;
