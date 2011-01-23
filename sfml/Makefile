@@ -1,7 +1,9 @@
 CC=g++
 CPPFLAGS=-g `freetype-config --cflags` -Wall
 
-EXECUTABLES=test-hexfml test-coords test-typesetter test-sexp test-sisenet
+LIBS=`freetype-config --libs` -lsfml-system -lsfml-graphics -lsfml-audio -lboost_filesystem
+
+EXECUTABLES=test-hexfml test-coords test-typesetter test-sexp test-sisenet test-sftools
 
 all: $(EXECUTABLES)
 
@@ -10,19 +12,20 @@ clean:
 	rm -f $(EXECUTABLES)
 
 test-sftools: test-sftools.o hexfml.o anisprite.o typesetter.o sftools.o
-	$(CC) $(CPPFLAGS) `freetype-config --libs` -lsfml-system -lsfml-graphics $^ -o $@
+	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
 
 test-hexfml: test-hexfml.o hexfml.o anisprite.o typesetter.o sftools.o HtGo.o
-	$(CC) $(CPPFLAGS) `freetype-config --libs` -lsfml-system -lsfml-graphics -lsfml-audio $^ -o $@
+	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
 
 test-coords: test-coords.o hexfml.o
-	$(CC) $(CPPFLAGS) -lsfml-system -lsfml-graphics $^ -o $@
+	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
 
 test-typesetter: test-typesetter.o typesetter.o
-	$(CC) -lsfml-graphics `freetype-config --libs` $(CPPFLAGS) $^ -o $@
+	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
 
 test-sexp: test-sexp.o Sise.o
-	$(CC) -lsfml-graphics `freetype-config --libs` $(CPPFLAGS) $^ -o $@
+	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
 
 test-sisenet: test-sisenet.o Sise.o
-	$(CC) -lsfml-graphics `freetype-config --libs` $(CPPFLAGS) $^ -o $@
+	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
+

@@ -384,6 +384,11 @@ namespace Sise {
     std::string getAddressString( struct sockaddr_storage*, socklen_t );
     int getPort( struct sockaddr_storage*, socklen_t );
 
+    class NamedSexpHandler {
+        public:
+            virtual void handleNamedSExp(const std::string&, SExp*) = 0;
+    };
+
     struct FileInputError : public std::runtime_error {
         FileInputError(void) :
             std::runtime_error( "file input error" )
@@ -393,6 +398,8 @@ namespace Sise {
 
     SExp * readSExpFromFile(const std::string&);
     bool writeSExpToFile(const std::string&, SExp *);
+
+    void readSExpDir( const std::string&, const std::string&, NamedSexpHandler& );
 };
 
 #endif

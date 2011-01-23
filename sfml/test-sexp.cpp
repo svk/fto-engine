@@ -2,14 +2,24 @@
 
 #include <iostream>
 
+class TestHandler : public Sise::NamedSexpHandler {
+    public:
+        void handleNamedSExp(const std::string& name, Sise::SExp *sexp) {
+            using namespace Sise;
+            using namespace std;
+            cout << name << ": ";
+            outputSExp( sexp, cout );
+            cout << endl;
+        }
+};
+
 int main(int argc, char *argv[]) {
     using namespace Sise;
     using namespace std;
     SExpStreamParser sp;
+    TestHandler handler;
     std::string data;
-    SExp *testy = readSExpFromFile( "./data/motd.lisp" );
-    outputSExp( testy, cout );
-    delete testy;
+    readSExpDir( "./data/", ".lisp", handler );
     while( true ) {
         getline( cin, data );
         for(int i=0;i<(int)data.length();i++) {

@@ -1,5 +1,7 @@
 #include "Sise.h"
 
+#include "boost/filesystem.hpp"
+
 #include <stdexcept>
 #include <cassert>
 
@@ -830,6 +832,29 @@ bool writeSExpToFile(const std::string& filename, SExp *sexp) {
     ofstream os ( filename.c_str(), ios::out );
     outputSExp( sexp, os );
     return os.good();
+}
+
+void readSExpDir( const std::string& dirname, const std::string& ext, NamedSexpHandler& nsh ) {
+    namespace fs = boost::filesystem;
+    fs::path path = fs::system_complete( dirname );
+    if( !fs::exists( path ) || !fs::is_directory( path ) ) {
+        throw std::runtime_error( "readSExpDir called on nonexistent file or non-directory" );
+    }
+    fs::directory_iterator end_iter;
+    for( fs::directory_iterator i ( path ); i != end_iter; i++) {
+        using namespace std;
+        if( fs::is_regular_file( i->status() ) && i->path().extension() == ext ) {
+            try {
+                SExp *rv = readSExpFromFile( i->path().string() );
+                nsh.handleNamedSExp( i->path().filename(), rv );
+                delete rv;
+            }
+            catch( FileInputError& e ) {
+                using namespace std;
+                cerr << "warning: input error on " << i->path() << endl;
+            }
+        }
+    }
 }
 
 }
