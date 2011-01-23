@@ -861,7 +861,7 @@ SExp * readSExpFromFile(const std::string& filename) {
 bool writeSExpToFile(const std::string& filename, SExp *sexp) {
     using namespace std;
     ofstream os ( filename.c_str(), ios::out );
-    outputSExp( sexp, os, false );
+    outputSExp( sexp, os, true );
     return os.good();
 }
 
