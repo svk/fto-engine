@@ -7,6 +7,9 @@ int main(int argc, char *argv[]) {
     using namespace std;
     SExpStreamParser sp;
     std::string data;
+    SExp *testy = readSExpFromFile( "./data/motd.lisp" );
+    outputSExp( testy, cout );
+    delete testy;
     while( true ) {
         getline( cin, data );
         for(int i=0;i<(int)data.length();i++) {
@@ -21,6 +24,7 @@ int main(int argc, char *argv[]) {
                 cout << "()";
             }
             cout << endl;
+            writeSExpToFile( "./data/motd.lisp", rv );
             delete rv;
         }
     }

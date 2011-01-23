@@ -46,6 +46,8 @@
 
 #include <sys/select.h>
 
+#include <fstream>
+
 namespace Sise {
     struct ParseError : public std::runtime_error {
         ParseError(std::string s) : std::runtime_error(s) {}
@@ -381,6 +383,9 @@ namespace Sise {
 
     std::string getAddressString( struct sockaddr_storage*, socklen_t );
     int getPort( struct sockaddr_storage*, socklen_t );
+
+    SExp * readSExpFromFile(const std::string&);
+    void writeSExpToFile(const std::string&, SExp *);
 };
 
 #endif

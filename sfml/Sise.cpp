@@ -808,4 +808,24 @@ int getPort( struct sockaddr_storage *st, socklen_t sz ) {
     throw std::runtime_error( "unknown or corrupt sockaddr_storage" );
 }
 
+SExp * readSExpFromFile(const std::string& filename) {
+    using namespace std;
+    SExpStreamParser streamParser;
+    ifstream is ( filename.c_str(), ios::in );
+    char byte;
+    while( !is.eof() ) {
+        is.read( &byte, 1 );
+        streamParser.feed( byte );
+    }
+    streamParser.end();
+    if( streamParser.empty() ) throw std::runtime_error( "no sexp in file" );
+    return streamParser.pop();
+}
+
+void writeSExpToFile(const std::string& filename, SExp *sexp) {
+    using namespace std;
+    ofstream os ( filename.c_str(), ios::out );
+    outputSExp( sexp, os );
+}
+
 }
