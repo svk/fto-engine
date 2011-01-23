@@ -151,14 +151,17 @@ void RemoteClient::handle( const std::string& cmd, Sise::SExp *arg ) {
         std::string data = *asString( args->nthcar(0) );
         delsendPacket( "debug-reply",
                        List()( new String( getHash( data ) ) )
-                       .make() );;;;
+                       .make() );
     } else if( cmd == "who-am-i" ) {
         delsendPacket( "debug-reply",
                        List()( new String( username ) )
-                       .make() );;;;
+                       .make() );
     } else if( cmd == "shutdown" ) {
-        // TODO verify admin rights
-        server.stopServer();
+        if( !server.getUsers().isAdministrator( username ) ) {
+            delsendPacket( "permission-denied", 0 );
+        } else {
+            server.stopServer();
+        }
     }
 }
 
@@ -190,9 +193,12 @@ Server::Server(void) :
     ConsSocketManager (),
     rclients (),
     subservers (),
-    running ( true )
+    running ( true ),
+    users ()
 {
     setGreeter( this );
+
+    users.restore();
 }
 
 Sise::Socket* Server::greet(Sise::RawSocket sock, struct sockaddr_storage *addr, socklen_t len) {
@@ -216,25 +222,6 @@ std::string getHash(const std::string& data) {
     return oss.str();
 }
 
-std::string Server::makeChallenge(void) {
-    std::ostringstream oss;
-    for(int i=0;i<64;i++) {
-        oss << (char) ('a' + rand()%26);
-    }
-    return oss.str();
-}
-
-std::string Server::usernameAvailable(const std::string& username) {
-    if( username.length() < 3 ) return "illegal";
-    for(int i=0;i<(int)username.length();i++) {
-        if( !isalnum( username[i] ) ) return "illegal";
-    }
-    if( users.find( username ) != users.end() ) {
-        return "taken";
-    }
-    return "ok";
-}
-
 std::string makeChallengeResponse( const std::string& username, const std::string& passwordhash, const std::string& challenge ) {
     std::ostringstream oss;
     oss << CHALLENGE_SALT << username << passwordhash << challenge;
@@ -245,23 +232,6 @@ std::string makePasswordHash( const std::string& username, const std::string& pa
     std::ostringstream oss;
     oss << PASSWORD_SALT << username << password;
     return getHash( oss.str() );
-}
-
-std::string Server::registerUsername( const std::string& username, const std::string& password ) {
-    std::string reason = usernameAvailable( username );
-    if( reason == "ok" ) {
-        users[ username ] = makePasswordHash( username, password );
-    }
-    return reason;
-}
-
-std::string Server::solveChallenge( const std::string& username, const std::string& challenge ) {
-    UsersMap::iterator i = users.find( username );
-    if( i == users.end() ) {
-        throw NoSuchUserException();
-    }
-    std::string passwordhash = i->second;
-    return makeChallengeResponse( username, passwordhash, challenge );
 }
 
 SProtoSocket::SProtoSocket( Sise::RawSocket dob ) :
@@ -276,6 +246,8 @@ void Server::stopServer(void) {
 
 Server::~Server(void) {
     unwatchAll();
+
+    users.save();
 }
 
 void Client::setCore(ClientCore *core) {
@@ -334,6 +306,132 @@ void Client::identify(const std::string& username_, const std::string& password)
     idState = IDST_IDENTIFYING;
 }
 
+std::string Server::makeChallenge(void) {
+    std::ostringstream oss;
+    for(int i=0;i<64;i++) {
+        oss << (char) ('a' + rand()%26);
+    }
+    return oss.str();
+}
 
+std::string Server::usernameAvailable(const std::string& username) {
+    return users.usernameAvailable( username );
+}
+
+std::string Server::registerUsername( const std::string& username, const std::string& password ) {
+    return users.registerUsername( username, password );
+}
+
+std::string Server::solveChallenge( const std::string& username, const std::string& challenge ) {
+    return users.solveChallenge( username, challenge );
+}
+
+std::string UsersInfo::usernameAvailable(const std::string& username) {
+    if( username.length() < 3 ) return "illegal";
+    if( !isalpha( username[0] ) ) return "illegal";
+    for(int i=0;i<(int)username.length();i++) {
+        if( !isalnum( username[i] ) ) return "illegal";
+    }
+    if( users.find( username ) != users.end() ) {
+        return "taken";
+    }
+    return "ok";
+}
+
+std::string UsersInfo::registerUsername( const std::string& username, const std::string& password ) {
+    std::string reason = usernameAvailable( username );
+    if( reason == "ok" ) {
+        users[ username ] = UserInfo( makePasswordHash( username, password ) );
+    }
+    return reason;
+}
+
+std::string UsersInfo::solveChallenge( const std::string& username, const std::string& challenge ) {
+    UsersMap::iterator i = users.find( username );
+    if( i == users.end() ) {
+        throw NoSuchUserException();
+    }
+    std::string passwordhash = i->second.passwordhash;
+    return makeChallengeResponse( username, passwordhash, challenge );
+}
+
+UsersInfo::UserInfo::UserInfo( const std::string& passwordhash, bool admin ) :
+    passwordhash ( passwordhash ),
+    isAdmin ( admin )
+{
+}
+
+Sise::SExp* UsersInfo::toSexp(void) const {
+    using namespace Sise;
+    List l;
+    for(UsersMap::const_iterator i = users.begin(); i != users.end(); i++) {
+        l( List()( new String( i->first ) )
+                 ( new String( i->second.passwordhash ) )
+                 ( new Symbol( i->second.isAdmin ? "admin" : "user" ) )
+           .make() );
+    }
+    return l.make();
+}
+
+void UsersInfo::fromSexp(Sise::SExp* sexp) {
+    using namespace Sise;
+    Cons *l = asCons( sexp );
+    while( l ) {
+        Cons *u = asProperCons( l->getcar() );
+        l = asCons( l->getcdr() );
+
+        std::string username = *asString( u->nthcar(0) );
+        std::string pwhash = *asString( u->nthcar(1) );
+        std::string role = *asSymbol( u->nthcar(2) );
+
+        users[ username ] = UserInfo( pwhash, role == "admin" );
+    }
+}
+
+void Persistable::save(void) const {
+    using namespace Sise;
+    SExp *sexp = toSexp();
+    if( !writeSExpToFile( filename, sexp ) ) {
+        using namespace std;
+        cerr << "warning: persistence failed" << endl;
+    }
+    delete sexp;
+}
+
+void Persistable::restore(void) {
+    using namespace Sise;
+    try {
+        SExp *sexp = readSExpFromFile( filename );
+        fromSexp( sexp );
+        delete sexp;
+    }
+    catch( FileInputError& e ) {
+    }
+}
+
+Persistable::Persistable(const std::string& filename) :
+    filename ( filename )
+{
+}
+UsersInfo::UserInfo& UsersInfo::operator[](const std::string& username) {
+    UsersMap::iterator i = users.find( username );
+    if( i == users.end() ) throw NoSuchUserException();
+    return i->second;
+}
+
+const UsersInfo::UserInfo& UsersInfo::operator[](const std::string& username) const {
+    UsersMap::const_iterator i = users.find( username );
+    if( i == users.end() ) throw NoSuchUserException();
+    return i->second;
+}
+
+bool UsersInfo::isAdministrator(const std::string& username) const {
+    try {
+        return (*this)[username].isAdmin;
+    }
+    catch( NoSuchUserException& e ) {
+        return false;
+    }
+}
 
 };

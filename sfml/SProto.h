@@ -90,6 +90,49 @@ namespace SProto {
             void handle( const std::string&, Sise::SExp* );
     };
 
+    class Persistable {
+        private:
+            std::string filename;
+        public:
+            Persistable(const std::string&);
+            
+            virtual Sise::SExp* toSexp(void) const = 0;
+            virtual void fromSexp(Sise::SExp*) = 0;
+
+            void save(void) const;
+            void restore(void);
+    };
+
+    class UsersInfo : public Persistable {
+        private:
+            struct UserInfo {
+                std::string passwordhash;
+                bool isAdmin;
+
+                UserInfo(void) {}
+                UserInfo(const std::string&, bool = false);
+            };
+            typedef std::map<std::string, UserInfo> UsersMap;
+            UsersMap users;
+
+            UserInfo& operator[](const std::string&);
+            const UserInfo& operator[](const std::string&) const;
+
+        public:
+            UsersInfo(void) :
+                Persistable( "./persist/users.lisp" )
+            {}
+
+            Sise::SExp* toSexp(void) const;
+            void fromSexp(Sise::SExp*);
+
+            std::string usernameAvailable(const std::string&);
+            std::string solveChallenge( const std::string&, const std::string& );
+            std::string registerUsername( const std::string&, const std::string& );
+
+            bool isAdministrator(const std::string&) const;
+    };
+
     class Server : public Sise::ConsSocketManager,
                    public Sise::SocketGreeter {
         private:
@@ -97,10 +140,9 @@ namespace SProto {
             typedef std::map<std::string,SubServer*> SubserverMap;
             SubserverMap subservers;
 
-            typedef std::map<std::string, std::string> UsersMap;
-            UsersMap users; // username -> hashed pw
-
             bool running;
+
+            UsersInfo users;
 
         public:
             Server(void);
@@ -118,6 +160,9 @@ namespace SProto {
             std::string usernameAvailable(const std::string&);
             std::string solveChallenge( const std::string&, const std::string& );
             std::string registerUsername( const std::string&, const std::string& );
+
+            UsersInfo& getUsers(void) { return users; }
+            const UsersInfo& getUsers(void) const { return users; }
     };
 
     struct NoSuchUserException : public std::runtime_error {

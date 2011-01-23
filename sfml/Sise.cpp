@@ -411,6 +411,9 @@ void outputSExp(SExp* sexp, std::ostream& os, bool terminateWithWhitespace) {
     } else {
         os.put( '(' );
         os.put( ')' );
+        if( terminateWithWhitespace ) {
+            os.put( '\n' );
+        }
     }
 }
 
