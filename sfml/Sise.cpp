@@ -276,6 +276,7 @@ SExp* ListParser::get(void) {
             rv = new Cons( *i, rv );
         }
     }
+    elements.clear();
     return rv;
 }
 
@@ -342,6 +343,17 @@ StringParser::StringParser(void) :
 }
 
 ListParser::~ListParser(void) {
+    for(std::list<SExp*>::iterator i = elements.begin(); i != elements.end(); i++) {
+        if( *i ) {
+            delete *i;
+        }
+    }
+    if( terminatingCdr ) {
+        delete terminatingCdr;
+    }
+    if( subparser ) {
+        delete subparser;
+    }
 }
 
 SExp *SExpStreamParser::pop(void) {
@@ -363,7 +375,10 @@ SExpStreamParser::SExpStreamParser(void) :
 SExpStreamParser::~SExpStreamParser(void) {
     // freeing partially parsed stuff on shutdown
     while( !rvs.empty() ) {
-        delete rvs.front();
+        SExp *sexp = rvs.front();
+        if( sexp ) {
+            delete sexp;
+        }
         rvs.pop();
     }
     delete parser;
@@ -629,10 +644,15 @@ void SocketManager::pump(int ms, SocketSet* ready) {
     }
 }
 
-SocketManager::~SocketManager(void) {
+void SocketManager::unwatchAll(void) {
     for(WatchedMap::iterator i = watched.begin(); i != watched.end();i++) {
         delete i->second;
     }
+    watched.clear();
+}
+
+SocketManager::~SocketManager(void) {
+    unwatchAll();
     for(std::vector<RawSocket>::iterator i = listeners.begin(); i != listeners.end();i++) {
         closesocket( *i );
     }

@@ -146,6 +146,8 @@ namespace Sise {
 
     class SExpParser {
         public:
+            virtual ~SExpParser(void) {}
+
             virtual void feedEnd(void) {}
             virtual bool feed(char) = 0;
             virtual bool done(void) const = 0;
@@ -347,6 +349,9 @@ namespace Sise {
             void watch( Socket* );
             void unwatch( Socket*, bool );
 
+        protected:
+            void unwatchAll(void);
+
         public:
             typedef std::set<Socket*> SocketSet;
 
@@ -371,6 +376,7 @@ namespace Sise {
     class ConsSocket : public Socket {
         public:
             ConsSocket( RawSocket x ) : Socket(x) {}
+            virtual ~ConsSocket(void) {}
 
             virtual void handle( const std::string&,  SExp* ) = 0;
             void pump(void);

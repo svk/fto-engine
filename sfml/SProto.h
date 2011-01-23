@@ -15,6 +15,7 @@ namespace SProto {
             bool closing;
         public:
             SProtoSocket( Sise::RawSocket );
+            virtual ~SProtoSocket(void) {}
 
             void close(void);
 
@@ -78,11 +79,17 @@ namespace SProto {
             typedef std::map<std::string, std::string> UsersMap;
             UsersMap users; // username -> hashed pw
 
+            bool running;
+
         public:
             Server(void);
+            ~Server(void);
 
             SubServer* getSubServer(const std::string&);
             void setSubServer(const std::string&, SubServer*);
+
+            void stopServer(void);
+            bool isRunning(void) const { return running; }
 
             Sise::Socket* greet(Sise::RawSocket, struct sockaddr_storage*, socklen_t);
 

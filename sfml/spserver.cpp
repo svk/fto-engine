@@ -3,7 +3,7 @@
 int main(int argc, char *argv[]) {
     SProto::Server server;
     server.addListener( 8990 );
-    while( true ) {
+    while( server.isRunning() ) {
         server.manage( 1000 );
     }
 }

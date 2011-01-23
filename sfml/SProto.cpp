@@ -27,7 +27,8 @@ RemoteClient::RemoteClient(Sise::RawSocket sock,
     netId ( netId ),
     username ( "" ),
     subserver ( 0 ),
-    rclients ( rclients )
+    rclients ( rclients ),
+    loggingIn ( false )
 {
     rclients.push_back( this );
 }
@@ -54,6 +55,7 @@ void RemoteClient::leave(void) {
 
 void RemoteClient::handle( const std::string& cmd, Sise::SExp *arg ) {
     using namespace Sise;
+    const bool strictMode = true;
     if( subserver ) {
         subserver->handle( this, cmd, arg );
         return;
@@ -73,7 +75,9 @@ void RemoteClient::handle( const std::string& cmd, Sise::SExp *arg ) {
                 List()( new String( PROTOCOL_SERVER_ID ) )
                 .make() );
         }
-    } else if( cmd == "login-request" ) {
+    } else if( state == ST_SILENT && strictMode ) {
+        close();
+    } if( cmd == "login-request" ) {
         Cons *args = arg->asCons();
         loggingIn = true;
         desiredUsername = *args->nthcar(0)->asString();
@@ -150,6 +154,9 @@ void RemoteClient::handle( const std::string& cmd, Sise::SExp *arg ) {
         delsendPacket( "debug-reply",
                        List()( new String( username ) )
                        .make() );;;;
+    } else if( cmd == "shutdown" ) {
+        // TODO verify admin rights
+        server.stopServer();
     }
 }
 
@@ -180,7 +187,8 @@ void Server::setSubServer(const std::string& name, SubServer* subserv) {
 Server::Server(void) :
     ConsSocketManager (),
     rclients (),
-    subservers ()
+    subservers (),
+    running ( true )
 {
     setGreeter( this );
 }
@@ -259,5 +267,15 @@ SProtoSocket::SProtoSocket( Sise::RawSocket dob ) :
     closing ( false )
 {
 }
+
+void Server::stopServer(void) {
+    running = false;
+}
+
+Server::~Server(void) {
+    unwatchAll();
+}
+
+
 
 };

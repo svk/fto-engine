@@ -1,7 +1,9 @@
 CC=g++
 CPPFLAGS=-g `freetype-config --cflags` -Wall
 
-LIBS=`freetype-config --libs` -lsfml-system -lsfml-graphics -lsfml-audio -lboost_filesystem -lssl
+SFML_LIBS=-lsfml-system -lsfml-graphics -lsfml-audio
+CORE_LIBS=`freetype-config --libs` -lboost_filesystem -lssl
+LIBS=$(SFML_LIBS) $(CORE_LIBS)
 
 EXECUTABLES=test-hexfml test-coords test-typesetter test-sexp test-sisenet test-sftools spserver
 
@@ -30,4 +32,4 @@ test-sisenet: test-sisenet.o Sise.o
 	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
 
 spserver: Sise.o spserver.o SProto.o
-	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
+	$(CC) $(CPPFLAGS) $(CORE_LIBS) $^ -o $@
