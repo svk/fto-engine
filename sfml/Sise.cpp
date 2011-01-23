@@ -724,27 +724,7 @@ bool OutputBuffer::hasWaiting(void) const {
 }
 
 Socket *Socket::connectTo(const std::string& addr, int port) {
-    struct addrinfo hints, *res;
-
-    char ports[512];
-    snprintf( ports, sizeof ports, "%d", port );
-
-        // TODO error handling
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    getaddrinfo( addr.c_str(), ports, &hints, &res );
-
-    using namespace std;
-
-    RawSocket x = socket( res->ai_family, res->ai_socktype, res->ai_protocol );
-    if( x == INVALID_SOCKET ) {
-        throw std::runtime_error( "unable to create outgoing connection socket" );
-    }
-
-    connect( x, res->ai_addr, res->ai_addrlen );
-
-    return new Socket( x );
+    return connectToAs<Socket>( addr, port );
 }
 
 SocketManager::SocketManager(void) :

@@ -8,6 +8,8 @@
 
 // Sise protocol? Slow-game protocol?
 
+#define SPROTO_STANDARD_PORT 8990
+
 namespace SProto {
 
     class SProtoSocket : public Sise::ConsSocket {
@@ -41,7 +43,9 @@ namespace SProto {
             ClientCore *clientCore;
 
         public:
-            Client(Sise::RawSocket, ClientCore*);
+            Client(Sise::RawSocket, ClientCore* = 0);
+
+            void setCore(ClientCore*);
 
             void identify( const std::string&, const std::string& );
 

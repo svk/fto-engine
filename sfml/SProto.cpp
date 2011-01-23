@@ -278,6 +278,10 @@ Server::~Server(void) {
     unwatchAll();
 }
 
+void Client::setCore(ClientCore *core) {
+    clientCore = core;
+}
+
 Client::Client( Sise::RawSocket sock, ClientCore* core ) :
     SProtoSocket( sock ),
     idState( IDST_UNIDENTIFIED ),
@@ -301,7 +305,7 @@ void Client::handle( const std::string& cmd, Sise::SExp *arg) {
                        .make() );
     } else if( cmd == "login-challenge" ) {
         Cons *args = asProperCons( arg );
-        std::string data = *asString( args->nthcar(0) );
+        std::string data = *asString( args->nthcar(1) );
 
         assert( idState == IDST_IDENTIFYING );
         std::string response = makeChallengeResponse( username, passwordhash, data );
@@ -315,7 +319,7 @@ void Client::handle( const std::string& cmd, Sise::SExp *arg) {
         username = data;
 
         idState = IDST_IDENTIFIED;
-    } if (clientCore) {
+    } else if (clientCore) {
         clientCore->handle( cmd, arg );
     }
 }
