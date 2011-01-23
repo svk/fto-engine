@@ -62,7 +62,6 @@ struct MyGreeter : public Sise::SocketGreeter {
 
         Sise::Socket* greet(Sise::RawSocket rs, struct sockaddr_storage* foo, socklen_t bar) {
             std::ostringstream oss;
-            char buffer[1024];
             oss << Sise::getAddressString( foo, bar ) << ":" << Sise::getPort( foo, bar );
             LabelledSocket *rv = new LabelledSocket( oss.str(), rs, list );
             return rv;
