@@ -146,6 +146,10 @@ void RemoteClient::handle( const std::string& cmd, Sise::SExp *arg ) {
         delsendPacket( "debug-reply",
                        List()( new String( getHash( data ) ) )
                        .make() );;;;
+    } else if( cmd == "who-am-i" ) {
+        delsendPacket( "debug-reply",
+                       List()( new String( username ) )
+                       .make() );;;;
     }
 }
 
