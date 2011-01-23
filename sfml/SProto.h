@@ -103,6 +103,26 @@ namespace SProto {
             void restore(void);
     };
 
+    class DirectoryPersistable : public Sise::NamedSexpHandler {
+        // note -- these names are trusted!
+        // do not allow non-sanitized user input in the file names
+        // the intention is things like game ID numbers
+        private:
+            std::string dirname;
+            std::string extension;
+    
+        protected:
+            void writeNamedSexp(const std::string&, Sise::SExp*);
+            void clearFiles(void);
+
+        public:
+            DirectoryPersistable(const std::string&);
+            
+            virtual void handleNamedSExp(const std::string&, Sise::SExp*) = 0;
+            virtual void save(void) const = 0;
+            void restore(void);
+    };
+
     class UsersInfo : public Persistable {
         public:
             struct UserInfo {

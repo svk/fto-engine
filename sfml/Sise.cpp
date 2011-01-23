@@ -888,4 +888,18 @@ void readSExpDir( const std::string& dirname, const std::string& ext, NamedSexpH
     }
 }
 
+void removeAllFilesWithExtension( const std::string& dirname, const std::string& ext ) {
+    namespace fs = boost::filesystem;
+    fs::path path = fs::system_complete( dirname );
+    if( !fs::exists( path ) || !fs::is_directory( path ) ) {
+        throw std::runtime_error( "readSExpDir called on nonexistent file or non-directory" );
+    }
+    fs::directory_iterator end_iter;
+    for( fs::directory_iterator i ( path ); i != end_iter; i++) {
+        if( fs::is_regular_file( i->status() ) && i->path().extension() == ext ) {
+            fs::remove( i->path() );
+        }
+    }
+}
+
 }

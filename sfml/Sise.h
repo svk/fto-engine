@@ -422,6 +422,8 @@ namespace Sise {
 
     void readSExpDir( const std::string&, const std::string&, NamedSexpHandler& );
 
+    void removeAllFilesWithExtension( const std::string&, const std::string& );
+
     template<class T>
     T *connectToAs(const std::string& addr, int port) {
         struct addrinfo hints, *res;

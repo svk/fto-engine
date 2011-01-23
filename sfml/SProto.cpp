@@ -443,4 +443,25 @@ bool UsersInfo::isAdministrator(const std::string& username) const {
     }
 }
 
+DirectoryPersistable::DirectoryPersistable(const std::string& dirname) :
+    dirname ( dirname ),
+    extension ( ".lisp" )
+{
+}
+
+void DirectoryPersistable::writeNamedSexp(const std::string& name, Sise::SExp* sexp) {
+    if( !Sise::writeSExpToFile( dirname + "/" + name, sexp ) ) {
+        using namespace std;
+        cerr << "warning: writing to named sexp " << name << " in " << dirname << " failed" << endl;
+    }
+}
+
+void DirectoryPersistable::clearFiles(void) {
+    Sise::removeAllFilesWithExtension( dirname, extension );
+}
+
+void DirectoryPersistable::restore(void) {
+    readSExpDir( dirname, extension, *this );
+}
+
 };
