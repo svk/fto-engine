@@ -4,6 +4,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#include <list>
 
 #include <vector>
 #include <stdint.h>
@@ -70,6 +71,8 @@ class FreetypeFace {
         int getWidthOf(uint32_t);
         int getHeightOf(uint32_t);
 
+        int getHeight(void);
+
         FT_Face getFace(void) const { return face; }
 };
 
@@ -116,6 +119,8 @@ class FormattedWord {
 
         void addCharacter(const FormattedCharacter&);
 
+        int getLength(void) const { return components.size(); }
+
         int getWidth(void) const { return width; }
         int getHeight(void) const { return height; }
         int getAscender(void) const { return maxAscender; }
@@ -155,6 +160,25 @@ class FormattedLine {
 class LineRenderer {
     public:
         virtual void render(const FormattedLine&, bool) = 0;
+};
+
+class LineBuilder {
+    private:
+        std::vector<FormattedCharacter> characters;
+
+        bool useCaret;
+        FormattedCharacter *caret;
+
+    public:
+        LineBuilder(void);
+        ~LineBuilder(void);
+
+        void setCaret(const FormattedCharacter&);
+        void addCharacter(const FormattedCharacter&);
+        void backspace(void);
+
+        FormattedLine createLine(void);
+
 };
 
 class WordWrapper {
@@ -209,6 +233,130 @@ class SfmlRectangularRenderer : public LineRenderer {
 
         void render(const FormattedLine&, bool);
         sf::Image* createImage(void);
+
+        void setWidth(int);
 };
+
+class LabelSprite {
+    private:
+        sf::Image *image;
+        sf::Sprite *sprite;
+
+        void construct(int, const FormattedLine&);
+    public:
+        LabelSprite(const std::string&,sf::Color,FreetypeFace&);
+        LabelSprite(FreetypeFace&, const FormattedLine&);
+        ~LabelSprite(void);
+
+        void restrictToWidth(int);
+        void noRestrictToWidth(void);
+
+        void setPosition(int,int);
+
+        int getWidth(void) const;
+        int getHeight(void) const;
+
+        void draw(sf::RenderWindow&) const;
+};
+
+struct ChatLine {
+    std::string username;
+    sf::Color usernameColour;
+    std::string text;
+    sf::Color textColour;
+
+    ChatLine(const std::string&, sf::Color, const std::string&, sf::Color);
+};
+
+class ChatLineSprite {
+    private:
+        int padding, height;
+        LabelSprite *nameSprite;
+        sf::Image *image;
+        sf::Sprite *textSprite;
+
+        void construct(int,const std::string&,sf::Color,const std::string&,sf::Color,FreetypeFace&);
+    public:
+        ChatLineSprite(int,const ChatLine&,FreetypeFace&);
+        ChatLineSprite(int,const std::string&,sf::Color,const std::string&,sf::Color,FreetypeFace&);
+        ~ChatLineSprite(void);
+
+        int getHeight(void) const;
+
+        void setPosition(int,int);
+
+        void draw(sf::RenderWindow&) const;
+};
+
+class ChatInputLine {
+    private:
+        int width;
+
+        sf::Color colour;
+        FreetypeFace& face;
+
+        LineBuilder builder;
+
+        std::vector<FormattedCharacter> characters;
+
+        LabelSprite *sprite;
+
+        bool ready;
+        int x, y;
+
+        void update(void);
+
+    public:
+        ChatInputLine(int width, FreetypeFace&, sf::Color, FormattedCharacter);
+        ~ChatInputLine(void);
+
+        void setWidth(int);
+        void add(uint32_t);
+        void backspace(void);
+        bool isDone(void) const { return ready; }
+
+        void setPosition(int,int);
+
+        int getHeight(void) const;
+
+        void textEntered( uint32_t );
+
+        std::string getString(void);
+        void draw(sf::RenderWindow&);
+};
+
+class ChatBox {
+    // no manual scrolling for now! infinite inaccessible text cache though
+    private:
+        FreetypeFace& face;
+
+        typedef std::vector< ChatLine > ChatLineList;
+        ChatLineList chatlines;
+
+        sf::Color bgColour;
+        int x, y;
+        int width, height;
+
+        typedef std::list< ChatLineSprite* > SpriteList;
+        SpriteList renderedLinesCache;
+
+        ChatLineSprite* render(const ChatLine&);
+        void rebuildCache(void);
+        void clearCache(void);
+
+    public:
+        ChatBox(int, int, int, int, FreetypeFace&, sf::Color);
+        ~ChatBox(void);
+
+        void setPosition(int,int);
+        void resize(int, int);
+
+        int getHeight(void) const { return height; }
+        int getWidth(void) const { return width; }
+        
+        void add(const ChatLine&);
+        void draw(sf::RenderWindow&);
+};
+
 
 #endif

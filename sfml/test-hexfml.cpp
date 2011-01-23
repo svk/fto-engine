@@ -215,6 +215,27 @@ int main(int argc, char *argv[]) {
     FreetypeLibrary freetypeLib;
     FreetypeFace myFtFont ("./data/CrimsonText-Bold.otf", 20);
 
+    LabelSprite helloWorldSprite ("What are you trying to find? I don't care, I'm not kind -- I have bludgeoned your sailors, spat out their keepsakes.",
+                                  sf::Color(192,72,72),
+                                  myFtFont ); 
+
+    sf::Color red(255,0,0);
+    sf::Color white(255,255,255);
+    ChatBox chatbox ( 0, 0, 640, 480, myFtFont, sf::Color(0,0,0) );
+    chatbox.add( ChatLine( "ocean", red, "What are you trying to find? I don't care, I'm not kind -- I have bludgeoned your sailors, spat out their keepsakes.", white ) );
+    chatbox.add( ChatLine( "ocean", red, "What are you trying to find? I don't care, I'm not kind -- I have bludgeoned your sailors, spat out their keepsakes.", white ) );
+    chatbox.add( ChatLine( "ocean", red, "What are you trying to find? I don't care, I'm not kind -- I have bludgeoned your sailors, spat out their keepsakes.", white ) );
+    chatbox.add( ChatLine( "ocean", red, "What are you trying to find? I don't care, I'm not kind -- I have bludgeoned your sailors, spat out their keepsakes.", white ) );
+    chatbox.add( ChatLine( "ocean", red, "What are you trying to find? I don't care, I'm not kind -- I have bludgeoned your sailors, spat out their keepsakes.", white ) );
+    chatbox.add( ChatLine( "ocean", red, "What are you trying to find? I don't care, I'm not kind -- I have bludgeoned your sailors, spat out their keepsakes.", white ) );
+    chatbox.add( ChatLine( "ocean", red, "What are you trying to find? I don't care, I'm not kind -- I have bludgeoned your sailors, spat out their keepsakes.", white ) );
+    chatbox.add( ChatLine( "ocean", red, "What are you trying to find? I don't care, I'm not kind -- I have bludgeoned your sailors, spat out their keepsakes.", white ) );
+    chatbox.add( ChatLine("kaw", red, "they don't give a damn about any trumpet-playing band", white ) );
+    chatbox.add( ChatLine("kaw", red, "it ain't what they call rock and roll", white ) );
+    chatbox.add( ChatLine( "blueberry", red, "why can't we ever win?", white  ) );
+    chatbox.add( ChatLine( "blueberry", red, "ever win?", white ) );
+    chatbox.add( ChatLine( "blueberry", red, "once?" , white ) );
+
     sf::Image *textPopup = 0;
     {
         int popupWidth = 320;
@@ -301,6 +322,8 @@ int main(int argc, char *argv[]) {
 
     sf::Sound failSound( soundBuffers["fail-sound"] );
 
+    ChatInputLine *chatInput = 0;
+
     while( win.IsOpened() ) {
         using namespace std;
 
@@ -312,18 +335,44 @@ int main(int argc, char *argv[]) {
 
         while( win.GetEvent( ev ) ) switch( ev.Type ) {
             case sf::Event::Resized:
-                viewport.setRectangle( 10,
-                                       10,
-                                       (ev.Size.Width - 20),
-                                       (ev.Size.Height - 20) );
+                chatbox.resize( win.GetWidth(), 200 );
+                viewport.setRectangle( 0,
+                                       0,
+                                       (ev.Size.Width),
+                                       (ev.Size.Height - chatbox.getHeight()) );
+                chatbox.setPosition( 0, win.GetHeight() - chatbox.getHeight() );
+                if( chatInput ) {
+                    chatInput->setWidth( win.GetWidth() );
+                }
                 mainView.SetHalfSize( sf::Vector2f( ev.Size.Width / 2, ev.Size.Height / 2 ) );
                 break;
             case sf::Event::Closed:
                 win.Close();
                 break;
+            case sf::Event::TextEntered:
+                if( chatInput ) {
+                    using namespace std;
+                    cerr << "warten Sie mal" << endl;
+                    chatInput->textEntered( ev.Text.Unicode );
+                    if( chatInput->isDone() ) {
+                        std::string chatline = chatInput->getString();
+                        chatbox.add( ChatLine( "user", red,
+                                               chatline, white ) );
+
+                        delete chatInput;
+                        chatInput = 0;
+                    }
+                }
+                break;
             case sf::Event::KeyPressed:
+                if( chatInput ) {
+                    if( ev.Key.Code == sf::Key::Escape ) {
+                        delete chatInput;
+                        chatInput = 0;
+                    }
+                    break;
+                }
                 switch( ev.Key.Code ) {
-                    case sf::Key::Escape:
                     case sf::Key::Q:
                         win.Close();
                         break;
@@ -332,6 +381,9 @@ int main(int argc, char *argv[]) {
                         break;
                     case sf::Key::N:
                         blitter.toggleShowNumbers();
+                        break;
+                    case sf::Key::Return:
+                        chatInput = new ChatInputLine( win.GetWidth(), myFtFont, sf::Color(255,255,255), FormattedCharacter(myFtFont, sf::Color(255,255,0), '_') );
                         break;
                     default: break;
                 }
@@ -403,6 +455,19 @@ int main(int argc, char *argv[]) {
         viewport.draw( blitter, win, mainView );
 
         mainView.SetFromRect( sf::FloatRect( 0, 0, win.GetWidth(), win.GetHeight() ) );
+
+        helloWorldSprite.setPosition(0,0);
+        helloWorldSprite.noRestrictToWidth();
+        helloWorldSprite.draw( win );
+        helloWorldSprite.setPosition(0,100);
+        helloWorldSprite.restrictToWidth(320);
+        helloWorldSprite.draw( win );
+        chatbox.draw( win );
+
+        if( chatInput ) {
+            chatInput->setPosition( 0, win.GetHeight() - chatbox.getHeight() - chatInput->getHeight() );
+            chatInput->draw( win );
+        }
 
         if( showingKitten ) {
             if( kittenMode ) {

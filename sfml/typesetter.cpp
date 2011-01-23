@@ -7,6 +7,8 @@
 #include <cstdlib>
 #include <cstring>
 
+#include <cassert>
+
 #define MAX(a,b) (((a)>(b))?(a):(b))
 #define MIN(a,b) (((a)<(b))?(a):(b))
 
@@ -294,6 +296,9 @@ int FreetypeFace::getWidthOf(uint32_t ch) {
     return face->glyph->advance.x / 64;
 }
 
+int FreetypeFace::getHeight(void) {
+    return face->size->metrics.height / 64;
+}
 
 int FreetypeFace::getHeightOf(uint32_t ch) {
     using namespace std;
@@ -425,4 +430,354 @@ void SfmlRectangularRenderer::render(const FormattedLine& line, bool brokenAbnor
     }
     totalHeight += line.getHeight();
     lines.push_back( rv );
+}
+
+void SfmlRectangularRenderer::setWidth(int width_) {
+    width = width_;
+}
+
+LabelSprite::LabelSprite(const std::string& text, sf::Color colour, FreetypeFace& face) {
+    const int spacing = face.getWidthOf( ' ' );
+    FormattedWord word;
+    FormattedLine line;
+    for(int i=0;i<(int)text.length();i++) {
+        if( isspace( text[i] ) ) {
+            if( word.getLength() > 0 ) {
+                line.addWord( word );
+                word.clear();
+            }
+        } else {
+            FormattedCharacter ch ( face, colour, text[i] );
+            word.addCharacter( ch );
+        }
+    }
+    if( word.getLength() > 0 ) {
+        line.addWord( word );
+        word.clear();
+    }
+    construct( spacing, line );
+}
+
+LabelSprite::LabelSprite(FreetypeFace& face, const FormattedLine& line) {
+    construct( face.getWidthOf( ' ' ), line );
+}
+
+void LabelSprite::construct(int spacing, const FormattedLine& line) {
+    SfmlRectangularRenderer renderer ( -1, spacing, TJM_LEFT );
+    renderer.setWidth( line.getWidthWithSpacing( spacing ) );
+    renderer.render( line, false );
+    image = renderer.createImage();
+    image->SetSmooth( false );
+    sprite = new sf::Sprite();
+    sprite->SetImage( *image );
+    setPosition(0,0);
+}
+
+LabelSprite::~LabelSprite(void) {
+    delete sprite;
+    delete image;
+}
+
+void LabelSprite::setPosition(int x, int y) {
+    sprite->SetPosition( 0.5 + (double) x, 0.5 + (double) y );
+}
+
+void LabelSprite::draw(sf::RenderWindow& win) const {
+    win.Draw( *sprite );
+}
+
+int LabelSprite::getHeight(void) const {
+    return (int)(0.999 + sprite->GetSize().y);
+}
+
+int LabelSprite::getWidth(void) const {
+    return (int)(0.999 + sprite->GetSize().x);
+}
+
+ChatLineSprite::ChatLineSprite(int width, const ChatLine& chatline, FreetypeFace& face) {
+    construct( width, chatline.username, chatline.usernameColour, chatline.text, chatline.textColour, face );
+}
+
+ChatLineSprite::ChatLineSprite(int width, const std::string& name, sf::Color usernameColour, const std::string& text, sf::Color textColour, FreetypeFace& face) {
+    construct( width, name, usernameColour, text, textColour, face );
+}
+
+void ChatLineSprite::construct(int width, const std::string& name, sf::Color usernameColour, const std::string& text, sf::Color textColour, FreetypeFace& face) {
+    padding = 10;
+    nameSprite = new LabelSprite( name, usernameColour, face );
+    int textWidth = width - (nameSprite->getWidth() + padding);
+    int spacing = face.getWidthOf(' ');
+    SfmlRectangularRenderer rr ( textWidth, spacing, TJM_LEFT );
+    WordWrapper wrap ( rr, textWidth, spacing );
+    for(int i=0;i<(int)text.size();i++) {
+        wrap.feed( FormattedCharacter( face, textColour, (uint32_t) text[i] ) );
+    }
+    wrap.end();
+    image = rr.createImage();
+    textSprite = new sf::Sprite();
+    textSprite->SetImage( *image );
+    setPosition(0,0);
+    height = MAX( nameSprite->getHeight(), (int) image->GetHeight() );
+}
+
+ChatLineSprite::~ChatLineSprite(void) {
+    delete nameSprite;
+    delete textSprite;
+    delete image;
+}
+
+int ChatLineSprite::getHeight(void) const {
+    return height;
+}
+
+void ChatLineSprite::setPosition(int x, int y) {
+    using namespace std;
+    nameSprite->setPosition( x, y );
+    textSprite->SetPosition( 0.5 + (double) (x + nameSprite->getWidth() + padding),
+                             0.5 + (double) y );
+}
+
+void ChatLineSprite::draw(sf::RenderWindow& win) const {
+    nameSprite->draw( win );
+    win.Draw( *textSprite );
+}
+
+ChatBox::ChatBox(int x, int y, int width, int height, FreetypeFace& face, sf::Color colour ) :
+    face ( face ),
+    bgColour ( colour ),
+    x ( x ),
+    y ( y ),
+    width ( width ),
+    height ( height )
+{
+}
+
+ChatLine::ChatLine(const std::string& username, sf::Color usernameColour,
+                   const std::string& text, sf::Color textColour) :
+    username ( username ),
+    usernameColour ( usernameColour ),
+    text ( text ),
+    textColour ( textColour )
+{
+}
+
+void ChatBox::resize(int width_, int height_) {
+    if( width != width_ ) {
+        clearCache();
+    }
+    width = width_;
+    height = height_;
+    rebuildCache();
+}
+
+ChatLineSprite* ChatBox::render(const ChatLine& chatline) {
+    return new ChatLineSprite( width, chatline, face );
+}
+
+void ChatBox::clearCache(void) {
+    for(SpriteList::iterator i = renderedLinesCache.begin(); i != renderedLinesCache.end(); i++) {
+        delete *i;
+    }
+    renderedLinesCache.clear();
+}
+
+ChatBox::~ChatBox(void) {
+    clearCache();
+}
+
+void ChatBox::add(const ChatLine& line ) {
+    ChatLineSprite *sprite = render( line );
+    chatlines.push_back( line );
+    renderedLinesCache.push_front( sprite );
+}
+
+void ChatBox::rebuildCache(void) {
+    int remainingHeight = height;
+    ChatLineList::reverse_iterator j = chatlines.rbegin();
+    for(SpriteList::iterator i = renderedLinesCache.begin(); i != renderedLinesCache.end(); i++) {
+        remainingHeight -= (*i)->getHeight();
+        assert( j != chatlines.rend() );
+        j++;
+    }
+    while( remainingHeight > 0 && j != chatlines.rend() ) {
+        ChatLineSprite *sprite = render( *j );
+        renderedLinesCache.push_back( sprite );
+        remainingHeight -= sprite->getHeight();
+        j++;
+    }
+}
+
+void ChatBox::setPosition(int x_, int y_) {
+    x = x_;
+    y = y_;
+}
+
+void ChatBox::draw(sf::RenderWindow& win) {
+    int remainingHeight = height;
+    int currentY = y + height;
+    SpriteList::iterator i = renderedLinesCache.begin();
+
+    glScissor( x, win.GetHeight() - (y + height), width, height );
+    glEnable( GL_SCISSOR_TEST );
+    win.Clear( bgColour );
+
+    while( i != renderedLinesCache.end() && remainingHeight >= 0 ) {
+        ChatLineSprite *sprite = *i;
+        currentY -= sprite->getHeight();
+        remainingHeight -= sprite->getHeight();
+        sprite->setPosition( x, currentY );
+        sprite->draw( win );
+        i++;
+    }
+    
+    glDisable( GL_SCISSOR_TEST );
+}
+
+void LineBuilder::setCaret(const FormattedCharacter& caret_) {
+    useCaret = true;
+    if( caret ) {
+        delete caret;
+    }
+    caret = new FormattedCharacter( caret_ );
+}
+
+void LineBuilder::addCharacter(const FormattedCharacter& ch) {
+    characters.push_back( ch );
+}
+
+void LineBuilder::backspace(void) {
+    if( characters.size() > 0 ) {
+        characters.pop_back();
+    }
+}
+
+FormattedLine LineBuilder::createLine(void) {
+    FormattedWord word;
+    FormattedLine line;
+    for(std::vector<FormattedCharacter>::iterator i = characters.begin(); i != characters.end(); i++) {
+        if( isspace( i->character ) ) {
+            if( word.getLength() > 0 ) {
+                line.addWord( word );
+                word.clear();
+            }
+        } else {
+            word.addCharacter( *i );
+        }
+    }
+    if( useCaret ) {
+        word.addCharacter( *caret );
+    }
+    if( word.getLength() > 0 ) {
+        line.addWord( word );
+        word.clear();
+    }
+    return line;
+}
+
+void LabelSprite::noRestrictToWidth(void) {
+    sprite->SetSubRect( sf::IntRect(0,0,image->GetWidth(), image->GetHeight() ) );
+}
+
+void LabelSprite::restrictToWidth(int widthRestriction) {
+    int imw = image->GetWidth();
+    if( imw > widthRestriction ) {
+        int offset = imw - widthRestriction;
+        sprite->SetSubRect( sf::IntRect(offset,0,offset + widthRestriction,image->GetHeight() ) );
+    } else {
+        noRestrictToWidth();
+        sprite->SetSubRect( sf::IntRect(0,0,image->GetWidth(), image->GetHeight() ) );
+    }
+}
+
+void ChatInputLine::update(void) {
+    using namespace std;
+    cerr << "woho! " << endl;
+    if( sprite ) {
+        delete sprite;
+    }
+    sprite = new LabelSprite( face, builder.createLine() );
+    sprite->restrictToWidth( width );
+    sprite->setPosition( x, y );
+}
+
+ChatInputLine::ChatInputLine(int width, FreetypeFace& face, sf::Color colour, FormattedCharacter caret) :
+    width ( width ),
+    colour ( colour ),
+    face ( face ),
+    sprite ( 0 ),
+    ready ( false ),
+    x(0),
+    y(0)
+{
+    using namespace std;
+    cerr << "wihi! " << endl;
+    builder.setCaret( caret );
+    update();
+}
+
+void ChatInputLine::add(uint32_t ch) {
+    builder.addCharacter( FormattedCharacter( face, colour, ch ) );
+    update();
+}
+
+void ChatInputLine::backspace(void) {
+    builder.backspace();
+    update();
+}
+
+void ChatInputLine::textEntered( uint32_t ch ) {
+    const uint32_t codeBackspace = 8,
+                   codeNewline = 13;
+    using namespace std;
+    if( ready ) return;
+    cerr << ch << endl;
+    if( ch == codeBackspace ) {
+        backspace();
+    } else if ( ch == codeNewline ) {
+        if( getString().length() > 0 ) {
+            ready = true;
+        }
+    } else if( isprint( ch ) ){
+        add( ch );
+    }
+}
+
+std::string ChatInputLine::getString(void) {
+    std::string rv = builder.createLine().getRawText();
+    return rv.substr( 0, rv.length() - 1 );
+}
+
+void ChatInputLine::setPosition(int x_,int y_) {
+    x = x_;
+    y = y_;
+}
+
+void ChatInputLine::draw(sf::RenderWindow& win) {
+    sprite->setPosition( x, y );
+    sprite->draw( win );
+}
+
+ChatInputLine::~ChatInputLine(void) {
+}
+
+LineBuilder::LineBuilder(void) :
+    characters (),
+    useCaret ( false ),
+    caret (0)
+{
+}
+
+LineBuilder::~LineBuilder(void) {
+    if( caret ) {
+        delete caret;
+    }
+}
+
+int ChatInputLine::getHeight(void) const {
+    return sprite->getHeight();
+}
+
+void ChatInputLine::setWidth(int w) {
+    width = w;
+    update();
 }
