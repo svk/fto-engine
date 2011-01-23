@@ -66,6 +66,11 @@ class CompositeEventHandler : public SfmlEventHandler {
         bool handleEvent(const sf::Event&);
 };
 
+class SfmlMouseTarget {
+    public:
+        virtual bool isAt(int, int) const = 0;
+};
+
 class SfmlApplication;
 
 class SfmlScreen : public SfmlEventHandler {
