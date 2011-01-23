@@ -813,19 +813,23 @@ SExp * readSExpFromFile(const std::string& filename) {
     SExpStreamParser streamParser;
     ifstream is ( filename.c_str(), ios::in );
     char byte;
+    if( !is.good() ) {
+        throw FileInputError();
+    }
     while( !is.eof() ) {
         is.read( &byte, 1 );
         streamParser.feed( byte );
     }
     streamParser.end();
-    if( streamParser.empty() ) throw std::runtime_error( "no sexp in file" );
+    if( streamParser.empty() ) throw FileInputError();
     return streamParser.pop();
 }
 
-void writeSExpToFile(const std::string& filename, SExp *sexp) {
+bool writeSExpToFile(const std::string& filename, SExp *sexp) {
     using namespace std;
     ofstream os ( filename.c_str(), ios::out );
     outputSExp( sexp, os );
+    return os.good();
 }
 
 }

@@ -24,7 +24,9 @@ int main(int argc, char *argv[]) {
                 cout << "()";
             }
             cout << endl;
-            writeSExpToFile( "./data/motd.lisp", rv );
+            if( !writeSExpToFile( "./data/motd.lisp", rv ) ) {
+                cerr << "unsuccessful write!" << endl;
+            }
             delete rv;
         }
     }
