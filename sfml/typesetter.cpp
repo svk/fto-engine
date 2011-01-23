@@ -690,8 +690,6 @@ void LabelSprite::restrictToWidth(int widthRestriction) {
 }
 
 void ChatInputLine::update(void) {
-    using namespace std;
-    cerr << "woho! " << endl;
     if( sprite ) {
         delete sprite;
     }
@@ -709,8 +707,6 @@ ChatInputLine::ChatInputLine(int width, FreetypeFace& face, sf::Color colour, Fo
     x(0),
     y(0)
 {
-    using namespace std;
-    cerr << "wihi! " << endl;
     builder.setCaret( caret );
     update();
 }
@@ -728,9 +724,7 @@ void ChatInputLine::backspace(void) {
 void ChatInputLine::textEntered( uint32_t ch ) {
     const uint32_t codeBackspace = 8,
                    codeNewline = 13;
-    using namespace std;
     if( ready ) return;
-    cerr << ch << endl;
     if( ch == codeBackspace ) {
         backspace();
     } else if ( ch == codeNewline ) {

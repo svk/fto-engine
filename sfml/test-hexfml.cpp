@@ -351,8 +351,6 @@ int main(int argc, char *argv[]) {
                 break;
             case sf::Event::TextEntered:
                 if( chatInput ) {
-                    using namespace std;
-                    cerr << "warten Sie mal" << endl;
                     chatInput->textEntered( ev.Text.Unicode );
                     if( chatInput->isDone() ) {
                         std::string chatline = chatInput->getString();
