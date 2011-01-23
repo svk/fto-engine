@@ -144,6 +144,15 @@ void RemoteClient::handle( const std::string& cmd, Sise::SExp *arg ) {
             subserver = 0;
             close();
         }
+    } else if( cmd == "change-password" ) {
+        if( username == "" ) {
+            delsendPacket( "permission-denied", 0 );
+        } else {
+            Cons *args = asProperCons( arg );
+            std::string password = *asString( args->nthcar(0) );
+            server.getUsers()[username].passwordhash = makePasswordHash( username, password );
+            delsendPacket( "change-password-ok", 0 );
+        }
     } else if( cmd == "goodbye" ) {
         close();
     } else if( cmd == "debug-hash" ) {

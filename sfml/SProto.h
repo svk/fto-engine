@@ -104,7 +104,7 @@ namespace SProto {
     };
 
     class UsersInfo : public Persistable {
-        private:
+        public:
             struct UserInfo {
                 std::string passwordhash;
                 bool isAdmin;
@@ -112,13 +112,15 @@ namespace SProto {
                 UserInfo(void) {}
                 UserInfo(const std::string&, bool = false);
             };
+
+        private:
             typedef std::map<std::string, UserInfo> UsersMap;
             UsersMap users;
 
+        public:
             UserInfo& operator[](const std::string&);
             const UserInfo& operator[](const std::string&) const;
 
-        public:
             UsersInfo(void) :
                 Persistable( "./persist/users.lisp" )
             {}
