@@ -66,6 +66,14 @@ void RemoteClient::handle( const std::string& cmd, Sise::SExp *arg ) {
 
 void Server::handle( RemoteClient *cli, const std::string& cmd, Sise::SExp *arg ) {
     using namespace Sise;
+    SubServer *subserv = getSubServer( cmd );
+    if( subserv ) {
+        Cons *args = asProperCons( arg );
+        Symbol *cmdp = asSymbol( args->getcar() );
+        SExp *argp = args->getcdr();
+        subserv->handle( cli, *cmdp, argp );
+        return;
+    }
     if( cmd == "hello" ) {
         Cons *args = asProperCons( arg );
         std::string protoName = *asSymbol( args->nthcar(0) );
