@@ -49,8 +49,12 @@
 #include <fstream>
 
 namespace Sise {
-    struct ParseError : public std::runtime_error {
-        ParseError(std::string s) : std::runtime_error(s) {}
+    struct SExpInterpretationError : public std::runtime_error {
+        SExpInterpretationError(std::string s) : std::runtime_error(s) {}
+    };
+
+    struct ParseError : public SExpInterpretationError {
+        ParseError(std::string s) : SExpInterpretationError(s) {}
     };
 
     enum Type {
@@ -60,12 +64,14 @@ namespace Sise {
         TYPE_SYMBOL
     };
 
-    struct SExpTypeError {
+    struct SExpTypeError : public SExpInterpretationError {
         Type expected;
         Type got;
 
-        SExpTypeError(Type,Type);
+        SExpTypeError(Type expected,Type got) : SExpInterpretationError( "type error" ), expected (expected), got(got) {};
     };
+
+
 
 
     struct Cons;
@@ -346,10 +352,10 @@ namespace Sise {
             bool doCheckStdin;
             bool stdinFlag;
 
+        protected:
             void watch( Socket* );
             void unwatch( Socket*, bool );
 
-        protected:
             void unwatchAll(void);
 
         public:

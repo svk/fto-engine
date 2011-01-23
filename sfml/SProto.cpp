@@ -5,6 +5,8 @@
 #define PROTOCOL_SERVER_ID "StdServer"
 #define PROTOCOL_CLIENT_ID "StdClient"
 
+#include <cassert>
+
 #include <cctype>
 #include <algorithm>
 
@@ -274,6 +276,58 @@ void Server::stopServer(void) {
 
 Server::~Server(void) {
     unwatchAll();
+}
+
+Client::Client( Sise::RawSocket sock, ClientCore* core ) :
+    SProtoSocket( sock ),
+    idState( IDST_UNIDENTIFIED ),
+    clientCore ( core )
+{
+    using namespace Sise;
+    delsendPacket( "hello",
+                   List()( new Symbol( PROTOCOL_ID ) )
+                         ( new Int( PROTOCOL_VERSION ) )
+                         ( new String( PROTOCOL_CLIENT_ID ) )
+                   .make() );
+}
+
+void Client::handle( const std::string& cmd, Sise::SExp *arg) {
+    using namespace Sise;
+    if( cmd == "echo" ) {
+        Cons *args = arg->asCons();
+        std::string data = *args->nthcar(0)->asString();
+        delsendPacket( "echo-reply",
+                       List()( new String( data ) )
+                       .make() );
+    } else if( cmd == "login-challenge" ) {
+        Cons *args = arg->asCons();
+        std::string data = *args->nthcar(0)->asString();
+
+        assert( idState == IDST_IDENTIFYING );
+        std::string response = makeChallengeResponse( username, passwordhash, data );
+
+        delsendPacket( "login-response",
+                       List()( new String( response ) )
+                       .make() );
+    } else if( cmd == "login-ok" ) {
+        Cons *args = arg->asCons();
+        std::string data = *args->nthcar(0)->asString();
+        username = data;
+
+        idState = IDST_IDENTIFIED;
+    } if (clientCore) {
+        clientCore->handle( cmd, arg );
+    }
+}
+
+void Client::identify(const std::string& username_, const std::string& password) {
+    using namespace Sise;
+    username = username_;
+    passwordhash = makePasswordHash( username, password );
+    delsendPacket( "login-request",
+                   List()( new String( username ) )
+                   .make() );
+    idState = IDST_IDENTIFYING;
 }
 
 

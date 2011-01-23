@@ -62,12 +62,6 @@ Cons* SExp::asCons(void) {
     return dynamic_cast<Cons*>( this );
 }
 
-SExpTypeError::SExpTypeError(Type expected, Type got) :
-    expected (expected),
-    got (got)
-{
-}
-
 bool SExp::isType(Type t) const {
     return type == t;
 }
@@ -788,8 +782,21 @@ void ConsSocket::pump(void) {
 void ConsSocketManager::manage(int ms) {
     SocketSet socks;
     pump( ms, &socks );
+    std::vector<ConsSocket*> errorsocks;
     for(SocketSet::iterator i = socks.begin(); i != socks.end(); i++) {
-        dynamic_cast<ConsSocket*>((*i))->pump();
+        try {
+            dynamic_cast<ConsSocket*>((*i))->pump();
+        }
+        catch( Sise::SExpInterpretationError& e ) {
+            using namespace std;
+            cerr << "warning: error (" << e.what() << ") on socket, closing" << endl;
+            errorsocks.push_back( dynamic_cast<ConsSocket*>(*i) );
+        }
+    }
+    for(std::vector<ConsSocket*>::iterator i = errorsocks.begin(); i != errorsocks.end(); i++) {
+        using namespace std;
+        unwatch( *i, false );
+        delete *i;
     }
 }
 

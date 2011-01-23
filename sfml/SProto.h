@@ -23,9 +23,26 @@ namespace SProto {
             void delsendPacket( const std::string&, Sise::SExp* );
     };
 
+    class ClientCore {
+        public:
+            virtual void handle( const std::string&, Sise::SExp* ) = 0;
+    };
+
     class Client : public SProtoSocket {
         private:
+            enum IdState {
+                IDST_UNIDENTIFIED,
+                IDST_IDENTIFYING,
+                IDST_IDENTIFIED
+            };
+            IdState idState;
+            std::string username, passwordhash;
+
+            ClientCore *clientCore;
+
         public:
+            Client(Sise::RawSocket, ClientCore*);
+
             void identify( const std::string&, const std::string& );
 
             void handle( const std::string&, Sise::SExp* );
