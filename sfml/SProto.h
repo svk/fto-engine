@@ -58,8 +58,6 @@ namespace SProto {
     class SubServer {
         public:
             virtual void handle( RemoteClient*, const std::string&, Sise::SExp* ) = 0;
-            virtual bool entering( RemoteClient* ) { return true; }
-            virtual void leaving( RemoteClient* ) {}
     };
 
     class RemoteClient : public SProtoSocket {
@@ -178,7 +176,8 @@ namespace SProto {
     };
 
     class Server : public Sise::ConsSocketManager,
-                   public Sise::SocketGreeter {
+                   public Sise::SocketGreeter,
+                   public SubServer {
         private:
             std::vector<RemoteClient*> rclients;
             typedef std::map<std::string,SubServer*> SubserverMap;
