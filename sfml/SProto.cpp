@@ -151,7 +151,7 @@ void RemoteClient::handle( const std::string& cmd, Sise::SExp *arg ) {
 
 void SProtoSocket::delsendPacket( const std::string& name, Sise::SExp* cdr ) {
     using namespace Sise;
-    delsend( new Cons( new String( name ), cdr ) );
+    delsend( new Cons( new Symbol( name ), cdr ) );
 }
 
 void SProtoSocket::delsend( Sise::SExp* sexp ) {

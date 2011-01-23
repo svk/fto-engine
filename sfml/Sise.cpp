@@ -123,7 +123,7 @@ void Cons::output(std::ostream& os) {
     Cons *c = this;
     os.put( '(' );
     while( c ) {
-        outputSExp( c->carPtr, os );
+        outputSExp( c->carPtr, os, false );
         if( !c->cdrPtr ) {
             c = 0;
         } else if( c->cdrPtr->isType( TYPE_CONS ) ){
@@ -133,7 +133,7 @@ void Cons::output(std::ostream& os) {
             os.put( ' ' );
             os.put( '.' );
             os.put( ' ' );
-            outputSExp( c->cdrPtr, os );
+            outputSExp( c->cdrPtr, os, false );
             c = 0;
         }
     }
@@ -383,10 +383,12 @@ void SExpStreamParser::feed(char ch) {
     }
 }
 
-void outputSExp(SExp* sexp, std::ostream& os) {
+void outputSExp(SExp* sexp, std::ostream& os, bool terminateWithWhitespace) {
     if( sexp ) {
         sexp->output( os );
-        os.put( ' ' );
+        if( terminateWithWhitespace ) {
+            os.put( '\n' );
+        }
     } else {
         os.put( '(' );
         os.put( ')' );
@@ -830,7 +832,7 @@ SExp * readSExpFromFile(const std::string& filename) {
 bool writeSExpToFile(const std::string& filename, SExp *sexp) {
     using namespace std;
     ofstream os ( filename.c_str(), ios::out );
-    outputSExp( sexp, os );
+    outputSExp( sexp, os, false );
     return os.good();
 }
 

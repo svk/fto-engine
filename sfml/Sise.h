@@ -267,7 +267,7 @@ namespace Sise {
 
     SExpParser *makeSExpParser(char);
 
-    void outputSExp(SExp*,std::ostream&);
+    void outputSExp(SExp*,std::ostream&,bool = true);
 
     typedef int RawSocket;
 #define closesocket close
