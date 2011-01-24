@@ -478,7 +478,8 @@ Socket::Socket(RawSocket sock) :
 
 OutputBuffer::OutputBuffer(void) :
     capacity ( INITIAL_BUFFER_CAPACITY ),
-    data ( new char [ capacity ] )
+    data ( new char [ capacity ] ),
+    spy ( false )
 {
     setp( data, data + capacity - 1 );
 }
@@ -531,6 +532,10 @@ bool OutputBuffer::tryFlushToSocket(RawSocket sock) {
     }
     if( rv > 0 ) {
         sent += rv;
+    }
+    if( spy ) {
+        using namespace std;
+        cerr << std::string( data, sent );
     }
     consume( sent );
     return (rv >= 0);
@@ -900,6 +905,14 @@ void removeAllFilesWithExtension( const std::string& dirname, const std::string&
             fs::remove( i->path() );
         }
     }
+}
+
+void OutputBuffer::debugSetSpy(bool spy_) {
+    spy = spy_;
+}
+
+void Socket::debugSetOutputSpy(bool spy_){
+    outbuffer.debugSetSpy( spy_ );
 }
 
 }

@@ -179,6 +179,7 @@ class LineBuilder {
 
         FormattedLine createLine(void);
 
+        void clear(void);
 };
 
 class WordWrapper {
@@ -309,6 +310,8 @@ class ChatInputLine {
     public:
         ChatInputLine(int width, FreetypeFace&, sf::Color, FormattedCharacter);
         ~ChatInputLine(void);
+
+        void clear(void);
 
         void setWidth(int);
         void add(uint32_t);

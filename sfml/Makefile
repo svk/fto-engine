@@ -5,7 +5,7 @@ SFML_LIBS=-lsfml-system -lsfml-graphics -lsfml-audio
 CORE_LIBS=`freetype-config --libs` -lboost_filesystem -lboost_program_options -lssl
 LIBS=$(SFML_LIBS) $(CORE_LIBS)
 
-EXECUTABLES=test-hexfml test-coords test-typesetter test-sexp test-sisenet test-sftools spserver spclient
+EXECUTABLES=test-hexfml test-coords test-typesetter test-sexp test-sisenet test-sftools spserver spclient spguient
 
 all: $(EXECUTABLES)
 
@@ -36,3 +36,6 @@ spserver: Sise.o spserver.o SProto.o
 
 spclient: spclient.o Sise.o SProto.o
 	$(CC) $(CPPFLAGS) $(CORE_LIBS) $^ -o $@
+
+spguient: spguient.o Sise.o SProto.o typesetter.o sftools.o
+	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@

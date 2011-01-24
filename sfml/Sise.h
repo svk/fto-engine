@@ -294,6 +294,7 @@ namespace Sise {
         private:
             int capacity;
             char *data;
+            bool spy;
 
         public:
             OutputBuffer(void);
@@ -308,6 +309,8 @@ namespace Sise {
             int getSize(void);
 
             int overflow(int);
+
+            void debugSetSpy(bool);
     };
 
     class Socket {
@@ -340,6 +343,8 @@ namespace Sise {
 
             std::ostream& out(void);
             SExpStreamParser& in(void);
+
+            void debugSetOutputSpy(bool);
     };
 
     class SocketGreeter {

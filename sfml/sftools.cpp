@@ -47,8 +47,12 @@ void SfmlApplication::processIteration(void) {
     window.Display();
 }
 
+void SfmlApplication::stop(void) {
+    keepRunning = false;
+}
+
 void SfmlApplication::run(void) {
-    while( window.IsOpened() ) {
+    while( keepRunning && window.IsOpened() ) {
         processIteration();
     }
 }
@@ -87,8 +91,9 @@ SfmlApplication::SfmlApplication(std::string title, int width, int height) :
     width (width),
     height (height),
     clock (),
-    window ( sf::VideoMode( width, height, 32 ), title ),
-    currentScreen ( 0 )
+    currentScreen ( 0 ),
+    keepRunning ( true ),
+    window ( sf::VideoMode( width, height, 32 ), title )
 {
     window.SetFramerateLimit( 60 );
     window.UseVerticalSync( true );

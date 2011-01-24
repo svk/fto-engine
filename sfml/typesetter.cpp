@@ -775,3 +775,12 @@ void ChatInputLine::setWidth(int w) {
     width = w;
     update();
 }
+
+void LineBuilder::clear(void) {
+    characters.clear();
+}
+
+void ChatInputLine::clear(void) {
+    builder.clear();
+    ready = false;
+}

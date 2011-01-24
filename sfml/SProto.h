@@ -52,6 +52,7 @@ namespace SProto {
             void identify( const std::string&, const std::string& );
 
             void handle( const std::string&, Sise::SExp* );
+            bool identified(void) const { return idState == IDST_IDENTIFIED; }
     };
 
     class RemoteClient;
