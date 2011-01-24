@@ -21,6 +21,7 @@ namespace SProto {
 
             void close(void);
 
+            void send( Sise::SExp* );
             void delsend( Sise::SExp* );
             void delsendPacket( const std::string&, Sise::SExp* );
             void delsendResponse( const std::string&, const std::string& );
@@ -206,11 +207,21 @@ namespace SProto {
 
             bool handle( RemoteClient*, const std::string&, Sise::SExp* );
     };
+    
+    class ChatSubserver : public SubServer {
+        public:
+            ChatSubserver(Server& server) : SubServer("chat",server) {}
+
+            bool handle( RemoteClient*, const std::string&, Sise::SExp* );
+    };
 
     class Server : public Sise::ConsSocketManager,
                    public Sise::SocketGreeter {
+        public:
+            typedef std::vector<RemoteClient*> RClientList;
+
         private:
-            std::vector<RemoteClient*> rclients;
+            RClientList rclients;
             typedef std::map<std::string,SubServer*> SubserverMap;
             SubserverMap subservers;
 
@@ -247,6 +258,8 @@ namespace SProto {
 
             void save(void);
             void restore(void);
+
+            RClientList& getClients(void) { return rclients; }
     };
 
     struct NoSuchUserException : public std::runtime_error {
@@ -256,6 +269,8 @@ namespace SProto {
     std::string getHash(const std::string&);
     std::string makeChallengeResponse( const std::string&, const std::string&, const std::string&);
     std::string makePasswordHash( const std::string&, const std::string&);
+
+    Sise::SExp *prepareChatMessage(const std::string&, const std::string&);
 };
 
 #endif

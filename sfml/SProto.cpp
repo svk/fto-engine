@@ -5,6 +5,8 @@
 #define PROTOCOL_SERVER_ID "StdServer"
 #define PROTOCOL_CLIENT_ID "StdClient"
 
+#include <ctime>
+
 #include <cassert>
 
 #include <cctype>
@@ -67,7 +69,7 @@ void RemoteClient::handle( const std::string& cmd, Sise::SExp *arg ) {
 bool AdminSubserver::handle( RemoteClient *cli, const std::string& cmd, Sise::SExp *arg ) {
     using namespace Sise;
     if( !cli->hasUsername() || !server.getUsers().isAdministrator( cli->getUsername() ) ) {
-        cli->delsendResponse( cmd, "permission-denied" );
+        cli->delsendResponse( cmd, "permission denied" );
         return true;
     }
     if( cmd == "shutdown" ) {
@@ -153,7 +155,7 @@ bool UsersInfo::handle( RemoteClient *cli, const std::string& cmd, Sise::SExp *a
         }
     } else if( cmd == "change-password" ) {
         if( !cli->hasUsername() ) {
-            cli->delsendResponse( cmd, "permission-denied" );
+            cli->delsendResponse( cmd, "permission denied" );
         } else {
             Cons *args = asProperCons( arg );
             std::string username = cli->getUsername();
@@ -240,6 +242,12 @@ void SProtoSocket::delsendResponse( const std::string& name, const std::string& 
 void SProtoSocket::delsendPacket( const std::string& name, Sise::SExp* cdr ) {
     using namespace Sise;
     delsend( new Cons( new Symbol( name ), cdr ) );
+}
+
+void SProtoSocket::send( Sise::SExp* sexp ) {
+    if( !closing ) {
+        Sise::outputSExp( sexp, out() );
+    }
 }
 
 void SProtoSocket::delsend( Sise::SExp* sexp ) {
@@ -547,6 +555,89 @@ void DirectoryPersistable::clearFiles(void) {
 
 void DirectoryPersistable::restore(void) {
     readSExpDir( dirname, extension, *this );
+}
+
+Sise::SExp *prepareChatMessage(const std::string& origin, const std::string& message) {
+    using namespace Sise;
+    return new Cons( new String( origin ),
+           new Cons( new String( message ),
+           new Cons( new Int ( time(0) ))));
+}
+
+bool ChatSubserver::handle( RemoteClient *cli, const std::string& cmd, Sise::SExp* arg ) {
+    using namespace Sise;
+
+    Server::RClientList::iterator i = server.getClients().begin();
+    Server::RClientList::iterator end = server.getClients().end();
+
+    if( !cli->hasUsername() ) {
+        cli->delsendResponse( cmd, "cannot use chat without being logged in" );
+        return true;
+    }
+
+    if( cmd == "channel-message" || cmd == "cm" ) {
+        std::string channelType = *asSymbol( asProperCons(arg)->nthcar(0) );
+        std::string channelName = *asString( asProperCons(arg)->nthcar(1) );
+        if( !cli->isInChannel( channelType, channelName ) ) {
+            cli->delsendResponse( cmd, "not in that channel" );
+        } else {
+            SExp * sexp = new Cons( new Symbol( "chat" ),
+                          new Cons( new Symbol( "channel" ),
+                          new Cons( new Symbol( channelType ),
+                          new Cons( new String( channelName ),
+                                    prepareChatMessage( cli->getUsername(),
+                                                        *asString( asProperCons(arg)->nthcar(0)))))));
+            while( i != end ) {
+                if( (*i)->isInChannel( channelType, channelName ) ) {
+                    (*i)->send( sexp );
+                }
+                i++;
+            }
+            delete sexp;
+        }
+    } else if( cmd == "private-message" || cmd == "pm" ) {
+        std::string targetName = *asString( asProperCons(arg)->nthcar(1) );
+        RemoteClient *target = 0;
+        int hits = 0;
+        while( i != end ) {
+            if( (*i)->hasUsername() && (*i)->getUsername() == targetName ) {
+                hits++;
+                target = *i;
+            }
+        }
+        assert( hits < 2 );
+        if( target ) {
+            SExp * sexp = new Cons( new Symbol( "chat" ),
+                          new Cons( new Symbol( "private" ),
+                                    prepareChatMessage( cli->getUsername(),
+                                                        *asString( asProperCons(arg)->nthcar(0)))));
+            target->send( sexp );
+            delete sexp;
+        } else {
+            cli->delsendResponse( cmd, "no such user" );
+        }
+    } else if( cmd == "join" ) {
+        cli->enterChannel( "user", *asString( asProperCons( arg )->nthcar(0) ) );
+    } else if( cmd == "part" ) {
+        cli->leaveChannel( "user", *asString( asProperCons( arg )->nthcar(0) ) );
+    } else if( cmd == "broadcast" || cmd == "bc" ) {
+        if( !server.getUsers().isAdministrator( cli->getUsername() ) ) {
+            cli->delsendResponse( cmd, "permission denied" );
+        } else {
+            SExp * sexp = new Cons( new Symbol( "chat" ),
+                          new Cons( new Symbol( "broadcast" ),
+                                    prepareChatMessage( cli->getUsername(),
+                                                        *asString( asProperCons(arg)->nthcar(0) ) ) ) );
+            while( i != end ) {
+                (*i)->send( sexp );
+                i++;
+            }
+            delete sexp;
+        }
+    } else {
+        return false;
+    }
+    return true;
 }
 
 };
