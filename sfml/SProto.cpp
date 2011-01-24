@@ -282,7 +282,8 @@ Server::Server(void) :
     running ( true ),
     users ( *this ),
     ssDebug ( *this ),
-    ssAdmin ( *this )
+    ssAdmin ( *this ),
+    ssChat( *this )
 {
     setGreeter( this );
 
@@ -566,6 +567,13 @@ Sise::SExp *prepareChatMessage(const std::string& origin, const std::string& mes
 
 bool ChatSubserver::handle( RemoteClient *cli, const std::string& cmd, Sise::SExp* arg ) {
     using namespace Sise;
+    // note, obviously this is q&d and not very scalable
+    // channel broadcasting need not be linear in the number of
+    //  people on the _server_, and private messaging should be
+    //  near constant time (map lookup).
+    // however, this does not paint me into a corner; rewriting
+    //  if an efficient version is required should be relatively
+    //  simple
 
     Server::RClientList::iterator i = server.getClients().begin();
     Server::RClientList::iterator end = server.getClients().end();
@@ -586,7 +594,7 @@ bool ChatSubserver::handle( RemoteClient *cli, const std::string& cmd, Sise::SEx
                           new Cons( new Symbol( channelType ),
                           new Cons( new String( channelName ),
                                     prepareChatMessage( cli->getUsername(),
-                                                        *asString( asProperCons(arg)->nthcar(0)))))));
+                                                        *asString( asProperCons(arg)->nthcar(2)))))));
             while( i != end ) {
                 if( (*i)->isInChannel( channelType, channelName ) ) {
                     (*i)->send( sexp );
@@ -596,7 +604,7 @@ bool ChatSubserver::handle( RemoteClient *cli, const std::string& cmd, Sise::SEx
             delete sexp;
         }
     } else if( cmd == "private-message" || cmd == "pm" ) {
-        std::string targetName = *asString( asProperCons(arg)->nthcar(1) );
+        std::string targetName = *asString( asProperCons(arg)->nthcar(0) );
         RemoteClient *target = 0;
         int hits = 0;
         while( i != end ) {
@@ -604,13 +612,14 @@ bool ChatSubserver::handle( RemoteClient *cli, const std::string& cmd, Sise::SEx
                 hits++;
                 target = *i;
             }
+            i++;
         }
         assert( hits < 2 );
         if( target ) {
             SExp * sexp = new Cons( new Symbol( "chat" ),
                           new Cons( new Symbol( "private" ),
                                     prepareChatMessage( cli->getUsername(),
-                                                        *asString( asProperCons(arg)->nthcar(0)))));
+                                                        *asString( asProperCons(arg)->nthcar(1)))));
             target->send( sexp );
             delete sexp;
         } else {
@@ -638,6 +647,18 @@ bool ChatSubserver::handle( RemoteClient *cli, const std::string& cmd, Sise::SEx
         return false;
     }
     return true;
+}
+
+void RemoteClient::enterChannel(const std::string& type, const std::string& name) {
+    channels.insert( ChannelId(type,name) );
+}
+
+void RemoteClient::leaveChannel(const std::string& type, const std::string& name) {
+    channels.erase( ChannelId(type,name) );
+}
+
+bool RemoteClient::isInChannel(const std::string& type, const std::string& name) {
+    return channels.find( ChannelId(type,name) ) != channels.end();
 }
 
 };

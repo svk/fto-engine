@@ -87,6 +87,8 @@ namespace SProto {
             bool loggingIn;
             std::string desiredUsername, challenge;
 
+            typedef std::pair<std::string,std::string> ChannelId;
+            std::set<ChannelId> channels;
 
         public:
             RemoteClient(Sise::RawSocket,Server&, const std::string&, std::vector<RemoteClient*>&);
@@ -118,6 +120,10 @@ namespace SProto {
 
             void setState(State);
             State getState(void) const;
+
+            void enterChannel(const std::string&, const std::string&);
+            void leaveChannel(const std::string&, const std::string&);
+            bool isInChannel(const std::string&, const std::string&);
     };
 
     class Persistable {
@@ -233,6 +239,7 @@ namespace SProto {
             // it's fine to add more (games)
             DebugSubserver ssDebug;
             AdminSubserver ssAdmin;
+            ChatSubserver ssChat;
 
         public:
             Server(void);
