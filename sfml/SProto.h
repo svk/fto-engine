@@ -64,6 +64,9 @@ namespace SProto {
             virtual ~SubServer(void) {};
 
             virtual bool handle( RemoteClient*, const std::string&, Sise::SExp* ) = 0;
+
+            virtual void saveSubserver(void) const {};
+            virtual void restoreSubserver(void) {};
     };
 
     class RemoteClient : public SProtoSocket {
@@ -183,6 +186,9 @@ namespace SProto {
             bool isAdministrator(const std::string&) const;
 
             bool handle( RemoteClient*, const std::string&, Sise::SExp* );
+
+            void saveSubserver(void) const { save(); }
+            void restoreSubserver(void) { restore(); }
     };
 
     class Server;
@@ -240,6 +246,7 @@ namespace SProto {
             void handle( RemoteClient*, const std::string&, Sise::SExp* );
 
             void save(void);
+            void restore(void);
     };
 
     struct NoSuchUserException : public std::runtime_error {

@@ -278,7 +278,7 @@ Server::Server(void) :
 {
     setGreeter( this );
 
-    users.restore();
+    restore();
 }
 
 Sise::Socket* Server::greet(Sise::RawSocket sock, struct sockaddr_storage *addr, socklen_t len) {
@@ -324,8 +324,16 @@ void Server::stopServer(void) {
     running = false;
 }
 
+void Server::restore(void) {
+    for(SubserverMap::iterator i = subservers.begin(); i != subservers.end(); i++) {
+        i->second->restoreSubserver();
+    }
+}
+
 void Server::save(void) {
-    users.save();
+    for(SubserverMap::iterator i = subservers.begin(); i != subservers.end(); i++) {
+        i->second->saveSubserver();
+    }
 }
 
 Server::~Server(void) {
