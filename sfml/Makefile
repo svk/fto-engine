@@ -13,29 +13,29 @@ clean:
 	rm -f *.o
 	rm -f $(EXECUTABLES)
 
-test-sftools: test-sftools.o hexfml.o anisprite.o typesetter.o sftools.o
+test-sftools: test-sftools.o hexfml.o anisprite.o typesetter.o sftools.o myabort.o
 	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
 
-test-hexfml: test-hexfml.o hexfml.o anisprite.o typesetter.o sftools.o HtGo.o
+test-hexfml: test-hexfml.o hexfml.o anisprite.o typesetter.o sftools.o HtGo.o myabort.o
 	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
 
-test-coords: test-coords.o hexfml.o
+test-coords: test-coords.o hexfml.o myabort.o
 	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
 
-test-typesetter: test-typesetter.o typesetter.o
+test-typesetter: test-typesetter.o typesetter.o myabort.o
 	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
 
-test-sexp: test-sexp.o Sise.o
+test-sexp: test-sexp.o Sise.o myabort.o
 	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
 
-test-sisenet: test-sisenet.o Sise.o
+test-sisenet: test-sisenet.o Sise.o myabort.o
 	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
 
-spserver: Sise.o spserver.o SProto.o
+spserver: Sise.o spserver.o SProto.o myabort.o
 	$(CC) $(CPPFLAGS) $(CORE_LIBS) $^ -o $@
 
-spclient: spclient.o Sise.o SProto.o
+spclient: spclient.o Sise.o SProto.o myabort.o
 	$(CC) $(CPPFLAGS) $(CORE_LIBS) $^ -o $@
 
-spguient: spguient.o Sise.o SProto.o typesetter.o sftools.o
+spguient: spguient.o Sise.o SProto.o typesetter.o sftools.o myabort.o
 	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@

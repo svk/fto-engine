@@ -279,6 +279,8 @@ namespace SProto {
     std::string makePasswordHash( const std::string&, const std::string&);
 
     Sise::SExp *prepareChatMessage(const std::string&, const std::string&);
+    std::string getChatMessageBody(Sise::SExp *);
+    std::string getChatMessageOrigin(Sise::SExp *);
 };
 
 #endif

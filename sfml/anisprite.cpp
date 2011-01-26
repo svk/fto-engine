@@ -1,5 +1,6 @@
 #include "anisprite.h"
 
+#include <cstdio>
 #include <cassert>
 
 #include <iostream>

@@ -1,5 +1,9 @@
 #include <iostream>
 
+#include <cstdio>
+#include <cstdlib>
+#include <cassert>
+
 #include <boost/program_options.hpp>
 
 #include "SProto.h"

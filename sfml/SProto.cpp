@@ -7,6 +7,8 @@
 
 #include <ctime>
 
+#include <cstdlib>
+#include <cstdio>
 #include <cassert>
 
 #include <cctype>
@@ -556,6 +558,14 @@ void DirectoryPersistable::clearFiles(void) {
 
 void DirectoryPersistable::restore(void) {
     readSExpDir( dirname, extension, *this );
+}
+
+std::string getChatMessageOrigin(Sise::SExp *sexp) {
+    return *asString( asProperCons(sexp)->nthcar(0) );
+}
+
+std::string getChatMessageBody(Sise::SExp *sexp) {
+    return *asString( asProperCons(sexp)->nthcar(1) );
 }
 
 Sise::SExp *prepareChatMessage(const std::string& origin, const std::string& message) {

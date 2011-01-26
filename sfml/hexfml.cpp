@@ -1,5 +1,7 @@
 #include "hexfml.h"
 
+#include <cstdlib>
+#include <cstdio>
 #include <cassert>
 #include <stdexcept>
 
