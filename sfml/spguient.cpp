@@ -51,6 +51,7 @@ class TriPanelScreen : public SfmlScreen {
         SfmlApplication& app;
         SProto::Client& client;
 
+
         bool inputtingText;
         ChatBox chatbox;
         ChatInputLine chatinput;
@@ -58,6 +59,41 @@ class TriPanelScreen : public SfmlScreen {
         sf::Shape ipPanel, gamePanel;
 
         int width, height;
+
+        class ChatboxClientCore : public SProto::ClientCore {
+            private:
+                ChatBox& box;
+
+            public:
+                ChatboxClientCore(ChatBox& box) : box(box) {}
+                
+                void showMessage( Sise::Cons *msg ) {
+                    using namespace Sise;
+                    using namespace std;
+                    using namespace SProto;
+                    outputSExp( msg, cerr );
+                    box.add(ChatLine( getChatMessageOrigin(msg),sf::Color(128,128,128),
+                                      getChatMessageBody(msg),sf::Color(255,255,255)));
+                }
+
+                void handle( const std::string& name, Sise::SExp* sexp ) {
+                    using namespace Sise;
+                    Cons *args = asProperCons( sexp );
+                    if( name != "chat" ) return;
+                    using namespace std;
+                    outputSExp( args, cerr );
+
+                    std::string type = *asSymbol( args->nthcar(0) );
+                    if( type == "channel" ) {
+                        showMessage( asCons( args->nthcdr( 2 ) ) );
+                    } else if( type == "private" || type == "broadcast" ) {
+                        showMessage( asCons( args->nthcdr( 0 ) ) );
+                    }
+                }
+        };
+
+        ChatboxClientCore ccore;
+
 
     public:
         TriPanelScreen( FreetypeFace& font,
@@ -68,8 +104,10 @@ class TriPanelScreen : public SfmlScreen {
             client ( client ),
             inputtingText ( false ),
             chatbox ( 0, 0, 640, 480, font, sf::Color(0,0,0) ),
-            chatinput ( 640, font, sf::Color(255,255,255), FormattedCharacter(font,sf::Color(255,255,0),'_') )
+            chatinput ( 640, font, sf::Color(255,255,255), FormattedCharacter(font,sf::Color(255,255,0),'_') ),
+            ccore ( chatbox )
         {
+            client.setCore( &ccore );
         }
 
         void resize(int width_, int height_) {
@@ -121,8 +159,6 @@ class TriPanelScreen : public SfmlScreen {
                 std::string data = chatinput.getString();
                 chatinput.clear();
                 toggleInputtingText();
-                chatbox.add(ChatLine("kaw",sf::Color(128,128,128),
-                                     data,sf::Color(255,255,255)));
 
                 client.delsend( List()( new Symbol( "chat" ) )
                                       ( new Symbol( "channel-message" ) )
