@@ -283,6 +283,7 @@ class ChatLineSprite {
         ~ChatLineSprite(void);
 
         int getHeight(void) const;
+        int getOffset(void) const;
 
         void setPosition(int,int);
 

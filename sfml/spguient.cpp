@@ -32,6 +32,9 @@
 
     [note: parsing must be done client-side, so it's not awkward to
      plug in a GUI later]
+
+    Note that none of the above commands have multiple arguments, so
+    we can make it simple.
 */
 
 class SpGuient : public SfmlApplication {
@@ -106,8 +109,13 @@ class NashTPScreen : public SfmlScreen {
                     using namespace std;
                     using namespace SProto;
                     outputSExp( msg, cerr );
-                    box.add(ChatLine( getChatMessageOrigin(msg),sf::Color(128,128,128),
-                                      getChatMessageBody(msg),sf::Color(255,255,255)));
+                    if( getChatMessageOrigin(msg) == "" ) {
+                        box.add(ChatLine( "", sf::Color(255,255,255),
+                                          getChatMessageBody(msg),sf::Color(100,100,200)));
+                    } else {
+                        box.add(ChatLine( getChatMessageOrigin(msg),sf::Color(128,128,128),
+                                          getChatMessageBody(msg),sf::Color(255,255,255)));
+                    }
                 }
 
                 void handle( const std::string& name, Sise::SExp* sexp ) {

@@ -494,18 +494,32 @@ int LabelSprite::getWidth(void) const {
     return (int)(0.999 + sprite->GetSize().x);
 }
 
-ChatLineSprite::ChatLineSprite(int width, const ChatLine& chatline, FreetypeFace& face) {
+ChatLineSprite::ChatLineSprite(int width, const ChatLine& chatline, FreetypeFace& face) :
+    nameSprite ( 0 )
+{
     construct( width, chatline.username, chatline.usernameColour, chatline.text, chatline.textColour, face );
 }
 
-ChatLineSprite::ChatLineSprite(int width, const std::string& name, sf::Color usernameColour, const std::string& text, sf::Color textColour, FreetypeFace& face) {
+ChatLineSprite::ChatLineSprite(int width, const std::string& name, sf::Color usernameColour, const std::string& text, sf::Color textColour, FreetypeFace& face) :
+    nameSprite ( 0 )
+{
     construct( width, name, usernameColour, text, textColour, face );
+}
+
+int ChatLineSprite::getOffset(void) const {
+    using namespace std;
+    if( nameSprite ) {
+        return nameSprite->getWidth() + padding;
+    }
+    return 0;
 }
 
 void ChatLineSprite::construct(int width, const std::string& name, sf::Color usernameColour, const std::string& text, sf::Color textColour, FreetypeFace& face) {
     padding = 10;
-    nameSprite = new LabelSprite( name, usernameColour, face );
-    int textWidth = width - (nameSprite->getWidth() + padding);
+    if( name.length() > 0 ) {
+        nameSprite = new LabelSprite( name, usernameColour, face );
+    }
+    int textWidth = width - getOffset();
     int spacing = face.getWidthOf(' ');
     SfmlRectangularRenderer rr ( textWidth, spacing, TJM_LEFT );
     WordWrapper wrap ( rr, textWidth, spacing );
@@ -517,11 +531,17 @@ void ChatLineSprite::construct(int width, const std::string& name, sf::Color use
     textSprite = new sf::Sprite();
     textSprite->SetImage( *image );
     setPosition(0,0);
-    height = MAX( nameSprite->getHeight(), (int) image->GetHeight() );
+    if( nameSprite ) {
+        height = MAX( nameSprite->getHeight(), (int) image->GetHeight() );
+    } else {
+        height = image->GetHeight();
+    }
 }
 
 ChatLineSprite::~ChatLineSprite(void) {
-    delete nameSprite;
+    if( nameSprite ) {
+        delete nameSprite;
+    }
     delete textSprite;
     delete image;
 }
@@ -532,13 +552,17 @@ int ChatLineSprite::getHeight(void) const {
 
 void ChatLineSprite::setPosition(int x, int y) {
     using namespace std;
-    nameSprite->setPosition( x, y );
-    textSprite->SetPosition( 0.5 + (double) (x + nameSprite->getWidth() + padding),
+    if( nameSprite ) {
+        nameSprite->setPosition( x, y );
+    }
+    textSprite->SetPosition( 0.5 + (double) (x + getOffset()),
                              0.5 + (double) y );
 }
 
 void ChatLineSprite::draw(sf::RenderWindow& win) const {
-    nameSprite->draw( win );
+    if( nameSprite ) {
+        nameSprite->draw( win );
+    }
     win.Draw( *textSprite );
 }
 
