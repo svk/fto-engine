@@ -285,7 +285,8 @@ int main(int argc, char *argv[]) {
     po::store( po::command_line_parser( argc, argv ).options( desc ).positional( pd ).run(), vm );
     po::notify( vm );
 
-    if( vm.count( "help" ) ) {
+    if( vm.count( "help" ) ||
+        (!vm.count( "host") || !vm.count("username") || !vm.count("password")) ) {
         cout << desc << endl;
         return 1;
     }
