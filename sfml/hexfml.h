@@ -188,6 +188,13 @@ class HexMap {
             if( k < 0 || k >= size ) return getDefault();
             return tiles[k];
         }
+
+        const T& getDefault(void) const { return defaultTile; }
+        const T& get(int x, int y) const {
+            int k = flattenHexCoordinate( x, y );
+            if( k < 0 || k >= size ) return getDefault();
+            return tiles[k];
+        }
 };
 
 #endif

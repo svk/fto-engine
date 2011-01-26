@@ -64,6 +64,8 @@ void CompositeEventHandler::adoptHandler(SfmlEventHandler* handler) {
 void SfmlApplication::resize(int width_, int height_) {
     width = width_;
     height = height_;
+    mainView = sf::View( sf::Vector2f(0,0),
+                         sf::Vector2f( width/2.0, height / 2.0 ) );
     currentScreen->resize(width, height);
 }
 

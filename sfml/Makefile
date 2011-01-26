@@ -37,5 +37,5 @@ spserver: Sise.o spserver.o SProto.o myabort.o
 spclient: spclient.o Sise.o SProto.o myabort.o
 	$(CC) $(CPPFLAGS) $(CORE_LIBS) $^ -o $@
 
-spguient: spguient.o Sise.o SProto.o typesetter.o sftools.o myabort.o
+spguient: spguient.o Sise.o SProto.o typesetter.o sftools.o myabort.o Nash.o NashClient.o sftools.o hexfml.o
 	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@

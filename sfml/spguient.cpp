@@ -6,6 +6,9 @@
 #include <boost/program_options.hpp>
 #include "SProto.h"
 
+#include "NashClient.h"
+#include "hexfml.h"
+
 class SpGuient : public SfmlApplication {
     private:
         SProto::Client& client;
@@ -45,16 +48,22 @@ class SpGuient : public SfmlApplication {
         SProto::Client& getClient(void) { return client; }
 };
 
-class TriPanelScreen : public SfmlScreen {
+class NashTPScreen : public SfmlScreen {
     private:
         FreetypeFace& font;
         SfmlApplication& app;
         SProto::Client& client;
 
-
         bool inputtingText;
         ChatBox chatbox;
         ChatInputLine chatinput;
+
+        ScreenGrid& grid;
+        Nash::NashBoard board;
+        Nash::NashBlitter blitter;
+        HexViewport viewport;
+
+        Nash::NashTile::Colour currentColour;
 
         sf::Shape ipPanel, gamePanel;
 
@@ -95,18 +104,26 @@ class TriPanelScreen : public SfmlScreen {
 
 
     public:
-        TriPanelScreen( FreetypeFace& font,
+        NashTPScreen( FreetypeFace& font,
                         SfmlApplication& app,
-                        SProto::Client& client) :
+                        SProto::Client& client,
+                        ScreenGrid& grid,
+                        ResourceManager<HexSprite>& sprites) :
             font ( font ),
             app ( app ),
             client ( client ),
             inputtingText ( false ),
             chatbox ( 0, 0, 640, 480, font, sf::Color(0,0,0) ),
             chatinput ( 640, font, sf::Color(255,255,255), FormattedCharacter(font,sf::Color(255,255,0),'_') ),
+            grid ( grid ),
+            board ( 11 ),
+            blitter ( board, sprites ),
+            viewport ( grid, 0, 0, 640, 480 ),
+            currentColour ( Nash::NashTile::WHITE ),
             ccore ( chatbox )
         {
             client.setCore( &ccore );
+            viewport.setBackgroundColour( sf::Color(0,100,0) );
         }
 
         void resize(int width_, int height_) {
@@ -127,11 +144,11 @@ class TriPanelScreen : public SfmlScreen {
                                             width,
                                             height,
                                             sf::Color( 200, 128, 128 ) );
-            gamePanel = sf::Shape::Rectangle( 0,
-                                              0,
-                                              width - ipWidth,
-                                              height - totalBottomHeight,
-                                              sf::Color( 200, 200, 128 ) );
+            viewport.setRectangle( 0,
+                                   0,
+                                   width - ipWidth,
+                                   height - totalBottomHeight );
+            viewport.center(0,0);
         }
 
         void toggleInputtingText(void) {
@@ -146,7 +163,10 @@ class TriPanelScreen : public SfmlScreen {
                 chatinput.draw( win );
             }
             win.Draw( ipPanel );
-            win.Draw( gamePanel );
+            sf::View view ( sf::Vector2f(0,0),
+                            sf::Vector2f((double)width/2.0, (double)height/2.0) );
+            win.SetView( view );
+            viewport.draw( blitter, win, view );
         }
 
         bool handleText(const sf::Event::TextEvent& text) {
@@ -164,6 +184,33 @@ class TriPanelScreen : public SfmlScreen {
                                       ( new Symbol( "user" ) )
                                       ( new String( "all" ) )
                                       ( new String( data ) ).make() );
+            }
+            return true;
+        }
+
+        bool handleLeftClick(int x, int y) {
+            if( viewport.translateCoordinates( x, y ) ) {
+                grid.screenToHex( x, y, 0, 0 );
+                if( board.isLegalMove( x, y ) ) {
+                    board.put( x, y, currentColour );
+                    currentColour = ( currentColour == Nash::NashTile::WHITE ) ? Nash::NashTile::BLACK : Nash::NashTile::WHITE;
+                }
+            }
+            return true;
+        }
+        
+        bool handleMouseMoved(int x, int y) {
+            bool doSelect = false;
+            if( viewport.translateCoordinates( x, y ) ) {
+                grid.screenToHex( x, y, 0, 0 );
+                if( board.isLegalMove( x, y ) ) {
+                    doSelect = true;
+                }
+            }
+            if( doSelect ) {
+                blitter.setSelected( x, y );
+            } else {
+                blitter.setNoSelected();
             }
             return true;
         }
@@ -197,6 +244,17 @@ class TriPanelScreen : public SfmlScreen {
                     return handleText( dynamic_cast<const sf::Event::TextEvent&>(ev.Text) );
                 case sf::Event::KeyPressed:
                     return handleKey( dynamic_cast<const sf::Event::KeyEvent&>(ev.Key) );
+                case sf::Event::MouseMoved:
+                    return handleMouseMoved( app.getWindow().GetInput().GetMouseX(),
+                                             app.getWindow().GetInput().GetMouseY() );
+                case sf::Event::MouseButtonPressed:
+                    switch( ev.MouseButton.Button ) {
+                        case sf::Mouse::Left:
+                            return handleLeftClick( app.getWindow().GetInput().GetMouseX(),
+                                                    app.getWindow().GetInput().GetMouseY() );
+                        default: break;
+                    }
+                    break;
                 default: break;
             }
             return false;
@@ -232,13 +290,24 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    ScreenGrid grid ( "./data/hexproto2.png" );
+    ResourceManager<HexSprite> sprites;
+    sprites.bind( "tile-white", new HexSprite( "./data/hexwhite2.png", grid ) );
+    sprites.bind( "tile-black", new HexSprite( "./data/hexblack2.png", grid ) );
+    sprites.bind( "tile-free", new HexSprite( "./data/hexgray2grid.png", grid ) );
+    sprites.bind( "border-selection", new HexSprite( "./data/hexborder2.png", grid ) );
+    sprites.bind( "tile-edge-white", new HexSprite( "./data/hexwhite2.png", grid ) );
+    sprites.bind( "tile-edge-black", new HexSprite( "./data/hexblack2.png", grid ) );
+    sprites.bind( "tile-edge-white-black", new HexSprite( "./data/hexwhiteblack2.png", grid ) );
+    sprites.bind( "tile-edge-black-white", new HexSprite( "./data/hexblackwhite2.png", grid ) );
+
     SpGuient app ( *Sise::connectToAs<SProto::Client>( vm["host"].as<string>(),
                                                       vm["port"].as<int>() ),
                    vm["username"].as<string>(),
                    vm["password"].as<string>()
     );
 
-    TriPanelScreen mainScreen (ftFont, app, app.getClient());
+    NashTPScreen mainScreen (ftFont, app, app.getClient(), grid, sprites );
 
     app.setScreen( &mainScreen );
     app.run();

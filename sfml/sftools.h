@@ -85,7 +85,7 @@ class SfmlApplication : public SfmlEventHandler {
         int width, height;
 
         sf::Clock clock;
-        sf::View mainView; // work out role
+        sf::View mainView;
         SfmlScreen *currentScreen;
 
         bool keepRunning;
@@ -98,6 +98,10 @@ class SfmlApplication : public SfmlEventHandler {
     public:
         SfmlApplication(std::string, int, int);
         ~SfmlApplication();
+
+        sf::View& getMainView(void) { return mainView; }
+
+        sf::RenderWindow& getWindow(void) { return window; }
 
         void run(void);
         void stop(void);

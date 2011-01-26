@@ -165,7 +165,7 @@ int main(int argc, char *argv[]) {
     ScreenGrid grid ( "./data/hexproto2.png" );
     hexSprites.bind( "black", new HexSprite( "./data/hexblack2.png", grid ) );
     hexSprites.bind( "white", new HexSprite( "./data/hexwhite2.png", grid ) );
-    hexSprites.bind( "gray", new HexSprite( "./data/hexgray2.png", grid ) );
+    hexSprites.bind( "gray", new HexSprite( "./data/hexgray2grid.png", grid ) );
 //    hexSprites.bind( "red", new HexSprite( "./data/hexred1.png", grid ) );
 //    hexSprites.bind( "blue", new HexSprite( "./data/hexblue1.png", grid ) );
 //    hexSprites.bind( "rainbow", new HexSprite( "./data/hexrainbow1.png", grid ) );
