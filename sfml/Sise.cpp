@@ -439,24 +439,22 @@ void SExpStreamParser::end(void) {
 }
 
 SExp* Cons::nthcar(int n) {
-    if( n == 0 ) {
-        return getcar();
-    }
-    Cons *c = asCons( nthcdr(n-1) );
+    Cons *c = asCons( nthtail(n) );
     if( !c ) {
         throw UnexpectedNilError();
     }
     return c->getcar();
 }
 
-SExp* Cons::nthcdr(int n) {
+SExp* Cons::nthtail(int n) {
     assert( n >= 0 );
-    if( n == 0 ) return cdrPtr;
+    if( n == 0 ) return this;
+    if( n == 1 ) return cdrPtr;
     if( !cdrPtr ) {
         throw UnexpectedNilError();
     }
     Cons *c = asCons( cdrPtr );
-    return c->nthcdr( n - 1 );
+    return c->nthtail( n - 1 );
 }
 
 void Socket::gracefulShutdown(void) {

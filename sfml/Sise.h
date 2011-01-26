@@ -122,7 +122,7 @@ namespace Sise {
             void setcdr(SExp*);
 
             SExp *nthcar(int);
-            SExp *nthcdr(int);
+            SExp *nthtail(int);
 
             void output(std::ostream&);
     };

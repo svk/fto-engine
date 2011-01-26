@@ -82,12 +82,11 @@ class TriPanelScreen : public SfmlScreen {
                     if( name != "chat" ) return;
                     using namespace std;
                     outputSExp( args, cerr );
-
                     std::string type = *asSymbol( args->nthcar(0) );
                     if( type == "channel" ) {
-                        showMessage( asCons( args->nthcdr( 2 ) ) );
+                        showMessage( asCons( args->nthtail( 3 ) ) );
                     } else if( type == "private" || type == "broadcast" ) {
-                        showMessage( asCons( args->nthcdr( 0 ) ) );
+                        showMessage( asCons( args->nthtail( 1 ) ) );
                     }
                 }
         };
