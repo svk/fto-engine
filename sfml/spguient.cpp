@@ -9,6 +9,31 @@
 #include "NashClient.h"
 #include "hexfml.h"
 
+/* Doing interaction while weaseling out of writing GUI code: time
+   to implement a CLI. We'll do the age-old method of having anything
+   prepended by / be a command.
+
+   What we need:
+        Lobby functionality
+            /users
+            /challenge username
+            /accept username
+            /decline username
+        Game functionality
+            Pie rule:
+                /swap
+                /no-swap
+            Ending the game:
+                /resign
+                /offer-draw
+                /retract-draw
+        Quitting
+            /disconnect
+
+    [note: parsing must be done client-side, so it's not awkward to
+     plug in a GUI later]
+*/
+
 class SpGuient : public SfmlApplication {
     private:
         SProto::Client& client;
