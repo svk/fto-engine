@@ -23,6 +23,8 @@ struct NashTile {
 
     Status status;
     Colour colour;
+
+    bool isColour(Colour) const;
     
     NashTile(void) :
         status ( OFF_MAP ),
@@ -44,6 +46,8 @@ class NashBoard {
         std::string getAppearance(int,int) const;
 
         void put(int,int,NashTile::Colour);
+
+        NashTile::Colour getWinner(void) const;
 };
 
 }

@@ -62,6 +62,9 @@ class SpGuient : public SfmlApplication {
             client.delsend( List()( new Symbol( "chat" ) )
                                   ( new Symbol( "join" ) )
                                   ( new String( "all" ) ).make() );
+            client.delsend( List()( new Symbol( "nash" ) )
+                                  ( new Symbol( "hello" ) )
+                            .make() );
         }
 
         void tick(double dt) {
@@ -91,6 +94,7 @@ class NashTPScreen : public SfmlScreen {
         Nash::NashBlitter blitter;
         HexViewport viewport;
 
+        bool expectingMove;
         Nash::NashTile::Colour currentColour;
 
         sf::Shape ipPanel, gamePanel;
@@ -152,6 +156,7 @@ class NashTPScreen : public SfmlScreen {
             board ( 11 ),
             blitter ( board, sprites ),
             viewport ( grid, 0, 0, 640, 480 ),
+            expectingMove ( true ), // xx: init to false and wait for signal
             currentColour ( Nash::NashTile::WHITE ),
             ccore ( chatbox )
         {
@@ -222,11 +227,24 @@ class NashTPScreen : public SfmlScreen {
         }
 
         bool handleLeftClick(int x, int y) {
+            using namespace Sise;
             if( viewport.translateCoordinates( x, y ) ) {
                 grid.screenToHex( x, y, 0, 0 );
-                if( board.isLegalMove( x, y ) ) {
+                if( expectingMove && board.isLegalMove( x, y ) ) {
+                    client.delsend( List()( new Symbol( "nash" ) )
+                                          ( new Symbol( "move" ) )
+                                          ( new Int( x ) )
+                                          ( new Int( y ) ).make() );
                     board.put( x, y, currentColour );
-                    currentColour = ( currentColour == Nash::NashTile::WHITE ) ? Nash::NashTile::BLACK : Nash::NashTile::WHITE;
+                    expectingMove = false; // wait for new signal
+
+                    if( board.getWinner() != Nash::NashTile::NONE ) {
+                        chatbox.add(ChatLine( "", sf::Color(255,255,255),
+                                              "Game over!",sf::Color(100,100,200)));
+                    } else {
+                        expectingMove = true; // xx: not really yet
+                        currentColour = ( currentColour == Nash::NashTile::WHITE ) ? Nash::NashTile::BLACK : Nash::NashTile::WHITE;
+                    }
                 }
             }
             return true;
