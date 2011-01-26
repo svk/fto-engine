@@ -439,7 +439,10 @@ void SExpStreamParser::end(void) {
 }
 
 SExp* Cons::nthcar(int n) {
-    Cons *c = asCons( nthcdr(n) );
+    if( n == 0 ) {
+        return getcar();
+    }
+    Cons *c = asCons( nthcdr(n-1) );
     if( !c ) {
         throw UnexpectedNilError();
     }
@@ -448,8 +451,7 @@ SExp* Cons::nthcar(int n) {
 
 SExp* Cons::nthcdr(int n) {
     assert( n >= 0 );
-    if( n == 0 ) return static_cast<SExp*>(this);
-    if( n == 1 ) return cdrPtr;
+    if( n == 0 ) return cdrPtr;
     if( !cdrPtr ) {
         throw UnexpectedNilError();
     }
