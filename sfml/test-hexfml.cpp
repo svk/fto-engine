@@ -162,16 +162,16 @@ int main(int argc, char *argv[]) {
     ResourceManager<HexSprite> hexSprites;
     ResourceManager<sf::SoundBuffer> soundBuffers;
 
-    ScreenGrid grid ( "./data/hexproto1.png" );
-    hexSprites.bind( "black", new HexSprite( "./data/hexblack1.png", grid ) );
-    hexSprites.bind( "white", new HexSprite( "./data/hexwhite1.png", grid ) );
-    hexSprites.bind( "gray", new HexSprite( "./data/hexgray1.png", grid ) );
-    hexSprites.bind( "red", new HexSprite( "./data/hexred1.png", grid ) );
-    hexSprites.bind( "blue", new HexSprite( "./data/hexblue1.png", grid ) );
-    hexSprites.bind( "rainbow", new HexSprite( "./data/hexrainbow1.png", grid ) );
-    hexSprites.bind( "yellow-border", new HexSprite( "./data/hexborder1.png", grid ) );
-    hexSprites.bind( "white-black-edge", new HexSprite( "./data/hexwhiteblack1.png", grid ) );
-    hexSprites.bind( "black-white-edge", new HexSprite( "./data/hexblackwhite1.png", grid ) );
+    ScreenGrid grid ( "./data/hexproto2.png" );
+    hexSprites.bind( "black", new HexSprite( "./data/hexblack2.png", grid ) );
+    hexSprites.bind( "white", new HexSprite( "./data/hexwhite2.png", grid ) );
+    hexSprites.bind( "gray", new HexSprite( "./data/hexgray2.png", grid ) );
+//    hexSprites.bind( "red", new HexSprite( "./data/hexred1.png", grid ) );
+//    hexSprites.bind( "blue", new HexSprite( "./data/hexblue1.png", grid ) );
+//    hexSprites.bind( "rainbow", new HexSprite( "./data/hexrainbow1.png", grid ) );
+    hexSprites.bind( "yellow-border", new HexSprite( "./data/hexborder2.png", grid ) );
+    hexSprites.bind( "white-black-edge", new HexSprite( "./data/hexwhiteblack2.png", grid ) );
+    hexSprites.bind( "black-white-edge", new HexSprite( "./data/hexblackwhite2.png", grid ) );
 
     soundBuffers.bind( "fail-sound", new sf::SoundBuffer() );
     soundBuffers["fail-sound"].LoadFromFile( "./data/fail.wav" );
