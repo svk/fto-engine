@@ -229,10 +229,11 @@ bool NashGame::done(void) const {
 NashSubserver::NashSubserver( SProto::Server& server ) :
     Persistable( "./persist/nash.lisp" ),
     SubServer( "nash", server ),
-    nextGameId ( 0 ),
+    nextGameId ( 1 ),
     games (),
     challenges ()
 {
+    restore();
 }
 
 void NashSubserver::fromSexp(Sise::SExp *sexp) {

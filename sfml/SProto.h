@@ -40,12 +40,17 @@ namespace SProto {
                 IDST_IDENTIFIED
             };
             IdState idState;
-            std::string username, passwordhash;
+            std::string username, password, passwordhash;
+
+            bool autoregister;
+            int triedAutoregister;
 
             ClientCore *clientCore;
 
         public:
             Client(Sise::RawSocket, ClientCore* = 0);
+
+            void setAutoRegister(void) { autoregister = true; }
 
             void setCore(ClientCore*);
 

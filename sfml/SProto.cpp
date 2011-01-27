@@ -360,6 +360,8 @@ void Client::setCore(ClientCore *core) {
 Client::Client( Sise::RawSocket sock, ClientCore* core ) :
     SProtoSocket( sock ),
     idState( IDST_UNIDENTIFIED ),
+    autoregister ( false ),
+    triedAutoregister ( 0 ),
     clientCore ( core )
 {
     using namespace Sise;
@@ -389,6 +391,17 @@ void Client::handle( const std::string& cmd, Sise::SExp *arg) {
                        ( new Symbol( "login-response" ) )
                        ( new String( response ) )
                  .make() );
+    } else if( autoregister && cmd == "login-failure" ) {
+        if( !triedAutoregister++) {
+            delsend( List()( new Symbol( "user" ) )
+                           ( new Symbol( "register" ) )
+                           ( new String( username ) )
+                           ( new String( password ) )
+                     .make() );
+            identify( username, password );
+        } else {
+            throw std::runtime_error( "login error after autoregister attempt -- bad password?" );
+        }
     } else if( cmd == "login-ok" ) {
         Cons *args = asProperCons( arg );
         std::string data = *asString( args->nthcar(0) );
@@ -400,10 +413,13 @@ void Client::handle( const std::string& cmd, Sise::SExp *arg) {
     }
 }
 
-void Client::identify(const std::string& username_, const std::string& password) {
+void Client::identify(const std::string& username_, const std::string& password_) {
     using namespace Sise;
     username = username_;
-    passwordhash = makePasswordHash( username, password );
+    passwordhash = makePasswordHash( username, password_ );
+    if( autoregister ) {
+        password = password_;
+    }
     delsend( List()( new Symbol( "user" ) )
                    ( new Symbol( "login-request" ) )
                    ( new String( username ) )

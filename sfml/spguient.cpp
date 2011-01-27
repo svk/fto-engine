@@ -408,6 +408,7 @@ int main(int argc, char *argv[]) {
     po::options_description desc( "Allowed options" );
     desc.add_options()
         ("help", "display option help")
+        ("noregister", "don't attempt to register an account upon login failure")
         ("username", po::value<string>(), "set username")
         ("password", po::value<string>(), "set password")
         ("host", po::value<string>(), "server host name or IP")
@@ -434,8 +435,16 @@ int main(int argc, char *argv[]) {
     sprites.bind( "tile-edge-white-black", new HexSprite( "./data/hexwhiteblack2.png", grid ) );
     sprites.bind( "tile-edge-black-white", new HexSprite( "./data/hexblackwhite2.png", grid ) );
 
-    SpGuient app ( *Sise::connectToAs<SProto::Client>( vm["host"].as<string>(),
-                                                      vm["port"].as<int>() ),
+    SProto::Client *client = Sise::connectToAs<SProto::Client>( vm["host"].as<string>(),
+                                                                vm["port"].as<int>() );
+
+    if( !vm.count( "noregister" ) ) { // at some point the default should probably be not autoregistering
+                                      // (reason: typos in usernames)
+                                      // this is fine for semi-long term testing though
+        client->setAutoRegister();
+    }
+
+    SpGuient app ( *client,
                    vm["username"].as<string>(),
                    vm["password"].as<string>()
     );
