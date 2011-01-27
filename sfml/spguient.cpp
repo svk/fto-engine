@@ -79,7 +79,8 @@ class SpGuient : public SfmlApplication {
         SProto::Client& getClient(void) { return client; }
 };
 
-class NashTPScreen : public SfmlScreen {
+class NashTPScreen : public SfmlScreen,
+                     public SProto::ClientCore {
     private:
         FreetypeFace& font;
         SfmlApplication& app;
@@ -95,50 +96,65 @@ class NashTPScreen : public SfmlScreen {
         HexViewport viewport;
 
         bool expectingMove;
-        Nash::NashTile::Colour currentColour;
+        bool maySwap;
+
+        bool wasWelcomed;
+        int gameId;
+        std::string channelName;
 
         sf::Shape ipPanel, gamePanel;
 
         int width, height;
 
-        class ChatboxClientCore : public SProto::ClientCore {
-            private:
-                ChatBox& box;
+        void showServerMessage( const std::string& message ) {
+            using namespace Sise;
+            using namespace std;
+            using namespace SProto;
+            chatbox.add(ChatLine( "", sf::Color(255,255,255),
+                                  message,sf::Color(100,100,200)));
+        }
 
-            public:
-                ChatboxClientCore(ChatBox& box) : box(box) {}
-                
-                void showMessage( Sise::Cons *msg ) {
-                    using namespace Sise;
-                    using namespace std;
-                    using namespace SProto;
-                    outputSExp( msg, cerr );
-                    if( getChatMessageOrigin(msg) == "" ) {
-                        box.add(ChatLine( "", sf::Color(255,255,255),
-                                          getChatMessageBody(msg),sf::Color(100,100,200)));
-                    } else {
-                        box.add(ChatLine( getChatMessageOrigin(msg),sf::Color(128,128,128),
-                                          getChatMessageBody(msg),sf::Color(255,255,255)));
-                    }
-                }
+        void showMessage( Sise::Cons *msg ) {
+            using namespace Sise;
+            using namespace std;
+            using namespace SProto;
+            outputSExp( msg, cerr );
+            if( getChatMessageOrigin(msg) == "" ) {
+                showServerMessage( getChatMessageBody(msg) );
+            } else {
+                chatbox.add(ChatLine( getChatMessageOrigin(msg),sf::Color(128,128,128),
+                                  getChatMessageBody(msg),sf::Color(255,255,255)));
+            }
+        }
 
-                void handle( const std::string& name, Sise::SExp* sexp ) {
-                    using namespace Sise;
-                    Cons *args = asProperCons( sexp );
-                    if( name != "chat" ) return;
-                    using namespace std;
-                    outputSExp( args, cerr );
-                    std::string type = *asSymbol( args->nthcar(0) );
-                    if( type == "channel" ) {
-                        showMessage( asCons( args->nthtail( 3 ) ) );
-                    } else if( type == "private" || type == "broadcast" ) {
-                        showMessage( asCons( args->nthtail( 1 ) ) );
-                    }
-                }
-        };
-
-        ChatboxClientCore ccore;
-
+        void handleNash( const std::string& cmd, Sise::SExp* arg) {
+            using namespace std;
+            using namespace Sise;
+            if( cmd == "challenge" ) {
+                std::ostringstream oss;
+                std::string challenger = *asString( asProperCons(arg)->nthcar(0) );
+                oss << ">> Received challenge from " << challenger;
+                showServerMessage( oss.str() );
+            } else if( cmd == "welcome" ) {
+                wasWelcomed = true;
+                gameId = *asInt( asProperCons(arg)->nthcar(0) );
+                channelName = *asString( asProperCons(arg)->nthcar(1) );
+                board.clear();
+            } else if( !wasWelcomed ) {
+                cerr << "oops: received " << cmd << " unexpectedly before welcome" << endl;
+            } else if( *asInt(asProperCons(arg)->nthcar(0)) != gameId ) {
+                cerr << "oops: received " << cmd << " to unknown gameId" << endl;
+            } else if( cmd == "put" ) {
+                std::string col = *asSymbol( asProperCons(arg)->nthcar(3));
+                board.put( *asInt( asProperCons(arg)->nthcar(1)),
+                           *asInt( asProperCons(arg)->nthcar(2)),
+                           ("white" == col) ? Nash::NashTile::WHITE : Nash::NashTile::BLACK );
+            } else if( cmd == "request-move" ) {
+                std::string sym = *asSymbol( asProperCons(arg)->nthcar(1));
+                expectingMove = true;
+                maySwap = "may-swap" == sym;
+            }
+        }
 
     public:
         NashTPScreen( FreetypeFace& font,
@@ -156,11 +172,11 @@ class NashTPScreen : public SfmlScreen {
             board ( 11 ),
             blitter ( board, sprites ),
             viewport ( grid, 0, 0, 640, 480 ),
-            expectingMove ( true ), // xx: init to false and wait for signal
-            currentColour ( Nash::NashTile::WHITE ),
-            ccore ( chatbox )
+            expectingMove ( false ),
+            maySwap ( false ),
+            wasWelcomed ( false )
         {
-            client.setCore( &ccore );
+            client.setCore( this );
             viewport.setBackgroundColour( sf::Color(0,100,0) );
         }
 
@@ -194,6 +210,25 @@ class NashTPScreen : public SfmlScreen {
             resize( width, height );
         }
 
+        void handle( const std::string& name, Sise::SExp* sexp ) {
+            using namespace Sise;
+            Cons *args = asProperCons( sexp );
+            if( name == "nash" ) {
+                handleNash( *asSymbol( args->nthcar(0) ),
+                            args->getcdr() );
+                return;
+            }
+            if( name != "chat" ) return;
+            using namespace std;
+            outputSExp( args, cerr );
+            std::string type = *asSymbol( args->nthcar(0) );
+            if( type == "channel" ) {
+                showMessage( asCons( args->nthtail( 3 ) ) );
+            } else if( type == "private" || type == "broadcast" ) {
+                showMessage( asCons( args->nthtail( 1 ) ) );
+            }
+        }
+
         void draw(sf::RenderWindow& win) {
             win.Clear( sf::Color(128,128,128) );
             chatbox.draw( win );
@@ -207,6 +242,51 @@ class NashTPScreen : public SfmlScreen {
             viewport.draw( blitter, win, view );
         }
 
+        void handleCliCommand( const std::string& s ) {
+            std::string command, argument;
+            int b = -1;
+            for(int i=0;i<(int)s.length();i++) {
+                if( isspace( s[i] ) ) {
+                    b = i;
+                    break;
+                }
+            }
+            if( b < 0 ) {
+                command = s;
+                argument = "";
+            } else {
+                command = s.substr( 0, b );
+                argument = s.substr( b + 1 );
+            }
+
+            using namespace Sise;
+
+            if( command == "challenge" ) {
+                client.delsend( List()( new Symbol( "nash" ) )
+                                      ( new Symbol( "challenge" ) )
+                                      ( new String( argument ) )
+                                .make() );
+            } else if( command == "resign" ) {
+                client.delsend( List()( new Symbol( "nash" ) )
+                                      ( new Symbol( "resign" ) )
+                                      ( new Int( gameId ) ).make() );
+            } else if( command == "swap" ) {
+                if( expectingMove && maySwap ) {
+                    client.delsend( List()( new Symbol( "nash" ) )
+                                          ( new Symbol( "swap" ) )
+                                          ( new Int( gameId ) ).make() );
+                    expectingMove = false;
+                }
+            } else if( command == "accept" ) {
+                client.delsend( List()( new Symbol( "nash" ) )
+                                      ( new Symbol( "accept" ) )
+                                      ( new String( argument ) )
+                                .make() );
+            } else {
+                showServerMessage( ":: bad command" );
+            }
+        }
+
         bool handleText(const sf::Event::TextEvent& text) {
             if( !inputtingText ) return false;
             chatinput.textEntered( text.Unicode );
@@ -217,11 +297,15 @@ class NashTPScreen : public SfmlScreen {
                 chatinput.clear();
                 toggleInputtingText();
 
-                client.delsend( List()( new Symbol( "chat" ) )
-                                      ( new Symbol( "channel-message" ) )
-                                      ( new Symbol( "user" ) )
-                                      ( new String( "all" ) )
-                                      ( new String( data ) ).make() );
+                if( data.length() > 0 && data[0] == '/' ) {
+                    handleCliCommand( data.substr( 1, data.length() - 1 ) );
+                } else {
+                    client.delsend( List()( new Symbol( "chat" ) )
+                                          ( new Symbol( "channel-message" ) )
+                                          ( new Symbol( "user" ) )
+                                          ( new String( "all" ) )
+                                          ( new String( data ) ).make() );
+                }
             }
             return true;
         }
@@ -233,17 +317,14 @@ class NashTPScreen : public SfmlScreen {
                 if( expectingMove && board.isLegalMove( x, y ) ) {
                     client.delsend( List()( new Symbol( "nash" ) )
                                           ( new Symbol( "move" ) )
+                                          ( new Int( gameId ) )
                                           ( new Int( x ) )
                                           ( new Int( y ) ).make() );
-                    board.put( x, y, currentColour );
                     expectingMove = false; // wait for new signal
 
                     if( board.getWinner() != Nash::NashTile::NONE ) {
                         chatbox.add(ChatLine( "", sf::Color(255,255,255),
                                               "Game over!",sf::Color(100,100,200)));
-                    } else {
-                        expectingMove = true; // xx: not really yet
-                        currentColour = ( currentColour == Nash::NashTile::WHITE ) ? Nash::NashTile::BLACK : Nash::NashTile::WHITE;
                     }
                 }
             }
@@ -258,7 +339,7 @@ class NashTPScreen : public SfmlScreen {
                     doSelect = true;
                 }
             }
-            if( doSelect ) {
+            if( expectingMove && doSelect ) {
                 blitter.setSelected( x, y );
             } else {
                 blitter.setNoSelected();

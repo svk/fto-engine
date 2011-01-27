@@ -42,6 +42,8 @@ class NashBoard {
         NashBoard(int);
         ~NashBoard(void);
 
+        void clear(void);
+
         bool isLegalMove(int,int) const;
         std::string getAppearance(int,int) const;
 

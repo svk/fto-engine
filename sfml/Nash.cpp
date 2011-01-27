@@ -21,13 +21,8 @@ bool NashTile::isColour(NashTile::Colour c) const {
     return false;
 }
 
-NashBoard::NashBoard(int size) :
-    size ( size ),
-    tiles ( size )
-{
-    assert( (size%2) == 1 );
+void NashBoard::clear(void) {
     const int border = (size+1)/2;
-
     for(int i=-border;i<=border;i++) for(int j=-border;j<=border;j++) {
         int x = i * 3, y = 2 * j + i;
         tiles.get(x,y).status = NashTile::FREE;
@@ -48,6 +43,14 @@ NashBoard::NashBoard(int size) :
     tiles.get(border*3,-border).colour = NashTile::WHITE_BLACK;
     tiles.get(border*3,-border).status = NashTile::EDGE;
     tiles.getDefault().status = NashTile::OFF_MAP;
+}
+
+NashBoard::NashBoard(int size) :
+    size ( size ),
+    tiles ( size )
+{
+    assert( (size%2) == 1 );
+    clear();
 }
 
 NashTile::Colour NashBoard::getWinner(void) const {
