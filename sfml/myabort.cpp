@@ -3,5 +3,5 @@
 #include <cassert>
 
 void myabort(void) {
-    abort();
+    exit(1);
 }
