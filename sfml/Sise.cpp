@@ -228,7 +228,7 @@ bool NumberParser::feed(char ch) {
     if( length >= (int) sizeof buffer ) {
         throw ParseError( "parse error / buffer overflow -- expected smallint" );
     }
-    if( isdigit( ch ) ) {
+    if( isdigit( ch ) || (length == 0 && ch == '-') ) {
         buffer[length++] = ch;
     } else {
         isDone = true;
@@ -248,7 +248,7 @@ SExpParser *makeSExpParser(char ch) {
     SExpParser *rv = 0;
     if( isspace( ch ) ) {
         return 0;
-    } else if( isdigit( ch ) ) {
+    } else if( isdigit( ch ) || ch == '-' ) {
         rv = new NumberParser();
         rv->feed( ch );
     } else if( ch == '"' ) {
