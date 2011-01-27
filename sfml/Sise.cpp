@@ -610,8 +610,10 @@ void SocketManager::pump(int ms, SocketSet* ready) {
                      0,
                      &exceptfds,
                      (ms < 0) ? 0 : &tv );
-    if( rv == EINTR ) return;
     if( rv < 0 ) {
+        if( errno == EINTR ) return;
+        using namespace std;
+        cerr << rv << endl;
         throw std::runtime_error( "select() returned unexpected error" );
     }
     for(WatchedMap::iterator i = watched.begin(); i != watched.end();) {
