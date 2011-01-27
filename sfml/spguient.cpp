@@ -22,7 +22,7 @@
         Game functionality
             Pie rule:
                 /swap
-                /no-swap
+                [to not swap, just make a move]
             Ending the game:
                 /resign
                 /offer-draw

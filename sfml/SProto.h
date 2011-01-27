@@ -268,6 +268,8 @@ namespace SProto {
             void restore(void);
 
             RClientList& getClients(void) { return rclients; }
+
+            RemoteClient* getConnectedUser( const std::string& );
     };
 
     struct NoSuchUserException : public std::runtime_error {

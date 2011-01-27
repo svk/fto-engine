@@ -31,8 +31,8 @@ test-sexp: test-sexp.o Sise.o myabort.o
 test-sisenet: test-sisenet.o Sise.o myabort.o
 	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
 
-spserver: Sise.o spserver.o SProto.o myabort.o
-	$(CC) $(CPPFLAGS) $(CORE_LIBS) $^ -o $@
+spserver: Sise.o spserver.o SProto.o myabort.o Nash.o NashServer.o hexfml.o
+	$(CC) $(CPPFLAGS) $(CORE_LIBS) $(LIBS) $^ -o $@
 
 spclient: spclient.o Sise.o SProto.o myabort.o
 	$(CC) $(CPPFLAGS) $(CORE_LIBS) $^ -o $@

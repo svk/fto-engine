@@ -671,4 +671,26 @@ bool RemoteClient::isInChannel(const std::string& type, const std::string& name)
     return channels.find( ChannelId(type,name) ) != channels.end();
 }
 
+class UsernameEqualTo {
+    private:
+        const std::string& str;
+
+    public:
+        UsernameEqualTo(const std::string& str) : str(str) {}
+
+        bool operator()(const RemoteClient* rc) const {
+            return rc->hasUsername() && rc->getUsername() == str;
+        }
+};
+
+RemoteClient* Server::getConnectedUser( const std::string& username ) {
+    UsernameEqualTo eq(username);
+    RClientList::iterator i = find_if( rclients.begin(), rclients.end(), eq);
+    if( i == rclients.end() ) {
+        return 0;
+    }
+    return *i;
+
+}
+
 };
