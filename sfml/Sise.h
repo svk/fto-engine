@@ -450,6 +450,8 @@ namespace Sise {
         }
 
         connect( x, res->ai_addr, res->ai_addrlen );
+        
+        freeaddrinfo( res );
 
         return new T( x );
     };

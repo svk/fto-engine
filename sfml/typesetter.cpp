@@ -776,6 +776,9 @@ void ChatInputLine::draw(sf::RenderWindow& win) {
 }
 
 ChatInputLine::~ChatInputLine(void) {
+    if( sprite ) {
+        delete sprite;
+    }
 }
 
 LineBuilder::LineBuilder(void) :
