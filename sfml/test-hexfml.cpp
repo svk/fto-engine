@@ -222,19 +222,6 @@ int main(int argc, char *argv[]) {
     sf::Color red(255,0,0);
     sf::Color white(255,255,255);
     ChatBox chatbox ( 0, 0, 640, 480, myFtFont, sf::Color(0,0,0) );
-    chatbox.add( ChatLine( "ocean", red, "What are you trying to find? I don't care, I'm not kind -- I have bludgeoned your sailors, spat out their keepsakes.", white ) );
-    chatbox.add( ChatLine( "ocean", red, "What are you trying to find? I don't care, I'm not kind -- I have bludgeoned your sailors, spat out their keepsakes.", white ) );
-    chatbox.add( ChatLine( "ocean", red, "What are you trying to find? I don't care, I'm not kind -- I have bludgeoned your sailors, spat out their keepsakes.", white ) );
-    chatbox.add( ChatLine( "ocean", red, "What are you trying to find? I don't care, I'm not kind -- I have bludgeoned your sailors, spat out their keepsakes.", white ) );
-    chatbox.add( ChatLine( "ocean", red, "What are you trying to find? I don't care, I'm not kind -- I have bludgeoned your sailors, spat out their keepsakes.", white ) );
-    chatbox.add( ChatLine( "ocean", red, "What are you trying to find? I don't care, I'm not kind -- I have bludgeoned your sailors, spat out their keepsakes.", white ) );
-    chatbox.add( ChatLine( "ocean", red, "What are you trying to find? I don't care, I'm not kind -- I have bludgeoned your sailors, spat out their keepsakes.", white ) );
-    chatbox.add( ChatLine( "ocean", red, "What are you trying to find? I don't care, I'm not kind -- I have bludgeoned your sailors, spat out their keepsakes.", white ) );
-    chatbox.add( ChatLine("kaw", red, "they don't give a damn about any trumpet-playing band", white ) );
-    chatbox.add( ChatLine("kaw", red, "it ain't what they call rock and roll", white ) );
-    chatbox.add( ChatLine( "blueberry", red, "why can't we ever win?", white  ) );
-    chatbox.add( ChatLine( "blueberry", red, "ever win?", white ) );
-    chatbox.add( ChatLine( "blueberry", red, "once?" , white ) );
 
     sf::Image *textPopup = 0;
     {
