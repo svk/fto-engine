@@ -340,7 +340,6 @@ int FormattedWord::render(int x, int y, ImageBuffer& buffer) const {
     int dx = 0;
     using namespace std;
     for(FCList::const_iterator i = components.begin(); i != components.end(); i++) {
-        cerr << dx << " ";
         dx += i->render( x + dx, y, buffer );
     }
     return dx;
@@ -349,14 +348,10 @@ int FormattedWord::render(int x, int y, ImageBuffer& buffer) const {
 void FormattedLine::renderLeftJustified(int x, int y, int spacing,ImageBuffer& buffer) const {
     int dx = 0;
     using namespace std;
-    cerr << "rendering [left] at: ";
     for(FWList::const_iterator i = components.begin(); i != components.end(); i++) {
-        cerr << dx << "(";
         dx += i->render( x + dx, y + maxAscender, buffer );
-        cerr << ") ";
         dx += spacing;
     }
-    cerr << endl;
 }
 
 void FormattedLine::renderCentered(int x, int y, int spacing, int width, ImageBuffer& buffer) const {
@@ -370,9 +365,7 @@ void FormattedLine::renderPadded(int x, int y, int spacing, int width, ImageBuff
     int dx = 0;
     int index = 0;
     using namespace std;
-    cerr << "rendering [padded] at: ";
     for(FWList::const_iterator i = components.begin(); i != components.end(); i++) {
-        cerr << dx << " ";
         dx += i->render( x + dx, y + maxAscender, buffer );
         dx += spacing;
         if( (index%2) == 0 ) {
@@ -384,7 +377,6 @@ void FormattedLine::renderPadded(int x, int y, int spacing, int width, ImageBuff
         }
         index++;
     }
-    cerr << endl;
 }
 
 sf::Color ImageBuffer::getColourAt(int x, int y) {
