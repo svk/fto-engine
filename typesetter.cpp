@@ -12,6 +12,8 @@
 #define MAX(a,b) (((a)>(b))?(a):(b))
 #define MIN(a,b) (((a)<(b))?(a):(b))
 
+#define TO_PIXELS(i) (((i)+63)/64)
+
 ImageBuffer::ImageBuffer(int width, int height) :
     width ( width ),
     height ( height ),
@@ -227,7 +229,7 @@ int FormattedCharacter::getWidth(void) {
 }
 
 int FormattedCharacter::getAscender(void) {
-    return (face->getFace()->size->metrics.ascender/64);
+    return TO_PIXELS(face->getFace()->size->metrics.ascender);
 }
 
 int FormattedCharacter::getHeight(void) {
@@ -293,16 +295,16 @@ void WordWrapper::handleNewWord(void) {
 int FreetypeFace::getWidthOf(uint32_t ch) {
     int error = FT_Load_Char( face, ch, FT_LOAD_RENDER );
     if( error ) return 0;
-    return face->glyph->advance.x / 64;
+    return TO_PIXELS(face->glyph->advance.x);
 }
 
 int FreetypeFace::getHeight(void) {
-    return face->size->metrics.height / 64;
+    return TO_PIXELS(face->size->metrics.height);
 }
 
 int FreetypeFace::getHeightOf(uint32_t ch) {
     using namespace std;
-    return face->size->metrics.height / 64;
+    return TO_PIXELS(face->size->metrics.height);
 }
 
 std::string FormattedLine::getRawText(void) const {
@@ -333,7 +335,7 @@ int FormattedCharacter::render(int x, int y, ImageBuffer& buffer) const {
                         y - face->getFace()->glyph->bitmap_top,
                         &face->getFace()->glyph->bitmap,
                         colour );
-    return face->getFace()->glyph->advance.x / 64;
+    return TO_PIXELS(face->getFace()->glyph->advance.x);
 }
 
 int FormattedWord::render(int x, int y, ImageBuffer& buffer) const {

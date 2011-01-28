@@ -411,7 +411,7 @@ class NashTPScreen : public SfmlScreen,
 
 int main(int argc, char *argv[]) {
     FreetypeLibrary ftLib;
-    FreetypeFace ftFont ("./data/Vera.ttf", 20);
+    FreetypeFace ftFont ("./data/BienetBold.ttf", 20);
 
     using namespace std;
     namespace po = boost::program_options;
