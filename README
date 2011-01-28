@@ -1,0 +1,14 @@
+An engine for turn-based multiplayer games, especially ones played on
+a hex grid. The idea is to combine server code for multiple projects
+to share code for similar needs such as persistence, chatting, and
+user management. It's also possible to combine multiple actual servers
+into one binary to host several game types on one port and allow
+communication among users across different games.
+
+It is currently unoptimized and at most be lightly optimized;
+it being an engine for _turn-based_ games means that achieving
+speed that support twitch gameplay is not a priority. It will
+always be stream-based, and is currently based on serialization
+to an ASCII form.
+
+Currently the implemented game is the board game Hex.
