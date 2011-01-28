@@ -57,7 +57,7 @@ class NashSubserver : public SProto::Persistable,
         typedef std::map<int,NashGame*> GameMap;
         GameMap games;
 
-        typedef std::vector<std::string> PlayerList;
+        typedef std::set<std::string> PlayerList;
         PlayerList players;
 
         std::map<std::string, std::string> challenges; // challenger -> challengee
@@ -73,7 +73,7 @@ class NashSubserver : public SProto::Persistable,
         void saveSubserver(void) const { save(); }
         void restoreSubserver(void) { restore(); }
 
-        void pruneUsers(void) {} // todo
+        void pruneUsers(void);
 };
 
 };

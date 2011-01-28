@@ -135,6 +135,16 @@ class NashTPScreen : public SfmlScreen,
                 std::string challenger = *asString( asProperCons(arg)->nthcar(0) );
                 oss << ">> Received challenge from " << challenger;
                 showServerMessage( oss.str() );
+            } else if( cmd == "users" ) {
+                std::ostringstream oss;
+                oss << ">> Connected players: ";
+                outputSExp( arg, cerr );
+                Cons * t = asCons( arg );
+                while( t ) {
+                    oss << (std::string)*asString(t->getcar()) << " ";
+                    t = asCons( t->getcdr() );
+                }
+                showServerMessage( oss.str() );
             } else if( cmd == "welcome" ) {
                 wasWelcomed = true;
                 gameId = *asInt( asProperCons(arg)->nthcar(0) );
@@ -270,6 +280,9 @@ class NashTPScreen : public SfmlScreen,
                 client.delsend( List()( new Symbol( "nash" ) )
                                       ( new Symbol( "resign" ) )
                                       ( new Int( gameId ) ).make() );
+            } else if( command == "users" ) {
+                client.delsend( List()( new Symbol( "nash" ) )
+                                      ( new Symbol( "users" ) ).make() );
             } else if( command == "swap" ) {
                 if( expectingMove && maySwap ) {
                     client.delsend( List()( new Symbol( "nash" ) )

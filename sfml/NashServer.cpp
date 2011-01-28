@@ -3,6 +3,13 @@
 #include "SProto.h"
 #include "Sise.h"
 
+// todo: a player connecting twice with the same client results in a confusing
+//       mess. however, a player connecting twice with different clients for
+//       different games must definitely be allowed.
+//       correct solution might be that games must know clients by RC*, not just
+//       username, and must be notified when they connect (construct) and disconnect
+//       (deconstruct)
+
 namespace Nash {
 
 NashGame::NashGame(SProto::Server& server, int id, int size, const std::string white, const std::string black) :
@@ -262,7 +269,7 @@ bool NashSubserver::handle( SProto::RemoteClient* cli, const std::string& cmd, S
         return i->second->handle( cli->getUsername(), cmd, asProperCons(arg)->getcdr() );
     }
     if( cmd == "hello" ) {
-        players.push_back( cli->getUsername() );
+        players.insert( cli->getUsername() );
     } else if( cmd == "users" ) {
         pruneUsers();
         List list;
@@ -307,6 +314,19 @@ bool NashSubserver::handle( SProto::RemoteClient* cli, const std::string& cmd, S
         return false;
     }
     return true;
+}
+
+void NashSubserver::pruneUsers(void) {
+    for(PlayerList::iterator i = players.begin(); i != players.end(); ) {
+        if( server.getConnectedUser( *i ) ) {
+            i++;
+        } else {
+            std::string name = *i;
+            i++;
+            players.erase( name );
+        }
+
+    }
 }
 
 NashSubserver::~NashSubserver(void) {
