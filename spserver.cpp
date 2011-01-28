@@ -8,7 +8,7 @@ bool keepRunning = true;
 
 void signal_stop(int sig) {
     using namespace std;
-    cerr << "caught ctrl-c" << endl;
+    cerr << "Caught signal " << sig << endl;
     keepRunning = false;
 }
 
