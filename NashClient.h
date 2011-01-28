@@ -4,6 +4,8 @@
 #include "Nash.h"
 #include "sftools.h"
 
+#include "hexfml.h"
+
 namespace Nash {
 
 class NashBlitter : public HexBlitter {
