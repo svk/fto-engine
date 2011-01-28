@@ -2,6 +2,9 @@
 
 #include <stdexcept>
 
+#include <string>
+#include <algorithm>
+
 #include <cstdio>
 #include <cstdlib>
 #include <cassert>

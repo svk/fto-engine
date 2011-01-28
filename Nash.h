@@ -1,7 +1,10 @@
 #ifndef H_NASH
 #define H_NASH
 
-#include "hexfml.h"
+#include "HexTools.h"
+using namespace HexTools;
+
+#include <string>
 
 namespace Nash {
 
