@@ -1,3 +1,13 @@
 data/
 persist/
 junk/
+*.o
+spclient
+spguient
+spserver
+test-coords
+test-hexfml
+test-sexp
+test-sftools
+test-sisenet
+test-typesetter
