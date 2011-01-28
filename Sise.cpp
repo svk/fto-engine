@@ -208,6 +208,7 @@ bool StringParser::feed(char ch) {
         quoted = true;
     } else if( ch == '"' ) {
         isDone = true;
+        quoted = false;
     } else {
         oss << ch;
     }
