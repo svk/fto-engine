@@ -1,5 +1,5 @@
 CC=g++
-CPPFLAGS=-g `freetype-config --cflags` -Wall
+CPPFLAGS=-g -I/usr/include/freetype2 -Wall
 
 SFML_LIBS=-lsfml-system -lsfml-graphics -lsfml-audio
 CORE_LIBS=`freetype-config --libs` -lboost_filesystem -lboost_program_options -lssl
