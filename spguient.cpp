@@ -188,6 +188,9 @@ class NashTPScreen : public SfmlScreen,
         {
             client.setCore( this );
             viewport.setBackgroundColour( sf::Color(0,100,0) );
+            
+            showServerMessage( ">> Welcome to Hex!" );
+            showServerMessage( ">> Commands: /users to get a list of connected users, /challenge <user> to challenge another user, /accept <challenger> to accept a challenge, /resign to resign a game." );
         }
 
         void resize(int width_, int height_) {
@@ -433,6 +436,7 @@ int main(int argc, char *argv[]) {
 
     if( vm.count( "help" ) ||
         (!vm.count( "host") || !vm.count("username") || !vm.count("password")) ) {
+        cout << "Usage: spguient <hostname> --username <username> --password <password>" << endl << endl;
         cout << desc << endl;
         return 1;
     }
