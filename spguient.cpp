@@ -46,7 +46,7 @@ class SpGuient : public SfmlApplication {
         SpGuient(SProto::Client& client,
                  const std::string& username,
                  const std::string& password) :
-            SfmlApplication( "SpGuient", 640, 480 ),
+            SfmlApplication( "SpGuient", 1024, 768 ),
             client ( client )
         {
             using namespace Sise;
@@ -411,7 +411,7 @@ class NashTPScreen : public SfmlScreen,
 
 int main(int argc, char *argv[]) {
     FreetypeLibrary ftLib;
-    FreetypeFace ftFont ("./data/CrimsonText-Bold.otf", 20);
+    FreetypeFace ftFont ("./data/Vera.ttf", 20);
 
     using namespace std;
     namespace po = boost::program_options;
