@@ -23,54 +23,56 @@ struct Tile {
         WALL
     };
     State state;
+    Tile(void) : state( Tile::WALL ) {}
     Tile(State state) : state(state) {}
 };
 
-class Semimap {
-    private:
-        Tile wall, floor;
-
-    public:
-        Semimap(void) : wall(Tile::WALL), floor(Tile::FLOOR) {}
-
-        Tile& get(int x,int y) {
-            if( x == 0 && y == 0 ) return floor;
-            unsigned long seed[] = { 1337, x, y };
-            MTRand_int32 prng ( seed, 3 );
-            switch( prng() % 2 ) {
-                case 1: return floor;
-                case 0: return wall;
-            }
-            return wall;
-        }
-};
-
-class LevelBlitter : public HexBlitter {
-    private:
-        Semimap semi;
-        ResourceManager<HexSprite>& sprites;
-
+class World : public HexTools::HexTorusMap<Tile> {
     public:
         int px, py;
 
-        LevelBlitter(ResourceManager<HexSprite>& sprites) :
-            sprites ( sprites ),
-            px( 0 ),
-            py( 0 )
+        World(int sz) :
+            HexTools::HexTorusMap<Tile>(sz),
+            px(0),
+            py(0)
         {
+            using namespace HexTools;
+            MTRand prng ( 1337 );
+            int hcs = hexCircleSize(sz);
+            get(0,0).state = Tile::FLOOR;
+            for(int i=1;i<hcs;i++) {
+                int x, y;
+                inflateHexCoordinate(i,x,y);
+                get(x,y).state = ( prng() > 0.5 ) ? Tile::WALL : Tile::FLOOR;
+            }
         }
 
         bool move(int dx, int dy) {
-            if( semi.get(px+dx,py+dy).state == Tile::FLOOR ) {
+            if( get(px+dx,py+dy).state == Tile::FLOOR ) {
                 px += dx;
                 py += dy;
                 return true;
             }
             return false;
         }
+        
+};
+
+class LevelBlitter : public HexBlitter {
+    private:
+        World& world;
+        ResourceManager<HexSprite>& sprites;
+
+    public:
+        LevelBlitter(World& world, ResourceManager<HexSprite>& sprites) :
+            world ( world ),
+            sprites ( sprites )
+        {
+        }
+
 
         void drawHex(int x, int y, sf::RenderWindow& win) {
-            switch( semi.get(x,y).state ) {
+            switch( world.get(x,y).state ) {
                 case Tile::WALL:
                     sprites["tile-wall"].draw( win );
                     break;
@@ -102,7 +104,8 @@ int main(int argc, char *argv[]) {
     hexSprites.bind( "overlay-player", new HexSprite( "./data/smiley32.png", grid ) );
     hexSprites.bind( "tile-wall", grid.createSingleColouredSprite( sf::Color(150,100,100) ) );
     hexSprites.bind( "tile-floor", grid.createSingleColouredSprite( sf::Color(100,200,100) ) );
-    LevelBlitter world ( hexSprites );
+    World world( 40 );
+    LevelBlitter levelBlit ( world, hexSprites );
     HexViewport vp ( grid,  0, 0, 640, 480 );
     sf::View mainView ( sf::Vector2f( 0, 0 ),
                         sf::Vector2f( 320, 240 ) );
@@ -139,7 +142,7 @@ int main(int argc, char *argv[]) {
                 break;
         }
         win.Clear(sf::Color(255,0,255));
-        vp.draw( world, win, mainView );
+        vp.draw( levelBlit, win, mainView );
         MobBlitter mobs ( hexSprites, world.px, world.py );
         vp.draw( mobs, win, mainView );
         win.Display();
