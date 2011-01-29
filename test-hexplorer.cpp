@@ -15,6 +15,8 @@
 
 #include "sftools.h"
 
+#include "mtrand.h"
+
 struct Tile {
     enum State {
         FLOOR,
@@ -33,8 +35,9 @@ class Semimap {
 
         Tile& get(int x,int y) {
             if( x == 0 && y == 0 ) return floor;
-            srand( 1337 + x * 1337 + y ); // hax
-            switch( rand() % 2 ) {
+            unsigned long seed[] = { 1337, x, y };
+            MTRand_int32 prng ( seed, 3 );
+            switch( prng() % 2 ) {
                 case 1: return floor;
                 case 0: return wall;
             }

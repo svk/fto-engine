@@ -19,7 +19,7 @@ test-sftools: test-sftools.o hexfml.o HexTools.o anisprite.o typesetter.o sftool
 test-hexfml: test-hexfml.o HexTools.o hexfml.o anisprite.o typesetter.o sftools.o HtGo.o myabort.o
 	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
 
-test-hexplorer: test-hexplorer.o HexTools.o hexfml.o anisprite.o typesetter.o sftools.o HtGo.o myabort.o
+test-hexplorer: test-hexplorer.o HexTools.o hexfml.o anisprite.o typesetter.o sftools.o HtGo.o myabort.o mtrand.o
 	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
 
 test-coords: test-coords.o hexfml.o HexTools.o myabort.o
