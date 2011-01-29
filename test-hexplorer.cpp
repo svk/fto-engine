@@ -27,12 +27,12 @@ struct Tile {
     Tile(State state) : state(state) {}
 };
 
-class World : public HexTools::HexTorusMap<Tile> {
+class World : public HexTools::HexMap<Tile> {
     public:
         int px, py;
 
         World(int sz) :
-            HexTools::HexTorusMap<Tile>(sz),
+            HexTools::HexMap<Tile>(sz),
             px(0),
             py(0)
         {
