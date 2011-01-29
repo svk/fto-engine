@@ -262,10 +262,14 @@ void HexViewport::draw(HexBlitter& blitter, sf::RenderWindow& win, sf::View& vie
             if( ((i%2)!=0) != ((j%2)!=0) ) continue;
             int sx = 3 * i, sy = j;
             grid.hexToScreen( sx, sy );
-            view.SetCenter( -((double) sx - centerX + screenXOffset - hw), // add to move left
-                            -((double) sy - centerY + screenYOffset - hh)); // add to move up
+            using namespace std;
+            cerr << "centering on " << i << " " << j << endl;
+            cerr << "setcenter: " <<  (rsw/2) - screenXOffset - hw + htw - sx + centerX
+                                  << " "
+                                  << (rsh/2) - screenYOffset - hh + hth - sy + centerY;
             view.SetCenter( (rsw/2) - screenXOffset - hw + htw - sx + centerX,
                             (rsh/2) - screenYOffset - hh + hth - sy + centerY);
+            cerr << "draw!" << endl;
             blitter.drawHex( 3 * i, j, win );
         }
     }
