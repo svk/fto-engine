@@ -102,8 +102,10 @@ int main(int argc, char *argv[]) {
         while( win.GetEvent( ev ) ) switch( ev.Type ) {
             default: break;
             case sf::Event::Resized:
+                using namespace std;
+                cerr << ev.Size.Width << " " << ev.Size.Height << endl;
                 vp.setRectangle(100, 100, win.GetWidth()-200, win.GetHeight()-200 );
-                mainView.SetHalfSize( ev.Size.Width/2, ev.Size.Height/2 );
+                mainView.SetHalfSize( (double)ev.Size.Width/2.0, (double)ev.Size.Height/2.0 );
                 break;
             case sf::Event::Closed:
                 win.Close();
