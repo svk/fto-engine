@@ -118,6 +118,9 @@ int main(int argc, char *argv[]) {
                     case sf::Key::D: world.move(3,-1); break;
                     default: break;
                 }
+                int ax = world.px, ay = world.py;
+                grid.hexToScreen( ax, ay );
+                vp.center( ax, ay );
                 break;
         }
         win.Clear(sf::Color(255,0,255));
