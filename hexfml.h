@@ -10,6 +10,8 @@
 #include "HexTools.h"
 using namespace HexTools; // temporary, to smoothly split hexfml.c
 
+class HexSprite;
+
 sf::FloatRect fitRectangleAt(double, double, const sf::FloatRect&, double, double);
 
 class ScreenGrid {
@@ -51,6 +53,8 @@ class ScreenGrid {
         int getHexHeight(void) const { return height; }
 
         void centerRectangle(sf::FloatRect&) const;
+
+        HexSprite* createSingleColouredSprite( const sf::Color& ) const;
 };
 
 
@@ -112,7 +116,8 @@ class HexSprite {
 
     public:
         HexSprite(const std::string&, const ScreenGrid&);
-        HexSprite(const sf::Image&, const ScreenGrid&);
+        HexSprite(const sf::Image&, const ScreenGrid&); // does not adopt!
+        HexSprite(sf::Image*, const ScreenGrid&); // adopts!
         ~HexSprite(void);
 
         void setPosition(int,int);

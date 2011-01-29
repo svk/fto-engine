@@ -97,8 +97,8 @@ int main(int argc, char *argv[]) {
     ScreenGrid grid ( "./data/hexproto2.png" );
     ResourceManager<HexSprite> hexSprites;
     hexSprites.bind( "overlay-player", new HexSprite( "./data/smiley32.png", grid ) );
-    hexSprites.bind( "tile-wall", new HexSprite( "./data/hexblack2.png", grid ) );
-    hexSprites.bind( "tile-floor", new HexSprite( "./data/hexwhite2.png", grid ) );
+    hexSprites.bind( "tile-wall", grid.createSingleColouredSprite( sf::Color(150,100,100) ) );
+    hexSprites.bind( "tile-floor", grid.createSingleColouredSprite( sf::Color(100,200,100) ) );
     LevelBlitter world ( hexSprites );
     HexViewport vp ( grid,  0, 0, 640, 480 );
     sf::View mainView ( sf::Vector2f( 0, 0 ),
