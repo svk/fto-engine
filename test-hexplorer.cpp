@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
     ScreenGrid grid ( "./data/hexproto2.png" );
     ResourceManager<HexSprite> hexSprites;
     hexSprites.bind( "tile-player", new HexSprite( "./data/hexgray2.png", grid ) );
-    hexSprites.bind( "tile-wall", new HexSprite( "./data/hexblack2.png", grid ) );
+    hexSprites.bind( "tile-wall", new HexSprite( "./data/hexrainbow2.png", grid ) );
     hexSprites.bind( "tile-floor", new HexSprite( "./data/hexwhite2.png", grid ) );
     World world ( hexSprites );
     HexViewport vp ( grid,  0, 0, 640, 480 );
@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
         while( win.GetEvent( ev ) ) switch( ev.Type ) {
             default: break;
             case sf::Event::Resized:
-                vp.setRectangle(0, 0, win.GetWidth(), win.GetHeight() );
+                vp.setRectangle(100, 100, win.GetWidth()-200, win.GetHeight()-200 );
                 mainView.SetHalfSize( ev.Size.Width/2, ev.Size.Height/2 );
                 break;
             case sf::Event::Closed:
@@ -120,6 +120,7 @@ int main(int argc, char *argv[]) {
                 }
                 break;
         }
+        win.Clear(sf::Color(255,0,255));
         vp.draw( world, win, mainView );
         win.Display();
     }
