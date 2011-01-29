@@ -42,7 +42,7 @@ class Semimap {
         }
 };
 
-class World : public HexBlitter {
+class LevelBlitter : public HexBlitter {
     private:
         Semimap semi;
         ResourceManager<HexSprite>& sprites;
@@ -50,7 +50,7 @@ class World : public HexBlitter {
     public:
         int px, py;
 
-        World(ResourceManager<HexSprite>& sprites) :
+        LevelBlitter(ResourceManager<HexSprite>& sprites) :
             sprites ( sprites ),
             px( 0 ),
             py( 0 )
@@ -67,10 +67,6 @@ class World : public HexBlitter {
         }
 
         void drawHex(int x, int y, sf::RenderWindow& win) {
-            if( px == x && py == y ) {
-                sprites["tile-player"].draw( win );
-                return;
-            }
             switch( semi.get(x,y).state ) {
                 case Tile::WALL:
                     sprites["tile-wall"].draw( win );
@@ -82,13 +78,28 @@ class World : public HexBlitter {
         }
 };
 
+class MobBlitter : public HexBlitter {
+    private:
+        ResourceManager<HexSprite>& sprites;
+
+        int px, py;
+    public:
+        MobBlitter(ResourceManager<HexSprite>& sprites, int px, int py) : sprites(sprites),px(px),py(py) {}
+
+        void drawHex(int x, int y, sf::RenderWindow& win) {
+            if( x == px && y == py ) {
+                sprites["overlay-player"].draw( win );
+            }
+        }
+};
+
 int main(int argc, char *argv[]) {
     ScreenGrid grid ( "./data/hexproto2.png" );
     ResourceManager<HexSprite> hexSprites;
-    hexSprites.bind( "tile-player", new HexSprite( "./data/hexgray2.png", grid ) );
-    hexSprites.bind( "tile-wall", new HexSprite( "./data/hexrainbow2.png", grid ) );
+    hexSprites.bind( "overlay-player", new HexSprite( "./data/smiley32.png", grid ) );
+    hexSprites.bind( "tile-wall", new HexSprite( "./data/hexblack2.png", grid ) );
     hexSprites.bind( "tile-floor", new HexSprite( "./data/hexwhite2.png", grid ) );
-    World world ( hexSprites );
+    LevelBlitter world ( hexSprites );
     HexViewport vp ( grid,  0, 0, 640, 480 );
     sf::View mainView ( sf::Vector2f( 0, 0 ),
                         sf::Vector2f( 320, 240 ) );
@@ -103,8 +114,7 @@ int main(int argc, char *argv[]) {
             default: break;
             case sf::Event::Resized:
                 using namespace std;
-                cerr << ev.Size.Width << " " << ev.Size.Height << endl;
-                vp.setRectangle(100, 100, win.GetWidth()-200, win.GetHeight()-200 );
+                vp.setRectangle(0, 0, win.GetWidth(), win.GetHeight() );
                 mainView.SetHalfSize( (double)ev.Size.Width/2.0, (double)ev.Size.Height/2.0 );
                 break;
             case sf::Event::Closed:
@@ -127,6 +137,8 @@ int main(int argc, char *argv[]) {
         }
         win.Clear(sf::Color(255,0,255));
         vp.draw( world, win, mainView );
+        MobBlitter mobs ( hexSprites, world.px, world.py );
+        vp.draw( mobs, win, mainView );
         win.Display();
     }
 }
