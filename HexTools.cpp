@@ -52,6 +52,10 @@ void cartesianiseHexCoordinate(int i, int j, int r, int& x , int& y) {
 }
 
 void polariseHexCoordinate(int x, int y, int& i, int& j, int& r) {
+    if( (x%3) != 0 ) {
+        using namespace std;
+        cerr << "oi" << endl;
+    }
     assert( (x%3) == 0 );
     x /= 3;
     if( x > 0 ) {

@@ -71,7 +71,7 @@ void ScreenGrid::cellClassify( int& gx, int& gy, int col, int row ) const {
     }
 }
 
-HexSprite* ScreenGrid::createSingleColouredSprite( const sf::Color& colour ) const {
+sf::Image* ScreenGrid::createSingleColouredImage( const sf::Color& colour ) const {
     sf::Image *img = new sf::Image( width, height );
     sf::Color transparent(0,0,0,0);
     for(int i=0;i<(width*height);i++) {
@@ -83,7 +83,8 @@ HexSprite* ScreenGrid::createSingleColouredSprite( const sf::Color& colour ) con
             img->SetPixel( x, y, transparent );
         }
     }
-    return new HexSprite( img, *this );
+    img->SetSmooth(false);
+    return img;
 }
 
 
@@ -148,19 +149,6 @@ ScreenGrid::ScreenGrid( const std::string& prototypeFilename ) {
 }
 
 ScreenGrid::~ScreenGrid(void) {
-}
-
-HexSprite::HexSprite(sf::Image *adoptedImage, const ScreenGrid& grid) :
-    grid ( grid ),
-    image ( adoptedImage ),
-    sprite (),
-    offsetX ( 0 ),
-    offsetY ( 0 ),
-    hx ( 0 ),
-    hy ( 0 )
-{
-    image->SetSmooth( false );
-    loadSpriteFrom( *image );
 }
 
 HexSprite::HexSprite(const std::string& filename, const ScreenGrid& grid) :

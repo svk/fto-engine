@@ -104,10 +104,15 @@ class MobBlitter : public HexBlitter {
 
 int main(int argc, char *argv[]) {
     ScreenGrid grid ( "./data/hexproto2.png" );
+    ResourceManager<sf::Image> images;
+    images.bind( "tile-floor", grid.createSingleColouredImage( sf::Color( 100,200,100 ) ) );
+    images.bind( "tile-wall", grid.createSingleColouredImage( sf::Color( 150,100,100 ) ) );
+
     ResourceManager<HexSprite> hexSprites;
     hexSprites.bind( "overlay-player", new HexSprite( "./data/smiley32.png", grid ) );
-    hexSprites.bind( "tile-wall", grid.createSingleColouredSprite( sf::Color(150,100,100) ) );
-    hexSprites.bind( "tile-floor", grid.createSingleColouredSprite( sf::Color(100,200,100) ) );
+    hexSprites.bind( "tile-wall", new HexSprite( images["tile-wall"], grid ) );
+    hexSprites.bind( "tile-floor", new HexSprite( images["tile-floor"], grid ) );
+
     World world( 40 );
     LevelBlitter levelBlit ( world, hexSprites );
     HexViewport vp ( grid,  0, 0, 640, 480 );
@@ -161,7 +166,7 @@ int main(int argc, char *argv[]) {
                     case sf::Key::D: tdx = 3; tdy = -1; break;
                     default: transitioning = false; break;
                 }
-                if( !world.canMove( tdx, tdy ) ) {
+                if( transitioning && !world.canMove( tdx, tdy ) ) {
                     transitioning = false;
                 }
                 break;

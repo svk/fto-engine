@@ -54,7 +54,7 @@ class ScreenGrid {
 
         void centerRectangle(sf::FloatRect&) const;
 
-        HexSprite* createSingleColouredSprite( const sf::Color& ) const;
+        sf::Image* createSingleColouredImage( const sf::Color& ) const;
 };
 
 
@@ -121,7 +121,6 @@ class HexSprite {
     public:
         HexSprite(const std::string&, const ScreenGrid&);
         HexSprite(const sf::Image&, const ScreenGrid&); // does not adopt!
-        HexSprite(sf::Image*, const ScreenGrid&); // adopts!
         ~HexSprite(void);
 
         void setPosition(int,int);
