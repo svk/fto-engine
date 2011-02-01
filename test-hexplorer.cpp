@@ -47,6 +47,10 @@ class World : public HexTools::HexMap<Tile> {
             }
         }
 
+        bool canMove(int dx, int dy) {
+            return ( get(px+dx,py+dy).state == Tile::FLOOR );
+        }
+
         bool move(int dx, int dy) {
             if( get(px+dx,py+dy).state == Tile::FLOOR ) {
                 px += dx;
@@ -111,11 +115,29 @@ int main(int argc, char *argv[]) {
                         sf::Vector2f( 320, 240 ) );
     sf::RenderWindow win ( sf::VideoMode(640,480,32), "Hexplorer demo" );
 
+    const double transitionTime = 0.15;
+    bool transitioning = false;
+    double transitionPhase;
+    int tdx, tdy;
+
+    sf::Clock clock;
     win.SetView( mainView );
     win.SetFramerateLimit( 30 );
 
     while( win.IsOpened() ) {
+        double dt = clock.GetElapsedTime();
+        clock.Reset();
+
         sf::Event ev;
+
+        if( transitioning ) {
+            transitionPhase += dt;
+            if( transitionPhase >= transitionTime ) {
+                world.move( tdx, tdy );
+                transitioning = false;
+            }
+        }
+
         while( win.GetEvent( ev ) ) switch( ev.Type ) {
             default: break;
             case sf::Event::Resized:
@@ -127,24 +149,45 @@ int main(int argc, char *argv[]) {
                 win.Close();
                 break;
             case sf::Event::KeyPressed:
+                if( transitioning ) break;
+                transitioning = true;
+                transitionPhase = 0.0;
                 switch( ev.Key.Code ) {
-                    case sf::Key::Q: world.move(-3,1); break;
-                    case sf::Key::W: world.move(0,2); break;
-                    case sf::Key::E: world.move(3,1); break;
-                    case sf::Key::A: world.move(-3,-1); break;
-                    case sf::Key::S: world.move(0,-2); break;
-                    case sf::Key::D: world.move(3,-1); break;
-                    default: break;
+                    case sf::Key::Q: tdx = -3; tdy = 1; break;
+                    case sf::Key::W: tdx = 0; tdy = 2; break;
+                    case sf::Key::E: tdx = 3; tdy = 1; break;
+                    case sf::Key::A: tdx = -3; tdy = -1; break;
+                    case sf::Key::S: tdx = 0; tdy = -2; break;
+                    case sf::Key::D: tdx = 3; tdy = -1; break;
+                    default: transitioning = false; break;
                 }
-                int ax = world.px, ay = world.py;
-                grid.hexToScreen( ax, ay );
-                vp.center( ax, ay );
+                if( !world.canMove( tdx, tdy ) ) {
+                    transitioning = false;
+                }
                 break;
         }
+        int rtdx = tdx, rtdy = tdy;
+        int tdxv = 0, tdyv = 0;
+        if( transitioning ) {
+            grid.hexToScreen( rtdx, rtdy );
+            tdxv = rtdx * (transitionPhase / transitionTime);
+            tdyv = rtdy * (transitionPhase / transitionTime);
+        }
+        int cx = world.px, cy = world.py;
+        grid.hexToScreen( cx, cy );
+        cx += tdxv;
+        cy += tdyv;
+        vp.center( cx, cy );
+
         win.Clear(sf::Color(255,0,255));
         vp.draw( levelBlit, win, mainView );
-        MobBlitter mobs ( hexSprites, world.px, world.py );
-        vp.draw( mobs, win, mainView );
+        vp.beginClip( win.GetWidth(), win.GetHeight() );
+        vp.translateToHex( world.px, world.py, win.GetWidth(), win.GetHeight(), mainView );
+        if( transitioning ) {
+            mainView.Move( -tdxv, -tdyv );
+        }
+        hexSprites["overlay-player"].draw( win );
+        vp.endClip();
         win.Display();
     }
 }

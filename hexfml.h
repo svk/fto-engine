@@ -99,6 +99,10 @@ class HexViewport {
         
         void setBackgroundColour( const sf::Color& );
         void setNoBackgroundColour(void);
+
+        void translateToHex(int,int,int,int,sf::View&) const;
+        void beginClip(int,int);
+        void endClip(void);
 };
 
 class HexSprite {

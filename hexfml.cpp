@@ -249,6 +249,24 @@ void HexViewport::setRectangle(int x0, int y0, int w, int h) {
     screenHeight = h;
 }
 
+void HexViewport::endClip(void) {
+    glDisable( GL_SCISSOR_TEST );
+}
+
+
+void HexViewport::beginClip(int ww, int wh) {
+    glScissor( screenXOffset, ww - (screenYOffset + screenHeight), screenWidth, screenHeight );
+    glEnable( GL_SCISSOR_TEST );
+}
+
+void HexViewport::translateToHex(int sx, int sy, int rsw, int rsh, sf::View& view) const {
+    const int htw = grid.getHexWidth()/2, hth = grid.getHexHeight()/2;
+    const int hw = screenWidth/2, hh = screenHeight/2;
+    grid.hexToScreen( sx, sy );
+    view.SetCenter( (rsw/2) - screenXOffset - hw + htw - sx + centerX,
+                    (rsh/2) - screenYOffset - hh + hth - sy + centerY);
+}
+
 void HexViewport::draw(HexBlitter& blitter, sf::RenderWindow& win, sf::View& view) const {
     using namespace std;
 

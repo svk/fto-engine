@@ -3,6 +3,8 @@
 
 #include <stdexcept>
 
+#include <utility>
+
 namespace HexTools {
 
 int hexCircleSize(int);
@@ -10,6 +12,8 @@ int flattenHexCoordinate(int,int);
 void inflateHexCoordinate(int,int&,int&);
 void polariseHexCoordinate(int,int,int&,int&,int&);
 void cartesianiseHexCoordinate(int,int,int,int&,int&);
+
+typedef std::pair<int,int> HexCoordinate;
 
 template<class T>
 class HexMap {
