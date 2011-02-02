@@ -7,23 +7,28 @@
 
 namespace HexTools {
 
+const int HexDX[] = { 3, 0, -3, -3, 0, 3 };
+const int HexDY[] = { 1, 2, 1, -1, -2, -1 };
+const int PtDX[] = { 2, 1, -1, -2, -1, 1 };
+const int PtDY[] = { 0, 1, 1, 0, -1, -1 };
+
 void HexFovNorthBeam::passFrom(int x, int y, const Angle& begin, const Angle& end) {
-    const bool passEast = !(x == y),
-               passWest = !(x == -y);
-    Angle t0 ( x + 2, y ),
-          t1 ( x + 1, y + 1 ),
-          t2 ( x - 1, y + 1 ),
-          t3 ( x - 2, y );
+    const bool passStandardEast = true,
+               passStandardWest = true; // why would we need these? can't recall rationale
+    Angle t0 ( x + PtDX[0], y + PtDY[0] ),
+          t1 ( x + PtDX[1], y + PtDY[1] ),
+          t2 ( x + PtDX[2], y + PtDY[2] ),
+          t3 ( x + PtDX[3], y + PtDY[3] );
     Angle a, b;
     using namespace std;
-    if( passEast && sectorIntersection( begin, end, t0, t1, a, b ) ) {
-        primary->add( x + 3, y + 1, a, b );
+    if( passStandardEast && sectorIntersection( begin, end, t0, t1, a, b ) ) {
+        primary->add( x + HexDX[0], y + HexDY[0], a, b );
     }
     if( sectorIntersection( begin, end, t1, t2, a, b ) ) {
-        secondary->add( x, y + 2, a, b );
+        secondary->add( x + HexDX[1], y + HexDY[1], a, b );
     }
-    if( passWest && sectorIntersection( begin, end, t2, t3, a, b ) ) {
-        primary->add( x - 3, y + 1, a, b );
+    if( passStandardWest && sectorIntersection( begin, end, t2, t3, a, b ) ) {
+        primary->add( x + HexDX[2], y + HexDY[2], a, b );
     }
 }
 
@@ -83,8 +88,8 @@ bool HexFovNorthBeam::popNext(int& x, int& y, Angle& begin, Angle& end) {
     return popNext( x, y, begin, end );
 }
 
-bool HexFovNorthBeam::isOpaque(int dx, int dy) const {
-    return map.isOpaque( cx + dx, cy + dy );
+bool HexFovNorthBeam::isOpaque(int rx, int ry) const {
+    return map.isOpaque( cx + rx, cy + ry );
 }
 
 Angle::Angle(void) :
@@ -247,7 +252,7 @@ HexFovNorthBeam::HexFovNorthBeam( HexOpacityMap& map, HexLightReceiver& receiver
     primary ( new LightedTileQueue() ),
     secondary ( new LightedTileQueue() )
 {
-    current->add(0,2,Angle(1,1),Angle(-1,1));
+    current->add(HexDX[1],HexDY[1],Angle(PtDX[1],PtDY[1]),Angle(PtDX[2],PtDY[2]));
 }
 
 HexFovNorthBeam::~HexFovNorthBeam(void) {
