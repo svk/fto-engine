@@ -16,7 +16,7 @@ void HexFovNorthBeam::passFrom(int x, int y, const Angle& begin, const Angle& en
           t3 ( x - 2, y );
     Angle a, b;
     using namespace std;
-    cerr << "at " << x << y << endl;
+    cerr << "at " << x << "," << y << endl;
     cerr << "passing: " << passEast << " " << passWest << endl;
     cerr << "passing east?" << endl;
     cerr << "isect:" << begin.x << "," << begin.y << " " << end.x << "," << end.y << endl;
@@ -34,11 +34,12 @@ void HexFovNorthBeam::passFrom(int x, int y, const Angle& begin, const Angle& en
     }
     cerr << "passing west?" << endl;
     cerr << "isect:" << begin.x << "," << begin.y << " " << end.x << "," << end.y << endl;
-    cerr << "vs   :" << t1.x << "," << t1.y << " " << t2.x << "," << t2.y << endl;
+    cerr << "vs   :" << t2.x << "," << t2.y << " " << t3.x << "," << t3.y << endl;
     if( passWest && sectorIntersection( begin, end, t2, t3, a, b ) ) {
         cerr << "yes:" << a.x << "," << a.y << " " << b.x << "," << b.y << endl;
         primary->add( x - 3, y + 1, a, b );
     }
+    cerr << endl << endl;
 }
 
 void HexFovNorthBeam::calculate(void) {
@@ -62,12 +63,16 @@ void LightedTileQueue::popFront(void) {
 }
 
 void LightedTileQueue::add(int x, int y, const Angle& begin,const Angle& end) {
+    using namespace std;
     std::pair<int,int> xy(x,y);
     LtqMap::iterator i = q.find( xy );
+    cerr << "adding light to " << x << ", " << y << ": ";
     if( i == q.end() ) {
+        cerr << "first" << endl;
         q[xy] = std::pair<Angle,Angle>( begin, end );
     } else {
         Angle nb, ne;
+        cerr << "not first" << endl;
         sectorAdjacentUnion( begin, end, i->second.first, i->second.second, nb, ne );
         q[xy] = std::pair<Angle,Angle>( nb, ne );
     }
@@ -156,7 +161,7 @@ bool Angle::operator<=(const Angle& that) const {
 }
 
 bool Angle::operator==(const Angle& that) const {
-    return compare( that ) <= 0;
+    return compare( that ) == 0;
 }
 
 Angle::Angle(const Angle& that) :
@@ -174,9 +179,12 @@ const Angle& Angle::operator=(const Angle& that) {
 }
 
 void Sector::adjacentUnion(const Sector& that) {
+    using namespace std;
     if( begin == that.end ) {
+        cerr << "(set begin)";
         begin = that.begin;
     } else if( end == that.begin ) {
+        cerr << "(set end)";
         end = that.end;
     }
 }
@@ -227,8 +235,12 @@ bool sectorIntersection( const Angle& a0, const Angle& a1,
 void sectorAdjacentUnion( const Angle& a0, const Angle& a1,
                           const Angle& b0, const Angle& b1,
                           Angle& r0, Angle& r1) {
+    using namespace std;
     Sector a (a0, a1), b (b0, b1);
+    cerr << "AU: [" << a0.x << "," << a0.y << ":" << a1.x << "," << a1.y << "] ";
+    cerr << " ~ [" << b0.x << "," << b0.y << ":" << b1.x << "," << b1.y << "] ";
     a.adjacentUnion( b );
+    cerr << " -> [" << a.begin.x << "," << a.begin.y << ":" << a.end.x << "," << a.end.y << "] ";
     r0 = a.begin;
     r1 = a.end;
 }
