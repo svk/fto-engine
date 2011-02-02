@@ -1,0 +1,29 @@
+#include "HexFov.h"
+
+#include <iostream>
+
+class DummyOpacity : public HexTools::HexOpacityMap {
+    public:
+        bool isOpaque(int x,int y) const {
+            if( x == 0 && y == 10 ) return true;
+            if(y > 40) return true;
+            return false;
+        }
+};
+
+class DummyReceiver : public HexTools::HexLightReceiver {
+    public:
+        void setLighted(int x, int y) {
+            using namespace std;
+            cout << x << " " << y << endl;
+        }
+};
+
+int main(int argc, char *argv[]) {
+    using namespace HexTools;
+    DummyOpacity opac;
+    DummyReceiver rec;
+    HexFovNorthBeam beam ( opac, rec );
+    beam.calculate();
+    return 0;
+}
