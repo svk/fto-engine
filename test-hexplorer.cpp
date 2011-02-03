@@ -123,21 +123,6 @@ class LevelBlitter : public HexBlitter {
         }
 };
 
-class MobBlitter : public HexBlitter {
-    private:
-        ResourceManager<HexSprite>& sprites;
-
-        int px, py;
-    public:
-        MobBlitter(ResourceManager<HexSprite>& sprites, int px, int py) : sprites(sprites),px(px),py(py) {}
-
-        void drawHex(int x, int y, sf::RenderWindow& win) {
-            if( x == px && y == py ) {
-                sprites["overlay-player"].draw( win );
-            }
-        }
-};
-
 int main(int argc, char *argv[]) {
     ScreenGrid grid ( "./data/hexproto2.png" );
     ResourceManager<sf::Image> images;
@@ -239,6 +224,9 @@ int main(int argc, char *argv[]) {
 
         win.Clear(sf::Color(255,0,255));
         vp.draw( levelBlit, win, mainView );
+
+//        mainView.SetCenter( 0, 0 );
+
         vp.beginClip( win.GetWidth(), win.GetHeight() );
         vp.translateToHex( world.px, world.py, win.GetWidth(), win.GetHeight(), mainView );
         if( transitioning ) {
@@ -246,6 +234,7 @@ int main(int argc, char *argv[]) {
         }
         hexSprites["overlay-player"].draw( win );
         vp.endClip();
+
         win.Display();
     }
 }

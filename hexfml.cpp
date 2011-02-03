@@ -243,7 +243,8 @@ void HexViewport::endClip(void) {
 
 
 void HexViewport::beginClip(int ww, int wh) {
-    glScissor( screenXOffset, ww - (screenYOffset + screenHeight), screenWidth, screenHeight );
+    using namespace std;
+    glScissor( screenXOffset, wh - (screenYOffset + screenHeight), screenWidth, screenHeight );
     glEnable( GL_SCISSOR_TEST );
 }
 
