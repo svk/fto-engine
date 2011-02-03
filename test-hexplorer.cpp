@@ -152,6 +152,7 @@ int main(int argc, char *argv[]) {
     World world( 40 );
     LevelBlitter levelBlit ( world, hexSprites );
     HexViewport vp ( grid,  0, 0, 640, 480 );
+    vp.setBackgroundColour( sf::Color(0,0,0) );
     sf::View mainView ( sf::Vector2f( 0, 0 ),
                         sf::Vector2f( 320, 240 ) );
     sf::RenderWindow win ( sf::VideoMode(640,480,32), "Hexplorer demo" );
