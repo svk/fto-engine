@@ -167,6 +167,7 @@ int main(int argc, char *argv[]) {
 
     const double transitionTime = 0.15;
     bool transitioning = false;
+    bool drybump;
     double transitionPhase;
     int tdx, tdy;
 
@@ -185,7 +186,9 @@ int main(int argc, char *argv[]) {
         if( transitioning ) {
             transitionPhase += dt;
             if( transitionPhase >= transitionTime ) {
-                world.move( tdx, tdy );
+                if( !drybump ) {
+                    world.move( tdx, tdy );
+                }
                 transitioning = false;
             }
         }
@@ -230,6 +233,11 @@ int main(int argc, char *argv[]) {
                 if( transitioning && !world.canMove( tdx, tdy ) ) {
                     transitioning = false;
                 }
+                if( transitioning && ev.Key.Shift ) {
+                    drybump = true;
+                } else {
+                    drybump = false;
+                }
                 break;
         }
         int rtdx = tdx, rtdy = tdy;
@@ -241,9 +249,12 @@ int main(int argc, char *argv[]) {
         }
         int cx = world.px, cy = world.py;
         grid.hexToScreen( cx, cy );
+        vp.center( cx, cy );
         cx += tdxv;
         cy += tdyv;
-        vp.center( cx, cy );
+        if( !drybump ) {
+            vp.center( cx, cy );
+        }
 
         win.Clear(sf::Color(255,0,255));
         vp.draw( levelBlit, win, mainView );
