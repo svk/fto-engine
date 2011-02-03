@@ -114,8 +114,7 @@ class LevelBlitter : public HexBlitter {
         KeyedSpritesheet& sheet;
 
         sf::Sprite tileWall, tileFloor, zoneFog, tileWallMemory, tileFloorMemory;
-
-        sf::Image *test;
+        sf::Sprite thinGrid;
 
     public:
         LevelBlitter(World& world, ResourceManager<HexSprite>& sprites, KeyedSpritesheet& sheet) :
@@ -126,16 +125,14 @@ class LevelBlitter : public HexBlitter {
             tileFloor ( sheet.makeSpriteNamed( "tile-floor" ) ),
             zoneFog ( sheet.makeSpriteNamed( "zone-fog" ) ),
             tileWallMemory ( sheet.makeSpriteNamed( "tile-wall-memory" ) ),
-            tileFloorMemory ( sheet.makeSpriteNamed( "tile-floor-memory" ) )
+            tileFloorMemory ( sheet.makeSpriteNamed( "tile-floor-memory" ) ),
+            thinGrid ( sheet.makeSpriteNamed( "thin-grid" ) )
         {
-            test = loadImageFromFile( "./data/smiley32.png" );
         }
 
         void putSprite(const sf::Sprite& sprite) {
             const float width = sprite.GetSize().x, height = sprite.GetSize().y;
             const sf::FloatRect rect = sprite.GetImage()->GetTexCoords( sprite.GetSubRect() );
-            using namespace std;
-            cerr << width << " " << height << endl;
             glBegin( GL_QUADS );
             glTexCoord2f( rect.Left, rect.Top ); glVertex2f(0+0.5,0+0.5);
             glTexCoord2f( rect.Left, rect.Bottom ); glVertex2f(0+0.5,height+0.5);
@@ -146,7 +143,6 @@ class LevelBlitter : public HexBlitter {
 
 
         void drawHex(int x, int y, sf::RenderWindow& win) {
-            if( !(x == 3 && y == 7) ) return;
             if( !world.seen.contains(x,y) ) return;
             if( world.get(x,y).lit ) switch( world.get(x,y).state ) {
                 case Tile::WALL:
@@ -163,56 +159,23 @@ class LevelBlitter : public HexBlitter {
                     putSprite( tileFloorMemory );
                     break;
             }
-#if 0
-            if( !world.seen.contains(x,y) ) return;
-            std::string suffix = ""; // obv unoptimized
-            if( !world.get(x,y).lit ) suffix = "-memory";
-            switch( world.get(x,y).state ) {
-                case Tile::WALL:
-                    sprites["tile-wall" + suffix].draw( win );
-                    break;
-                case Tile::FLOOR:
-                    sprites["tile-floor" + suffix].draw( win );
-                    break;
-            }
-            if( !world.get(x,y).lit ) {
-                sprites["zone-fog"].draw( win );
-            }
-#endif
+            putSprite( thinGrid );
         }
 };
 
 int main(int argc, char *argv[]) {
     ScreenGrid grid ( "./data/hexproto2.png" );
-#if 0
-    ResourceManager<sf::Image> images;
-    images.bind( "tile-floor", grid.createSingleColouredImage( sf::Color( 100,200,100 ) ) );
-    images.bind( "tile-floor-memory", ToGrayscale().apply(
-                                      grid.createSingleColouredImage( sf::Color(100,200,100))));
-    images.bind( "tile-wall", grid.createSingleColouredImage( sf::Color( 100,50,50 ) ) );
-    images.bind( "tile-wall-memory", ToGrayscale().apply(
-                                     grid.createSingleColouredImage( sf::Color(100,50,50))));
-    images.bind( "zone-fog", grid.createSingleColouredImage( sf::Color( 0,0,0,128 ) ) );
-
-    ResourceManager<HexSprite> hexSprites;
-    hexSprites.bind( "overlay-player", new HexSprite( "./data/smiley32.png", grid ) );
-    hexSprites.bind( "tile-wall", new HexSprite( images["tile-wall"], grid ) );
-    hexSprites.bind( "tile-wall-memory", new HexSprite( images["tile-wall-memory"], grid ) );
-    hexSprites.bind( "tile-floor", new HexSprite( images["tile-floor"], grid ) );
-    hexSprites.bind( "tile-floor-memory", new HexSprite( images["tile-floor-memory"], grid ) );
-    hexSprites.bind( "zone-fog", new HexSprite( images["zone-fog"], grid ) );
-#endif
 
     KeyedSpritesheet images (1024,1024);
     images.adoptAs( "smiley", loadImageFromFile( "./data/smiley32.png" ) );
     images.adoptAs( "tile-floor", grid.createSingleColouredImage( sf::Color( 100,200,100 ) ) );
-    images.adoptAs( "tile-floor", loadImageFromFile( "./data/hexrainbow2.png" ) );
     images.adoptAs( "tile-floor-memory", ToGrayscale().apply(
                                       grid.createSingleColouredImage( sf::Color(100,200,100))));
     images.adoptAs( "tile-wall", grid.createSingleColouredImage( sf::Color( 100,50,50 ) ) );
     images.adoptAs( "tile-wall-memory", ToGrayscale().apply(
                                      grid.createSingleColouredImage( sf::Color(100,50,50))));
     images.adoptAs( "zone-fog", grid.createSingleColouredImage( sf::Color( 0,0,0,128 ) ) );
+    images.adoptAs( "thin-grid", loadImageFromFile( "./data/hexthingrid2.png" ) );
 
     ResourceManager<HexSprite> hexSprites;
     hexSprites.bind( "overlay-player", new HexSprite( images.makeSpriteNamed( "smiley"), grid ) );
@@ -242,7 +205,7 @@ int main(int argc, char *argv[]) {
 
     sf::Clock clock;
     win.SetView( mainView );
-    win.SetFramerateLimit( 360 );
+    win.SetFramerateLimit( 30 );
 
     world.updateVision();
 
@@ -251,8 +214,6 @@ int main(int argc, char *argv[]) {
 
         double dt = clock.GetElapsedTime();
         clock.Reset();
-
-        cerr << "Framerate: " << 1 / dt << endl;
 
         sf::Event ev;
 
