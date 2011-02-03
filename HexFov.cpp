@@ -22,13 +22,19 @@ void HexFovBeam::passFrom(int x, int y, const Angle& begin, const Angle& end) {
     Angle a, b;
     using namespace std;
     if( passStandardEast && sectorIntersection( begin, end, t0, t1, a, b ) ) {
-        primary->add( x + HexDX[dirindex], y + HexDY[dirindex], a, b );
+        if( a != b ) {
+            primary->add( x + HexDX[dirindex], y + HexDY[dirindex], a, b );
+        }
     }
     if( sectorIntersection( begin, end, t1, t2, a, b ) ) {
-        secondary->add( x + HexDX[(dirindex+1)%6], y + HexDY[(dirindex+1)%6], a, b );
+        if( a != b ) {
+            secondary->add( x + HexDX[(dirindex+1)%6], y + HexDY[(dirindex+1)%6], a, b );
+        }
     }
     if( passStandardWest && sectorIntersection( begin, end, t2, t3, a, b ) ) {
-        primary->add( x + HexDX[(dirindex+2)%6], y + HexDY[(dirindex+2)%6], a, b );
+        if( a != b ) {
+            primary->add( x + HexDX[(dirindex+2)%6], y + HexDY[(dirindex+2)%6], a, b );
+        }
     }
 }
 
@@ -145,6 +151,10 @@ bool Angle::operator>=(const Angle& that) const {
 
 bool Angle::operator<=(const Angle& that) const {
     return compare( that ) <= 0;
+}
+
+bool Angle::operator!=(const Angle& that) const {
+    return compare( that ) != 0;
 }
 
 bool Angle::operator==(const Angle& that) const {

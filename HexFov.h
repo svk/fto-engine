@@ -24,6 +24,7 @@ struct Angle {
     Angle(const Angle&);
     const Angle& operator=(const Angle&);
 
+    bool operator!=(const Angle&) const;
     bool operator>(const Angle&) const;
     bool operator<(const Angle&) const;
     bool operator>=(const Angle&) const;
