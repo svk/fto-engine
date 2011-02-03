@@ -238,7 +238,7 @@ int main(int argc, char *argv[]) {
 
     sf::Clock clock;
     win.SetView( mainView );
-    win.SetFramerateLimit( 360 );
+    win.SetFramerateLimit( 30 );
 
     world.updateVision();
 
