@@ -94,6 +94,7 @@ class HexViewport {
         int getCenterY(void) { return centerY; }
 
         void draw(HexBlitter&, sf::RenderWindow&, sf::View&) const;
+        void drawGL(HexBlitter&, sf::RenderWindow&, double, double) const;
 
         bool translateCoordinates(int&, int&) const;
         

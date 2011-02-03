@@ -271,6 +271,65 @@ void HexViewport::translateToHex(int sx, int sy, int rsw, int rsh, sf::View& vie
                     (rsh/2) - screenYOffset - hh + hth - sy + centerY);
 }
 
+void HexViewport::drawGL(HexBlitter& blitter, sf::RenderWindow& win, double viewWidth, double viewHeight) const { // ew
+    using namespace std;
+
+    int hwx0 = centerX - screenWidth/2,
+        hwy0 = centerY - screenHeight/2;
+    int hwx1 = hwx0 + screenWidth - 1,
+        hwy1 = hwy0 + screenHeight - 1;
+
+    hwx0 = screenXOffset;
+    hwy0 = screenYOffset; 
+    hwx1 = screenXOffset + screenWidth - 1;
+    hwy1 = screenYOffset + screenHeight - 1; 
+    translateCoordinates( hwx0, hwy0 );
+    translateCoordinates( hwx1, hwy1 );
+
+    glScissor( screenXOffset, win.GetHeight() - (screenYOffset + screenHeight), screenWidth, screenHeight );
+    glEnable( GL_SCISSOR_TEST );
+
+    if( drawBackground ) {
+        win.Clear( bgColor );
+    }
+
+    grid.screenToHex( hwx0, hwy0, 0, 0 );
+    grid.screenToHex( hwx1, hwy1, 0, 0 );
+
+    hwx0 /= 3;
+    hwx1 /= 3;
+    hwx0--;
+    hwy0++;
+    hwx1++;
+    hwy1--;
+
+    sf::Matrix3 my;
+
+    my(0,0) = 2.0 / viewWidth;
+    my(1,1) = -2.0 / viewHeight;
+
+    int rsw = win.GetWidth(), rsh = win.GetHeight();
+    int htw = grid.getHexWidth()/2, hth = grid.getHexHeight()/2;
+    int hw = screenWidth/2, hh = screenHeight/2;
+    for(int i=hwx0;i<=hwx1;i++) {
+        for(int j=hwy1;j<=hwy0;j++) {
+            if( ((i%2)!=0) != ((j%2)!=0) ) continue;
+            int sx = 3 * i, sy = j;
+            grid.hexToScreen( sx, sy );
+            using namespace std;
+            float newcx = (rsw/2) - screenXOffset - hw + htw - sx + centerX,
+                  newcy = (rsh/2) - screenYOffset - hh + hth - sy + centerY;
+            glMatrixMode( GL_MODELVIEW );
+            my(0,2) = (2 * newcx) / viewWidth;
+            my(1,2) = (2 * newcy) / viewHeight;
+            glLoadMatrixf( my.Get4x4Elements() );
+            blitter.drawHex( 3 * i, j, win );
+        }
+    }
+
+    glDisable( GL_SCISSOR_TEST );
+}
+
 void HexViewport::draw(HexBlitter& blitter, sf::RenderWindow& win, sf::View& view) const {
     using namespace std;
 

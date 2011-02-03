@@ -115,6 +115,8 @@ class LevelBlitter : public HexBlitter {
 
         sf::FloatRect tileWall, tileFloor, zoneFog;
 
+        sf::Image *test;
+
     public:
         LevelBlitter(World& world, ResourceManager<HexSprite>& sprites, KeyedSpritesheet& sheet) :
             world ( world ),
@@ -124,17 +126,26 @@ class LevelBlitter : public HexBlitter {
             tileFloor ( sheet.getSpriteRectNamed( "tile-floor" ) ),
             zoneFog ( sheet.getSpriteRectNamed( "zone-fog" ) )
         {
+            test = loadImageFromFile( "./data/smiley32.png" );
         }
 
         void putRect(const sf::FloatRect& rect) {
             const float width = 32, height = 32;
             using namespace std;
+#if 0
             glBegin( GL_QUADS );
-            glColor3f( 0.5, 0.5, 1.0 );
             glTexCoord2f( rect.Left, rect.Top ); glVertex2f(0,0);
             glTexCoord2f( rect.Left, rect.Bottom ); glVertex2f(0,height);
             glTexCoord2f( rect.Right, rect.Bottom ); glVertex2f(width,height);
             glTexCoord2f( rect.Right, rect.Top ); glVertex2f(width,0);
+            glEnd();
+#endif
+            test->Bind();
+            glBegin( GL_QUADS );
+            glTexCoord2f( 0, 0 ); glVertex2f(0,0);
+            glTexCoord2f( 0, 1 ); glVertex2f(0,height);
+            glTexCoord2f( 1, 1 ); glVertex2f(width,height);
+            glTexCoord2f( 1, 0 ); glVertex2f(width,0);
             glEnd();
         }
 
@@ -317,66 +328,24 @@ int main(int argc, char *argv[]) {
 
         win.Clear(sf::Color(255,0,255));
 
-        {
-            glViewport( 0, 0, win.GetWidth(), win.GetHeight() );
+        glViewport( 0, 0, win.GetWidth(), win.GetHeight() );
 
-            glMatrixMode( GL_PROJECTION );
-            glLoadIdentity();
-            sf::Matrix3 myMatrix;
-            {
-#if 0
-                float Left   = mainView.GetCenter().x - mainView.GetHalfSize().x;
-                float Top    = mainView.GetCenter().y - mainView.GetHalfSize().y;
-                float Right  = mainView.GetCenter().x + mainView.GetHalfSize().x;
-                float Bottom = mainView.GetCenter().y + mainView.GetHalfSize().y;
-#endif
-                float Left   = 0- mainView.GetHalfSize().x;
-                float Top    = 0- mainView.GetHalfSize().y;
-                float Right  = mainView.GetHalfSize().x;
-                float Bottom = mainView.GetHalfSize().y;
-                sf::FloatRect myRect;
+        glMatrixMode( GL_PROJECTION );
+        glLoadIdentity();
 
-                // Update the view rectangle - be careful, reversed views are allowed !
-                myRect.Left   = std::min(Left, Right);
-                myRect.Top    = std::min(Top, Bottom);
-                myRect.Right  = std::max(Left, Right);
-                myRect.Bottom = std::max(Top, Bottom);
+        glMatrixMode( GL_MODELVIEW );
+        glLoadIdentity();
+        sf::Matrix3 myMatrix;
+        myMatrix(0, 0) = 1.f / (mainView.GetHalfSize().x);
+        myMatrix(1, 1) = -1.f / (mainView.GetHalfSize().y);
+        myMatrix(0, 2) = 100 / (mainView.GetHalfSize().x);
+        myMatrix(1, 2) = 0 / (mainView.GetHalfSize().y);
+        glLoadMatrixf( myMatrix.Get4x4Elements() );
 
-                // Update the projection matrix
-                myMatrix(0, 0) = 2.f / (Right - Left);
-                myMatrix(1, 1) = 2.f / (Top - Bottom);
-                myMatrix(0, 2) = (Left + Right) / (Left - Right);
-                myMatrix(1, 2) = (Bottom + Top) / (Bottom - Top);
+        glEnable( GL_BLEND );
+        glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
-                myMatrix(0, 0) = 1.f / (mainView.GetHalfSize().x);
-                myMatrix(1, 1) = -1.f / (mainView.GetHalfSize().y);
-                myMatrix(0, 2) = 0;
-                myMatrix(1, 2) = 0;
-            }
-            glLoadMatrixf( myMatrix.Get4x4Elements() );
-
-            glMatrixMode( GL_MODELVIEW );
-            glLoadIdentity();
-
-            glEnable( GL_BLEND );
-            glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-
-            testImage->Bind();
-            glBegin( GL_QUADS );
-            glTexCoord2f( 0, 0 );
-            glVertex2f(0,0);
-            glTexCoord2f( 0, 1);
-            glVertex2f(0,100);
-            glTexCoord2f( 1, 1 );
-            glVertex2f(100,100);
-            glTexCoord2f( 1, 0 );
-            glVertex2f(100,0);
-            glEnd();
-        }
-
-
-
-//        vp.draw( levelBlit, win, mainView );
+        vp.drawGL( levelBlit, win, mainView.GetHalfSize().x*2, mainView.GetHalfSize().y*2 );
 
 //        mainView.SetCenter( 0, 0 );
 
