@@ -1,6 +1,8 @@
 #ifndef H_HEXFOV
 #define H_HEXFOV
 
+#include "HexTools.h"
+
 #include <map>
 #include <utility>
 
@@ -14,6 +16,12 @@ class HexOpacityMap {
 class HexLightReceiver {
     public:
         virtual void setLit(int,int) = 0;
+};
+
+class HexFovRegion : public HexLightReceiver,
+                     public HexRegion {
+    public:
+        void setLit(int,int);
 };
 
 struct Angle {

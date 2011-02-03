@@ -100,4 +100,21 @@ void polariseHexCoordinate(int x, int y, int& i, int& j, int& r) {
     }
 }
 
+void HexRegion::add(int x, int y) {
+    coords.insert( HexCoordinate(x,y) );
+}
+
+void HexRegion::remove(int x,int y) {
+    coords.erase( HexCoordinate(x,y) );
+}
+
+void HexRegion::clear(void) {
+    coords.clear();
+}
+
+bool HexRegion::contains(int x, int y) const {
+    std::set<HexCoordinate>::const_iterator i = coords.find( HexCoordinate(x,y) );
+    return i != coords.end();
+}
+
 };

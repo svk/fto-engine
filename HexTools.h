@@ -5,6 +5,8 @@
 
 #include <utility>
 
+#include <set>
+
 namespace HexTools {
 
 int hexCircleSize(int);
@@ -14,6 +16,17 @@ void polariseHexCoordinate(int,int,int&,int&,int&);
 void cartesianiseHexCoordinate(int,int,int,int&,int&);
 
 typedef std::pair<int,int> HexCoordinate;
+
+class HexRegion {
+    private:
+        std::set< HexCoordinate > coords;
+
+    public:
+        void clear(void);
+        void add(int,int);
+        void remove(int,int);
+        bool contains(int,int) const;
+};
 
 template<class T>
 class HexMap {

@@ -35,6 +35,8 @@ class World : public HexTools::HexMap<Tile>,
               public HexTools::HexOpacityMap,
               public HexTools::HexLightReceiver {
     public:
+        HexTools::HexFovRegion seen;
+
         int px, py;
 
         World(int sz) :
@@ -74,6 +76,7 @@ class World : public HexTools::HexMap<Tile>,
         void setLit(int x, int y) {
             if( &getDefault() != &get(x,y) ) {
                 get(x,y).lit = true;
+                seen.add( x, y );
             }
         }
 
@@ -87,7 +90,7 @@ class World : public HexTools::HexMap<Tile>,
 
         void updateVision(void) {
             clearlight();
-            HexTools::HexFov fov ( *this, *this, px, py );
+            HexTools::HexFov fov ( *this, seen, px, py );
             fov.calculate();
         }
 
@@ -117,7 +120,7 @@ class LevelBlitter : public HexBlitter {
 
 
         void drawHex(int x, int y, sf::RenderWindow& win) {
-            if( !world.get(x,y).lit ) return;
+            if( !world.seen.contains(x,y) ) return;
             switch( world.get(x,y).state ) {
                 case Tile::WALL:
                     sprites["tile-wall"].draw( win );

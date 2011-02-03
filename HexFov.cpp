@@ -294,5 +294,9 @@ void HexFov::calculate(void) {
     northeast.calculate();
 }
 
+void HexFovRegion::setLit(int x, int y) {
+    add(x,y);
+}
+
 
 }
