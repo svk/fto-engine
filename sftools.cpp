@@ -1,5 +1,22 @@
 #include "sftools.h"
 
+sf::Color ToTranslucent::transform(const sf::Color& x) {
+    return sf::Color( x.r, x.g, x.b, alpha );
+}
+
+sf::Color ToGrayscale::transform(const sf::Color& x) {
+    int rgb = (int)(0.5 + ((double)(x.r + x.g + x.b))/3.0);
+    return sf::Color( rgb, rgb, rgb, x.a );
+}
+
+sf::Image* PixelTransform::apply(sf::Image *rv) {
+    const int w = rv->GetWidth(), h = rv->GetHeight();
+    for(int x=0;x<w;x++) for(int y=0;y<h;y++) {
+        rv->SetPixel( x, y, transform( rv->GetPixel(x, y ) ) );
+    }
+    return rv;
+}
+
 SfmlEventHandler::SfmlEventHandler(void) :
     next ( 0 )
 {

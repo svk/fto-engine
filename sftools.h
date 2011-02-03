@@ -6,6 +6,25 @@
 #include <string>
 #include <map>
 
+class PixelTransform {
+    public:
+        virtual sf::Color transform(const sf::Color&) = 0;
+        sf::Image* apply(sf::Image*);
+};
+
+class ToTranslucent : public PixelTransform {
+    private:
+        int alpha;
+    public:
+        ToTranslucent(int alpha) : alpha(alpha) {}
+        sf::Color transform(const sf::Color&);
+};
+
+class ToGrayscale : public PixelTransform {
+    public:
+        sf::Color transform(const sf::Color&);
+};
+
 template<class T>
 class ResourceManager {
     // not thread-safe for assignment
