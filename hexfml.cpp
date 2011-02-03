@@ -320,7 +320,7 @@ void HexViewport::drawGL(HexBlitter& blitter, sf::RenderWindow& win, double view
             float newcx = (rsw/2) - screenXOffset - hw + htw - sx + centerX,
                   newcy = (rsh/2) - screenYOffset - hh + hth - sy + centerY;
             glMatrixMode( GL_MODELVIEW );
-            my(0,2) = (2 * newcx) / viewWidth;
+            my(0,2) = -(2 * newcx) / viewWidth;
             my(1,2) = (2 * newcy) / viewHeight;
             glLoadMatrixf( my.Get4x4Elements() );
             blitter.drawHex( 3 * i, j, win );

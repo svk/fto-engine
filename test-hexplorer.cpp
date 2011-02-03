@@ -113,7 +113,7 @@ class LevelBlitter : public HexBlitter {
         ResourceManager<HexSprite>& sprites;
         KeyedSpritesheet& sheet;
 
-        sf::FloatRect tileWall, tileFloor, zoneFog;
+        sf::FloatRect tileWall, tileFloor, zoneFog, tileWallMemory, tileFloorMemory;
 
         sf::Image *test;
 
@@ -124,7 +124,9 @@ class LevelBlitter : public HexBlitter {
             sheet ( sheet ),
             tileWall ( sheet.getSpriteRectNamed( "tile-wall" ) ),
             tileFloor ( sheet.getSpriteRectNamed( "tile-floor" ) ),
-            zoneFog ( sheet.getSpriteRectNamed( "zone-fog" ) )
+            zoneFog ( sheet.getSpriteRectNamed( "zone-fog" ) ),
+            tileWallMemory ( sheet.getSpriteRectNamed( "tile-wall-memory" ) ),
+            tileFloorMemory ( sheet.getSpriteRectNamed( "tile-floor-memory" ) )
         {
             test = loadImageFromFile( "./data/smiley32.png" );
         }
@@ -132,32 +134,30 @@ class LevelBlitter : public HexBlitter {
         void putRect(const sf::FloatRect& rect) {
             const float width = 32, height = 32;
             using namespace std;
-#if 0
             glBegin( GL_QUADS );
             glTexCoord2f( rect.Left, rect.Top ); glVertex2f(0,0);
             glTexCoord2f( rect.Left, rect.Bottom ); glVertex2f(0,height);
             glTexCoord2f( rect.Right, rect.Bottom ); glVertex2f(width,height);
             glTexCoord2f( rect.Right, rect.Top ); glVertex2f(width,0);
             glEnd();
-#endif
-            test->Bind();
-            glBegin( GL_QUADS );
-            glTexCoord2f( 0, 0 ); glVertex2f(0,0);
-            glTexCoord2f( 0, 1 ); glVertex2f(0,height);
-            glTexCoord2f( 1, 1 ); glVertex2f(width,height);
-            glTexCoord2f( 1, 0 ); glVertex2f(width,0);
-            glEnd();
         }
 
 
         void drawHex(int x, int y, sf::RenderWindow& win) {
-//            if( !world.seen.contains(x,y) ) return;
-            switch( world.get(x,y).state ) {
+            if( !world.seen.contains(x,y) ) return;
+            if( world.get(x,y).lit ) switch( world.get(x,y).state ) {
                 case Tile::WALL:
                     putRect( tileWall );
                     break;
                 case Tile::FLOOR:
                     putRect( tileFloor );
+                    break;
+            } else switch( world.get(x,y).state ) {
+                case Tile::WALL:
+                    putRect( tileWallMemory );
+                    break;
+                case Tile::FLOOR:
+                    putRect( tileFloorMemory );
                     break;
             }
 #if 0
@@ -230,7 +230,7 @@ int main(int argc, char *argv[]) {
                         sf::Vector2f( 320, 240 ) );
     sf::RenderWindow win ( sf::VideoMode(640,480,32), "Hexplorer demo" );
 
-    const double transitionTime = 2.15;
+    const double transitionTime = 0.15;
     bool transitioning = false;
     bool drybump;
     double transitionPhase;
@@ -238,7 +238,7 @@ int main(int argc, char *argv[]) {
 
     sf::Clock clock;
     win.SetView( mainView );
-//    win.SetFramerateLimit( 30 );
+    win.SetFramerateLimit( 360 );
 
     world.updateVision();
 
@@ -345,17 +345,19 @@ int main(int argc, char *argv[]) {
         glEnable( GL_BLEND );
         glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
+        images.bindTexture();
+
         vp.drawGL( levelBlit, win, mainView.GetHalfSize().x*2, mainView.GetHalfSize().y*2 );
 
-//        mainView.SetCenter( 0, 0 );
+        mainView.SetCenter( 0, 0 );
 
-//        vp.beginClip( win.GetWidth(), win.GetHeight() );
-//        vp.translateToHex( world.px, world.py, win.GetWidth(), win.GetHeight(), mainView );
-//        if( transitioning ) {
-//            mainView.Move( -tdxv, -tdyv );
-//        }
-//        hexSprites["overlay-player"].draw( win );
-//        vp.endClip();
+        vp.beginClip( win.GetWidth(), win.GetHeight() );
+        vp.translateToHex( world.px, world.py, win.GetWidth(), win.GetHeight(), mainView );
+        if( transitioning ) {
+            mainView.Move( -tdxv, -tdyv );
+        }
+        hexSprites["overlay-player"].draw( win );
+        vp.endClip();
 
         win.Display();
     }
