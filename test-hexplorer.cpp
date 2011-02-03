@@ -192,6 +192,20 @@ int main(int argc, char *argv[]) {
             case sf::Event::Closed:
                 win.Close();
                 break;
+            case sf::Event::MouseButtonPressed:
+                if( ev.MouseButton.Button == sf::Mouse::Left ) {
+                    int x = win.GetInput().GetMouseX(),
+                        y = win.GetInput().GetMouseY();
+                    if( vp.translateCoordinates( x, y ) ) {
+                        grid.screenToHex( x, y, 0, 0 );
+                        if( x == world.px && y == world.py ) break;
+                        if( !world.get(x,y).lit ) break;
+                        if( (&world.getDefault()) != (&world.get(x,y)) ) {
+                            world.get(x,y).state = (world.get(x,y).state == Tile::FLOOR) ? Tile::WALL : Tile::FLOOR;
+                            world.updateVision();
+                        }
+                    }
+                }
             case sf::Event::KeyPressed:
                 if( transitioning ) break;
                 transitioning = true;
