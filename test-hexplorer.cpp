@@ -79,15 +79,17 @@ class World : public HexTools::HexMap<Tile>,
             return ( get(px+dx,py+dy).state == Tile::FLOOR );
         }
 
+        void updateVision(void) {
+            clearlight();
+            HexTools::HexFov fov ( *this, *this, px, py );
+            fov.calculate();
+        }
+
         bool move(int dx, int dy) {
             if( get(px+dx,py+dy).state == Tile::FLOOR ) {
                 px += dx;
                 py += dy;
-
-                clearlight();
-                HexTools::HexFov fov ( *this, *this, px, py );
-                fov.calculate();
-
+                updateVision();
                 return true;
             }
             return false;
@@ -162,6 +164,8 @@ int main(int argc, char *argv[]) {
     sf::Clock clock;
     win.SetView( mainView );
     win.SetFramerateLimit( 30 );
+
+    world.updateVision();
 
     while( win.IsOpened() ) {
         double dt = clock.GetElapsedTime();
