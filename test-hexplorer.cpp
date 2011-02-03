@@ -113,7 +113,7 @@ class LevelBlitter : public HexBlitter {
         ResourceManager<HexSprite>& sprites;
         KeyedSpritesheet& sheet;
 
-        sf::FloatRect tileWall, tileFloor, zoneFog, tileWallMemory, tileFloorMemory;
+        sf::Sprite tileWall, tileFloor, zoneFog, tileWallMemory, tileFloorMemory;
 
         sf::Image *test;
 
@@ -122,42 +122,45 @@ class LevelBlitter : public HexBlitter {
             world ( world ),
             sprites ( sprites ),
             sheet ( sheet ),
-            tileWall ( sheet.getSpriteRectNamed( "tile-wall" ) ),
-            tileFloor ( sheet.getSpriteRectNamed( "tile-floor" ) ),
-            zoneFog ( sheet.getSpriteRectNamed( "zone-fog" ) ),
-            tileWallMemory ( sheet.getSpriteRectNamed( "tile-wall-memory" ) ),
-            tileFloorMemory ( sheet.getSpriteRectNamed( "tile-floor-memory" ) )
+            tileWall ( sheet.makeSpriteNamed( "tile-wall" ) ),
+            tileFloor ( sheet.makeSpriteNamed( "tile-floor" ) ),
+            zoneFog ( sheet.makeSpriteNamed( "zone-fog" ) ),
+            tileWallMemory ( sheet.makeSpriteNamed( "tile-wall-memory" ) ),
+            tileFloorMemory ( sheet.makeSpriteNamed( "tile-floor-memory" ) )
         {
             test = loadImageFromFile( "./data/smiley32.png" );
         }
 
-        void putRect(const sf::FloatRect& rect) {
-            const float width = 32, height = 32;
+        void putSprite(const sf::Sprite& sprite) {
+            const float width = sprite.GetSize().x, height = sprite.GetSize().y;
+            const sf::FloatRect rect = sprite.GetImage()->GetTexCoords( sprite.GetSubRect() );
             using namespace std;
+            cerr << width << " " << height << endl;
             glBegin( GL_QUADS );
-            glTexCoord2f( rect.Left, rect.Top ); glVertex2f(0,0);
-            glTexCoord2f( rect.Left, rect.Bottom ); glVertex2f(0,height);
-            glTexCoord2f( rect.Right, rect.Bottom ); glVertex2f(width,height);
-            glTexCoord2f( rect.Right, rect.Top ); glVertex2f(width,0);
+            glTexCoord2f( rect.Left, rect.Top ); glVertex2f(0+0.5,0+0.5);
+            glTexCoord2f( rect.Left, rect.Bottom ); glVertex2f(0+0.5,height+0.5);
+            glTexCoord2f( rect.Right, rect.Bottom ); glVertex2f(width+0.5,height+0.5);
+            glTexCoord2f( rect.Right, rect.Top ); glVertex2f(width+0.5,0+0.5);
             glEnd();
         }
 
 
         void drawHex(int x, int y, sf::RenderWindow& win) {
+            if( !(x == 3 && y == 7) ) return;
             if( !world.seen.contains(x,y) ) return;
             if( world.get(x,y).lit ) switch( world.get(x,y).state ) {
                 case Tile::WALL:
-                    putRect( tileWall );
+                    putSprite( tileWall );
                     break;
                 case Tile::FLOOR:
-                    putRect( tileFloor );
+                    putSprite( tileFloor );
                     break;
             } else switch( world.get(x,y).state ) {
                 case Tile::WALL:
-                    putRect( tileWallMemory );
+                    putSprite( tileWallMemory );
                     break;
                 case Tile::FLOOR:
-                    putRect( tileFloorMemory );
+                    putSprite( tileFloorMemory );
                     break;
             }
 #if 0
@@ -201,14 +204,15 @@ int main(int argc, char *argv[]) {
 #endif
 
     KeyedSpritesheet images (1024,1024);
+    images.adoptAs( "smiley", loadImageFromFile( "./data/smiley32.png" ) );
     images.adoptAs( "tile-floor", grid.createSingleColouredImage( sf::Color( 100,200,100 ) ) );
+    images.adoptAs( "tile-floor", loadImageFromFile( "./data/hexrainbow2.png" ) );
     images.adoptAs( "tile-floor-memory", ToGrayscale().apply(
                                       grid.createSingleColouredImage( sf::Color(100,200,100))));
     images.adoptAs( "tile-wall", grid.createSingleColouredImage( sf::Color( 100,50,50 ) ) );
     images.adoptAs( "tile-wall-memory", ToGrayscale().apply(
                                      grid.createSingleColouredImage( sf::Color(100,50,50))));
     images.adoptAs( "zone-fog", grid.createSingleColouredImage( sf::Color( 0,0,0,128 ) ) );
-    images.adoptAs( "smiley", loadImageFromFile( "./data/smiley32.png" ) );
 
     ResourceManager<HexSprite> hexSprites;
     hexSprites.bind( "overlay-player", new HexSprite( images.makeSpriteNamed( "smiley"), grid ) );
@@ -238,7 +242,7 @@ int main(int argc, char *argv[]) {
 
     sf::Clock clock;
     win.SetView( mainView );
-    win.SetFramerateLimit( 30 );
+    win.SetFramerateLimit( 360 );
 
     world.updateVision();
 
@@ -326,7 +330,7 @@ int main(int argc, char *argv[]) {
         }
 
 
-        win.Clear(sf::Color(255,0,255));
+        win.Clear(sf::Color(255,0,0));
 
         glViewport( 0, 0, win.GetWidth(), win.GetHeight() );
 
@@ -347,7 +351,7 @@ int main(int argc, char *argv[]) {
 
         images.bindTexture();
 
-        vp.drawGL( levelBlit, win, mainView.GetHalfSize().x*2, mainView.GetHalfSize().y*2 );
+        vp.drawGL( levelBlit, win, win.GetWidth(), win.GetHeight() );
 
         mainView.SetCenter( 0, 0 );
 
