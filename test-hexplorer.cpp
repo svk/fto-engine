@@ -49,8 +49,13 @@ class World : public HexTools::HexMap<Tile>,
             for(int i=1;i<hcs;i++) {
                 int x, y;
                 inflateHexCoordinate(i,x,y);
-                get(x,y).state = ( prng() > 0.5 ) ? Tile::WALL : Tile::FLOOR;
-                get(x,y).state = Tile::FLOOR;
+                int ti, tj, tr;
+                polariseHexCoordinate( x, y, ti, tj, tr );
+                if( tr < sz ) {
+                    get(x,y).state = ( prng() > 0.75 ) ? Tile::WALL : Tile::FLOOR;
+                } else {
+                    get(x,y).state = Tile::WALL;
+                }
             }
         }
 
