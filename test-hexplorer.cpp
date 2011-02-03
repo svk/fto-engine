@@ -17,17 +17,23 @@
 
 #include "mtrand.h"
 
+#include "HexFov.h"
+
 struct Tile {
     enum State {
         FLOOR,
         WALL
     };
     State state;
-    Tile(void) : state( Tile::WALL ) {}
-    Tile(State state) : state(state) {}
+    Tile(void) : state( Tile::WALL ), lighted ( false ) {}
+    Tile(State state) : state(state), lighted ( false ) {}
+
+    bool lighted;
 };
 
-class World : public HexTools::HexMap<Tile> {
+class World : public HexTools::HexMap<Tile>,
+              public HexTools::HexOpacityMap,
+              public HexTools::HexLightReceiver {
     public:
         int px, py;
 
@@ -47,6 +53,28 @@ class World : public HexTools::HexMap<Tile> {
             }
         }
 
+        void clearlight(void) {
+            int sz = getSize();
+            for(int i=0;i<sz;i++) {
+                get(i).lighted = false;
+            }
+            get(px,py).lighted = true;
+        }
+
+        bool isOpaque(int x, int y) const {
+            return get(x,y).state != Tile::FLOOR;
+        }
+
+        void setLighted(int x, int y) {
+            if( &getDefault() != &get(x,y) ) {
+                get(x,y).lighted = true;
+            }
+        }
+
+        bool isLit(int x, int y) const {
+            return get(x,y).lighted;
+        }
+
         bool canMove(int dx, int dy) {
             return ( get(px+dx,py+dy).state == Tile::FLOOR );
         }
@@ -55,6 +83,11 @@ class World : public HexTools::HexMap<Tile> {
             if( get(px+dx,py+dy).state == Tile::FLOOR ) {
                 px += dx;
                 py += dy;
+
+                clearlight();
+                HexTools::HexFov fov ( *this, *this, px, py );
+                fov.calculate();
+
                 return true;
             }
             return false;
@@ -76,6 +109,7 @@ class LevelBlitter : public HexBlitter {
 
 
         void drawHex(int x, int y, sf::RenderWindow& win) {
+            if( !world.get(x,y).lighted ) return;
             switch( world.get(x,y).state ) {
                 case Tile::WALL:
                     sprites["tile-wall"].draw( win );

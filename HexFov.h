@@ -69,7 +69,7 @@ class LightedTileQueue {
         void popFront(void);
 };
 
-class HexFovNorthBeam {
+class HexFovBeam {
     // won't be making a class for each direction, but I'll be writing
     // north first and then translating to something general by symmetry
     // (but still a beam!)
@@ -82,6 +82,8 @@ class HexFovNorthBeam {
 
         LightedTileQueue *current, *primary, *secondary;
 
+        const int dirindex;
+
         bool popNext(int&,int&,Angle&,Angle&);
         void passFrom(int,int,const Angle&,const Angle&);
 
@@ -89,9 +91,17 @@ class HexFovNorthBeam {
         bool isOpaque(int,int) const;
 
     public:
-        HexFovNorthBeam( HexOpacityMap&, HexLightReceiver&); 
-        ~HexFovNorthBeam(void);
+        HexFovBeam( HexOpacityMap&, HexLightReceiver&, int, int, int); 
+        ~HexFovBeam(void);
 
+        void calculate(void);
+};
+
+class HexFov {
+    private:
+        HexFovBeam north, northwest, southwest, south, southeast, northeast;
+    public:
+        HexFov( HexOpacityMap&, HexLightReceiver&, int, int );
         void calculate(void);
 };
 

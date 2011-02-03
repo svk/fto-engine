@@ -12,27 +12,27 @@ const int HexDY[] = { 1, 2, 1, -1, -2, -1 };
 const int PtDX[] = { 2, 1, -1, -2, -1, 1 };
 const int PtDY[] = { 0, 1, 1, 0, -1, -1 };
 
-void HexFovNorthBeam::passFrom(int x, int y, const Angle& begin, const Angle& end) {
+void HexFovBeam::passFrom(int x, int y, const Angle& begin, const Angle& end) {
     const bool passStandardEast = true,
                passStandardWest = true; // why would we need these? can't recall rationale
-    Angle t0 ( x + PtDX[0], y + PtDY[0] ),
-          t1 ( x + PtDX[1], y + PtDY[1] ),
-          t2 ( x + PtDX[2], y + PtDY[2] ),
-          t3 ( x + PtDX[3], y + PtDY[3] );
+    Angle t0 ( x + PtDX[dirindex], y + PtDY[dirindex] ),
+          t1 ( x + PtDX[(dirindex+1)%6], y + PtDY[(dirindex+1)%6] ),
+          t2 ( x + PtDX[(dirindex+2)%6], y + PtDY[(dirindex+2)%6] ),
+          t3 ( x + PtDX[(dirindex+3)%6], y + PtDY[(dirindex+3)%6] );
     Angle a, b;
     using namespace std;
     if( passStandardEast && sectorIntersection( begin, end, t0, t1, a, b ) ) {
-        primary->add( x + HexDX[0], y + HexDY[0], a, b );
+        primary->add( x + HexDX[dirindex], y + HexDY[dirindex], a, b );
     }
     if( sectorIntersection( begin, end, t1, t2, a, b ) ) {
-        secondary->add( x + HexDX[1], y + HexDY[1], a, b );
+        secondary->add( x + HexDX[(dirindex+1)%6], y + HexDY[(dirindex+1)%6], a, b );
     }
     if( passStandardWest && sectorIntersection( begin, end, t2, t3, a, b ) ) {
-        primary->add( x + HexDX[2], y + HexDY[2], a, b );
+        primary->add( x + HexDX[(dirindex+2)%6], y + HexDY[(dirindex+2)%6], a, b );
     }
 }
 
-void HexFovNorthBeam::calculate(void) {
+void HexFovBeam::calculate(void) {
     int x, y;
     Angle begin, end;
     while( popNext(x, y, begin, end) ) {
@@ -72,7 +72,7 @@ void LightedTileQueue::getFront(int& x_, int& y_, Angle& begin_, Angle& end_) {
     end_ = q.begin()->second.second;
 }
 
-bool HexFovNorthBeam::popNext(int& x, int& y, Angle& begin, Angle& end) {
+bool HexFovBeam::popNext(int& x, int& y, Angle& begin, Angle& end) {
     if( !current->empty() ) {
         current->getFront( x, y, begin, end );
         current->popFront();
@@ -88,7 +88,7 @@ bool HexFovNorthBeam::popNext(int& x, int& y, Angle& begin, Angle& end) {
     return popNext( x, y, begin, end );
 }
 
-bool HexFovNorthBeam::isOpaque(int rx, int ry) const {
+bool HexFovBeam::isOpaque(int rx, int ry) const {
     return map.isOpaque( cx + rx, cy + ry );
 }
 
@@ -239,26 +239,50 @@ void Sector::recheckBranchCut(void) {
     containsBranchCut = ( !empty && end < begin );
 }
 
-void HexFovNorthBeam::setLighted(int x, int y) {
-    receiver.setLighted( x, y );
+void HexFovBeam::setLighted(int x, int y) {
+    receiver.setLighted( x + cx, y + cy );
 }
 
-HexFovNorthBeam::HexFovNorthBeam( HexOpacityMap& map, HexLightReceiver& receiver ) :
+HexFovBeam::HexFovBeam( HexOpacityMap& map, HexLightReceiver& receiver, int dirindex, int cx, int cy ) :
     map ( map ),
-    cx ( 0 ), // todo
-    cy ( 0 ),
+    cx ( cx ),
+    cy ( cy ),
     receiver ( receiver ),
     current ( new LightedTileQueue() ),
     primary ( new LightedTileQueue() ),
-    secondary ( new LightedTileQueue() )
+    secondary ( new LightedTileQueue() ),
+    dirindex ( dirindex )
 {
-    current->add(HexDX[1],HexDY[1],Angle(PtDX[1],PtDY[1]),Angle(PtDX[2],PtDY[2]));
+    current->add(HexDX[(dirindex+1)%6],
+                 HexDY[(dirindex+1)%6],
+                 Angle(PtDX[(dirindex+1)%6],PtDY[(dirindex+1)%6]),
+                 Angle(PtDX[(dirindex+2)%6],PtDY[(dirindex+2)%6]));
 }
 
-HexFovNorthBeam::~HexFovNorthBeam(void) {
+HexFovBeam::~HexFovBeam(void) {
     delete current;
     delete primary;
     delete secondary;
 }
+
+HexFov::HexFov(HexOpacityMap& map, HexLightReceiver& receiver, int cx, int cy) :
+    north ( map, receiver, 0, cx, cy ),
+    northwest ( map, receiver, 1, cx, cy ),
+    southwest ( map, receiver, 2, cx, cy ),
+    south ( map, receiver, 3, cx, cy ),
+    southeast ( map, receiver, 4, cx, cy ),
+    northeast ( map, receiver, 5, cx, cy )
+{
+}
+
+void HexFov::calculate(void) {
+    north.calculate();
+    northwest.calculate();
+    southwest.calculate();
+    south.calculate();
+    southeast.calculate();
+    northeast.calculate();
+}
+
 
 }

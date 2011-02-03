@@ -63,6 +63,18 @@ class HexMap {
             delete [] tiles;
         }
 
+        int getSize(void) const { return size; }
+
+
+        T& get(int k) {
+            if( k < 0 || k >= size ) return getDefault();
+            return tiles[k];
+        }
+        const T& get(int k) const {
+            if( k < 0 || k >= size ) return getDefault();
+            return tiles[k];
+        }
+
         T& getDefault(void) { return defaultTile; }
         T& get(int x, int y) {
             int k = flattenHexCoordinate( x, y );
