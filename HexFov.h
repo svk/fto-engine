@@ -13,7 +13,7 @@ class HexOpacityMap {
 
 class HexLightReceiver {
     public:
-        virtual void setLighted(int,int) = 0;
+        virtual void setLit(int,int) = 0;
 };
 
 struct Angle {
@@ -57,7 +57,7 @@ void sectorAdjacentUnion( const Angle&, const Angle&,
                           const Angle&, const Angle&,
                           Angle&, Angle& );
 
-class LightedTileQueue {
+class LitTileQueue {
     private:
         typedef std::map< std::pair<int,int>, std::pair<Angle,Angle> > LtqMap;
         LtqMap q;
@@ -80,14 +80,14 @@ class HexFovBeam {
 
         HexLightReceiver& receiver;
 
-        LightedTileQueue *current, *primary, *secondary;
+        LitTileQueue *current, *primary, *secondary;
 
         const int dirindex;
 
         bool popNext(int&,int&,Angle&,Angle&);
         void passFrom(int,int,const Angle&,const Angle&);
 
-        void setLighted(int,int);
+        void setLit(int,int);
         bool isOpaque(int,int) const;
 
     public:

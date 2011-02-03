@@ -36,7 +36,7 @@ void HexFovBeam::calculate(void) {
     int x, y;
     Angle begin, end;
     while( popNext(x, y, begin, end) ) {
-        setLighted( x, y );
+        setLit( x, y );
         if( !isOpaque( x, y ) ) {
             using namespace std;
             passFrom( x, y, begin, end );
@@ -44,15 +44,15 @@ void HexFovBeam::calculate(void) {
     }
 }
 
-bool LightedTileQueue::empty(void) const {
+bool LitTileQueue::empty(void) const {
     return q.empty();
 }
 
-void LightedTileQueue::popFront(void) {
+void LitTileQueue::popFront(void) {
     q.erase( q.begin() );
 }
 
-void LightedTileQueue::add(int x, int y, const Angle& begin,const Angle& end) {
+void LitTileQueue::add(int x, int y, const Angle& begin,const Angle& end) {
     using namespace std;
     std::pair<int,int> xy(x,y);
     LtqMap::iterator i = q.find( xy );
@@ -65,7 +65,7 @@ void LightedTileQueue::add(int x, int y, const Angle& begin,const Angle& end) {
     }
 }
 
-void LightedTileQueue::getFront(int& x_, int& y_, Angle& begin_, Angle& end_) {
+void LitTileQueue::getFront(int& x_, int& y_, Angle& begin_, Angle& end_) {
     x_ = q.begin()->first.first;
     y_ = q.begin()->first.second;
     begin_ = q.begin()->second.first;
@@ -81,7 +81,7 @@ bool HexFovBeam::popNext(int& x, int& y, Angle& begin, Angle& end) {
     if( primary->empty() && secondary->empty() ) {
         return false;
     }
-    LightedTileQueue *t = current;
+    LitTileQueue *t = current;
     current = primary;
     primary = secondary;
     secondary = t;
@@ -239,8 +239,8 @@ void Sector::recheckBranchCut(void) {
     containsBranchCut = ( !empty && end < begin );
 }
 
-void HexFovBeam::setLighted(int x, int y) {
-    receiver.setLighted( x + cx, y + cy );
+void HexFovBeam::setLit(int x, int y) {
+    receiver.setLit( x + cx, y + cy );
 }
 
 HexFovBeam::HexFovBeam( HexOpacityMap& map, HexLightReceiver& receiver, int dirindex, int cx, int cy ) :
@@ -248,9 +248,9 @@ HexFovBeam::HexFovBeam( HexOpacityMap& map, HexLightReceiver& receiver, int diri
     cx ( cx ),
     cy ( cy ),
     receiver ( receiver ),
-    current ( new LightedTileQueue() ),
-    primary ( new LightedTileQueue() ),
-    secondary ( new LightedTileQueue() ),
+    current ( new LitTileQueue() ),
+    primary ( new LitTileQueue() ),
+    secondary ( new LitTileQueue() ),
     dirindex ( dirindex )
 {
     current->add(HexDX[(dirindex+1)%6],

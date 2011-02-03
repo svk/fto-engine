@@ -25,10 +25,10 @@ struct Tile {
         WALL
     };
     State state;
-    Tile(void) : state( Tile::WALL ), lighted ( false ) {}
-    Tile(State state) : state(state), lighted ( false ) {}
+    Tile(void) : state( Tile::WALL ), lit ( false ) {}
+    Tile(State state) : state(state), lit ( false ) {}
 
-    bool lighted;
+    bool lit;
 };
 
 class World : public HexTools::HexMap<Tile>,
@@ -56,23 +56,23 @@ class World : public HexTools::HexMap<Tile>,
         void clearlight(void) {
             int sz = getSize();
             for(int i=0;i<sz;i++) {
-                get(i).lighted = false;
+                get(i).lit = false;
             }
-            get(px,py).lighted = true;
+            get(px,py).lit = true;
         }
 
         bool isOpaque(int x, int y) const {
             return get(x,y).state != Tile::FLOOR;
         }
 
-        void setLighted(int x, int y) {
+        void setLit(int x, int y) {
             if( &getDefault() != &get(x,y) ) {
-                get(x,y).lighted = true;
+                get(x,y).lit = true;
             }
         }
 
         bool isLit(int x, int y) const {
-            return get(x,y).lighted;
+            return get(x,y).lit;
         }
 
         bool canMove(int dx, int dy) {
@@ -109,7 +109,7 @@ class LevelBlitter : public HexBlitter {
 
 
         void drawHex(int x, int y, sf::RenderWindow& win) {
-            if( !world.get(x,y).lighted ) return;
+            if( !world.get(x,y).lit ) return;
             switch( world.get(x,y).state ) {
                 case Tile::WALL:
                     sprites["tile-wall"].draw( win );

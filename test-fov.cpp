@@ -13,7 +13,7 @@ class DummyOpacity : public HexTools::HexOpacityMap {
 
 class DummyReceiver : public HexTools::HexLightReceiver {
     public:
-        void setLighted(int x, int y) {
+        void setLit(int x, int y) {
             using namespace std;
             cout << x << " " << y << endl;
         }
