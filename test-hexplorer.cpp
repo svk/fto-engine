@@ -50,6 +50,7 @@ class World : public HexTools::HexMap<Tile>,
                 int x, y;
                 inflateHexCoordinate(i,x,y);
                 get(x,y).state = ( prng() > 0.5 ) ? Tile::WALL : Tile::FLOOR;
+                get(x,y).state = Tile::FLOOR;
             }
         }
 
