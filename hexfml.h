@@ -121,6 +121,7 @@ class HexSprite {
     public:
         HexSprite(const std::string&, const ScreenGrid&);
         HexSprite(const sf::Image&, const ScreenGrid&); // does not adopt!
+        HexSprite(const sf::Sprite&, const ScreenGrid&);
         ~HexSprite(void);
 
         void setPosition(int,int);

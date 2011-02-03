@@ -6,6 +6,8 @@
 #include <string>
 #include <map>
 
+#include <vector>
+
 class PixelTransform {
     public:
         virtual sf::Color transform(const sf::Color&) = 0;
@@ -131,5 +133,43 @@ class SfmlApplication : public SfmlEventHandler {
 
         void setScreen(SfmlScreen*);
 };
+
+class SpritesheetFull {
+};
+
+class Spritesheet {
+    private:
+        sf::Image sheet;
+        int width, height;
+
+        int x, y;
+        int rowHeight;
+
+        std::vector<sf::IntRect> rects;
+
+    public:
+        Spritesheet(int,int);
+
+        int adopt(sf::Image*);
+        bool hasSpaceFor(int,int) const;
+
+        sf::Sprite makeSprite(int) const;
+        sf::FloatRect getSpriteRect(int) const;
+
+        void bindTexture(void);
+};
+
+class KeyedSpritesheet : public Spritesheet {
+    private:
+        std::map<std::string,int> keys;
+    public:
+        KeyedSpritesheet(int,int);
+
+        void adoptAs(const std::string& str, sf::Image* resource);
+        sf::Sprite makeSpriteNamed(const std::string&) const;
+        sf::FloatRect getSpriteRectNamed(const std::string&) const;
+};
+
+sf::Image* loadImageFromFile(const std::string&);
 
 #endif

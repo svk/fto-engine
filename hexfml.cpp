@@ -181,6 +181,21 @@ HexSprite::HexSprite(const sf::Image& externalImage, const ScreenGrid& grid) :
     loadSpriteFrom( externalImage );
 }
 
+HexSprite::HexSprite(const sf::Sprite& sprite, const ScreenGrid& grid) :
+    grid ( grid ),
+    image ( 0 ),
+    sprite ( sprite ),
+    offsetX ( 0 ),
+    offsetY ( 0 ),
+    hx ( 0 ),
+    hy ( 0 )
+{
+    sf::Vector2f sz = sprite.GetSize();
+    offsetX = (grid.getHexWidth() - sz.x) / 2;
+    offsetY = (grid.getHexHeight() - sz.y) / 2;
+    setPosition( hx, hy );
+}
+
 void HexSprite::loadSpriteFrom(const sf::Image& img) {
     sprite.SetImage( img );
     offsetX = (grid.getHexWidth() - img.GetWidth()) / 2;

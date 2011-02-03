@@ -111,16 +111,45 @@ class LevelBlitter : public HexBlitter {
     private:
         World& world;
         ResourceManager<HexSprite>& sprites;
+        KeyedSpritesheet& sheet;
+
+        sf::FloatRect tileWall, tileFloor, zoneFog;
 
     public:
-        LevelBlitter(World& world, ResourceManager<HexSprite>& sprites) :
+        LevelBlitter(World& world, ResourceManager<HexSprite>& sprites, KeyedSpritesheet& sheet) :
             world ( world ),
-            sprites ( sprites )
+            sprites ( sprites ),
+            sheet ( sheet ),
+            tileWall ( sheet.getSpriteRectNamed( "tile-wall" ) ),
+            tileFloor ( sheet.getSpriteRectNamed( "tile-floor" ) ),
+            zoneFog ( sheet.getSpriteRectNamed( "zone-fog" ) )
         {
+        }
+
+        void putRect(const sf::FloatRect& rect) {
+            const float width = 32, height = 32;
+            using namespace std;
+            glBegin( GL_QUADS );
+            glColor3f( 0.5, 0.5, 1.0 );
+            glTexCoord2f( rect.Left, rect.Top ); glVertex2f(0,0);
+            glTexCoord2f( rect.Left, rect.Bottom ); glVertex2f(0,height);
+            glTexCoord2f( rect.Right, rect.Bottom ); glVertex2f(width,height);
+            glTexCoord2f( rect.Right, rect.Top ); glVertex2f(width,0);
+            glEnd();
         }
 
 
         void drawHex(int x, int y, sf::RenderWindow& win) {
+//            if( !world.seen.contains(x,y) ) return;
+            switch( world.get(x,y).state ) {
+                case Tile::WALL:
+                    putRect( tileWall );
+                    break;
+                case Tile::FLOOR:
+                    putRect( tileFloor );
+                    break;
+            }
+#if 0
             if( !world.seen.contains(x,y) ) return;
             std::string suffix = ""; // obv unoptimized
             if( !world.get(x,y).lit ) suffix = "-memory";
@@ -135,11 +164,13 @@ class LevelBlitter : public HexBlitter {
             if( !world.get(x,y).lit ) {
                 sprites["zone-fog"].draw( win );
             }
+#endif
         }
 };
 
 int main(int argc, char *argv[]) {
     ScreenGrid grid ( "./data/hexproto2.png" );
+#if 0
     ResourceManager<sf::Image> images;
     images.bind( "tile-floor", grid.createSingleColouredImage( sf::Color( 100,200,100 ) ) );
     images.bind( "tile-floor-memory", ToGrayscale().apply(
@@ -156,16 +187,39 @@ int main(int argc, char *argv[]) {
     hexSprites.bind( "tile-floor", new HexSprite( images["tile-floor"], grid ) );
     hexSprites.bind( "tile-floor-memory", new HexSprite( images["tile-floor-memory"], grid ) );
     hexSprites.bind( "zone-fog", new HexSprite( images["zone-fog"], grid ) );
+#endif
+
+    KeyedSpritesheet images (1024,1024);
+    images.adoptAs( "tile-floor", grid.createSingleColouredImage( sf::Color( 100,200,100 ) ) );
+    images.adoptAs( "tile-floor-memory", ToGrayscale().apply(
+                                      grid.createSingleColouredImage( sf::Color(100,200,100))));
+    images.adoptAs( "tile-wall", grid.createSingleColouredImage( sf::Color( 100,50,50 ) ) );
+    images.adoptAs( "tile-wall-memory", ToGrayscale().apply(
+                                     grid.createSingleColouredImage( sf::Color(100,50,50))));
+    images.adoptAs( "zone-fog", grid.createSingleColouredImage( sf::Color( 0,0,0,128 ) ) );
+    images.adoptAs( "smiley", loadImageFromFile( "./data/smiley32.png" ) );
+
+    ResourceManager<HexSprite> hexSprites;
+    hexSprites.bind( "overlay-player", new HexSprite( images.makeSpriteNamed( "smiley"), grid ) );
+    hexSprites.bind( "tile-wall", new HexSprite( images.makeSpriteNamed( "tile-wall" ), grid ) );
+    hexSprites.bind( "tile-wall-memory", new HexSprite( images.makeSpriteNamed( "tile-wall-memory" ), grid ) );
+    hexSprites.bind( "tile-floor", new HexSprite( images.makeSpriteNamed( "tile-floor" ), grid ) );
+    hexSprites.bind( "tile-floor-memory", new HexSprite( images.makeSpriteNamed( "tile-floor-memory" ), grid ) );
+    hexSprites.bind( "zone-fog", new HexSprite( images.makeSpriteNamed( "zone-fog" ), grid ) );
+
+    sf::Image *testImage, *testImage2;
+    testImage = loadImageFromFile( "./data/smiley32.png" );
+    testImage2 = loadImageFromFile( "./data/hexproto2.png" );
 
     World world( 40 );
-    LevelBlitter levelBlit ( world, hexSprites );
+    LevelBlitter levelBlit ( world, hexSprites, images );
     HexViewport vp ( grid,  0, 0, 640, 480 );
     vp.setBackgroundColour( sf::Color(0,0,0) );
     sf::View mainView ( sf::Vector2f( 0, 0 ),
                         sf::Vector2f( 320, 240 ) );
     sf::RenderWindow win ( sf::VideoMode(640,480,32), "Hexplorer demo" );
 
-    const double transitionTime = 0.15;
+    const double transitionTime = 2.15;
     bool transitioning = false;
     bool drybump;
     double transitionPhase;
@@ -173,13 +227,17 @@ int main(int argc, char *argv[]) {
 
     sf::Clock clock;
     win.SetView( mainView );
-    win.SetFramerateLimit( 30 );
+//    win.SetFramerateLimit( 30 );
 
     world.updateVision();
 
     while( win.IsOpened() ) {
+        using namespace std;
+
         double dt = clock.GetElapsedTime();
         clock.Reset();
+
+        cerr << "Framerate: " << 1 / dt << endl;
 
         sf::Event ev;
 
@@ -256,18 +314,79 @@ int main(int argc, char *argv[]) {
             vp.center( cx, cy );
         }
 
+
         win.Clear(sf::Color(255,0,255));
-        vp.draw( levelBlit, win, mainView );
+
+        {
+            glViewport( 0, 0, win.GetWidth(), win.GetHeight() );
+
+            glMatrixMode( GL_PROJECTION );
+            glLoadIdentity();
+            sf::Matrix3 myMatrix;
+            {
+#if 0
+                float Left   = mainView.GetCenter().x - mainView.GetHalfSize().x;
+                float Top    = mainView.GetCenter().y - mainView.GetHalfSize().y;
+                float Right  = mainView.GetCenter().x + mainView.GetHalfSize().x;
+                float Bottom = mainView.GetCenter().y + mainView.GetHalfSize().y;
+#endif
+                float Left   = 0- mainView.GetHalfSize().x;
+                float Top    = 0- mainView.GetHalfSize().y;
+                float Right  = mainView.GetHalfSize().x;
+                float Bottom = mainView.GetHalfSize().y;
+                sf::FloatRect myRect;
+
+                // Update the view rectangle - be careful, reversed views are allowed !
+                myRect.Left   = std::min(Left, Right);
+                myRect.Top    = std::min(Top, Bottom);
+                myRect.Right  = std::max(Left, Right);
+                myRect.Bottom = std::max(Top, Bottom);
+
+                // Update the projection matrix
+                myMatrix(0, 0) = 2.f / (Right - Left);
+                myMatrix(1, 1) = 2.f / (Top - Bottom);
+                myMatrix(0, 2) = (Left + Right) / (Left - Right);
+                myMatrix(1, 2) = (Bottom + Top) / (Bottom - Top);
+
+                myMatrix(0, 0) = 1.f / (mainView.GetHalfSize().x);
+                myMatrix(1, 1) = -1.f / (mainView.GetHalfSize().y);
+                myMatrix(0, 2) = 0;
+                myMatrix(1, 2) = 0;
+            }
+            glLoadMatrixf( myMatrix.Get4x4Elements() );
+
+            glMatrixMode( GL_MODELVIEW );
+            glLoadIdentity();
+
+            glEnable( GL_BLEND );
+            glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+
+            testImage->Bind();
+            glBegin( GL_QUADS );
+            glTexCoord2f( 0, 0 );
+            glVertex2f(0,0);
+            glTexCoord2f( 0, 1);
+            glVertex2f(0,100);
+            glTexCoord2f( 1, 1 );
+            glVertex2f(100,100);
+            glTexCoord2f( 1, 0 );
+            glVertex2f(100,0);
+            glEnd();
+        }
+
+
+
+//        vp.draw( levelBlit, win, mainView );
 
 //        mainView.SetCenter( 0, 0 );
 
-        vp.beginClip( win.GetWidth(), win.GetHeight() );
-        vp.translateToHex( world.px, world.py, win.GetWidth(), win.GetHeight(), mainView );
-        if( transitioning ) {
-            mainView.Move( -tdxv, -tdyv );
-        }
-        hexSprites["overlay-player"].draw( win );
-        vp.endClip();
+//        vp.beginClip( win.GetWidth(), win.GetHeight() );
+//        vp.translateToHex( world.px, world.py, win.GetWidth(), win.GetHeight(), mainView );
+//        if( transitioning ) {
+//            mainView.Move( -tdxv, -tdyv );
+//        }
+//        hexSprites["overlay-player"].draw( win );
+//        vp.endClip();
 
         win.Display();
     }

@@ -1,5 +1,8 @@
 #include "sftools.h"
 
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+
 sf::Color ToTranslucent::transform(const sf::Color& x) {
     return sf::Color( x.r, x.g, x.b, alpha );
 }
@@ -121,3 +124,93 @@ SfmlApplication::SfmlApplication(std::string title, int width, int height) :
 SfmlApplication::~SfmlApplication(void) {
 }
 
+Spritesheet::Spritesheet(int width, int height) :
+    sheet ( width,height, sf::Color(254,0,0)),
+    width ( width ),
+    height ( height ),
+    x ( 0 ),
+    y ( 0 ),
+    rowHeight ( 0 ),
+    rects ()
+{
+    sheet.SetSmooth( false );
+}
+
+bool Spritesheet::hasSpaceFor(int sw, int sh) const {
+    if( sw <= (width-x) && sh <= (height-y) ) {
+        return true;
+    }
+    if( sw <= width && sh <= (height-y-rowHeight) ) {
+        return true;
+    }
+    return false;
+}
+
+int Spritesheet::adopt(sf::Image* img) {
+    const int sw = img->GetWidth(), sh = img->GetHeight();
+    int rv;
+    if( !hasSpaceFor( sw, sh ) ) {
+        throw SpritesheetFull();
+    }
+    if( sw > (width-x) ) {
+        y += rowHeight;
+        x = 0;
+        rowHeight = 0;
+    }
+    rowHeight = MAX( sh, rowHeight );
+    rv = rects.size();
+    sf::IntRect rect ( x, y, x + sw, y + sh );
+    rects.push_back( rect );
+    for(int sx=0;sx<sw;sx++) for(int sy=0;sy<sh;sy++) {
+        sheet.SetPixel( x + sx, y + sy, img->GetPixel( sx, sy ) );
+    }
+    x += width;
+    delete img;
+    return rv;
+}
+
+sf::Sprite Spritesheet::makeSprite(int j) const {
+    sf::Sprite rv;
+    rv.SetImage( sheet );
+    rv.SetSubRect( rects[j] );
+    return rv;
+}
+
+KeyedSpritesheet::KeyedSpritesheet(int w, int h) :
+    Spritesheet ( w , h ),
+    keys () 
+{
+}
+
+void KeyedSpritesheet::adoptAs(const std::string& str, sf::Image* img) {
+    int rv = adopt( img );
+    keys[str] = rv;
+}
+
+sf::Sprite KeyedSpritesheet::makeSpriteNamed(const std::string& key) const {
+    std::map< std::string, int >::const_iterator i = keys.find( key );
+    return makeSprite( i->second );
+}
+
+sf::Image* loadImageFromFile(const std::string& fn) {
+    sf::Image *rv = new sf::Image();
+    if( !rv->LoadFromFile( fn ) ) {
+        delete rv;
+        return 0;
+    }
+    rv->SetSmooth( false );
+    return rv;
+}
+
+sf::FloatRect Spritesheet::getSpriteRect(int j) const {
+    return sheet.GetTexCoords( rects[j] );
+}
+
+sf::FloatRect KeyedSpritesheet::getSpriteRectNamed(const std::string& key) const {
+    std::map< std::string, int >::const_iterator i = keys.find( key );
+    return getSpriteRect( i->second );
+}
+
+void Spritesheet::bindTexture(void) {
+    sheet.Bind();
+}
