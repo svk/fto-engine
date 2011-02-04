@@ -21,6 +21,13 @@ struct FiniteLifetimeObjectList {
     typedef std::vector<T*> List;
     List objects;
 
+    ~FiniteLifetimeObjectList(void) {
+        while( !objects.empty() ) {
+            delete objects.back();
+            objects.pop_back();
+        }
+    }
+
     void prune(void) {
         typename List::iterator i = objects.begin();
         while( i != objects.end() ) {

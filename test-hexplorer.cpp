@@ -188,10 +188,6 @@ int main(int argc, char *argv[]) {
     hexSprites.bind( "tile-floor-memory", new HexSprite( images.makeSpriteNamed( "tile-floor-memory" ), grid ) );
     hexSprites.bind( "zone-fog", new HexSprite( images.makeSpriteNamed( "zone-fog" ), grid ) );
 
-    sf::Image *testImage, *testImage2;
-    testImage = loadImageFromFile( "./data/smiley32.png" );
-    testImage2 = loadImageFromFile( "./data/hexproto2.png" );
-
     World world( 40 );
     LevelBlitter levelBlit ( world, hexSprites, images );
     HexViewport vp ( grid,  0, 0, 640, 480 );
@@ -213,6 +209,8 @@ int main(int argc, char *argv[]) {
     typedef FiniteLifetimeObjectList<RisingTextAnimation> RTAManager;
     RTAManager textAnims;
 
+    MTRand prng ( 1337 );
+
     world.updateVision();
 
     while( win.IsOpened() ) {
@@ -231,7 +229,7 @@ int main(int argc, char *argv[]) {
                 } else {
                     int ax = world.px + tdx, ay = world.py + tdy;
                     vp.hexToScreen( ax, ay );
-                    LabelSprite *label = new LabelSprite( "42", sf::Color(200,0,0), ftFont );
+                    LabelSprite *label = new LabelSprite( (prng() > 0.5) ? "42" : "*miss*", sf::Color(200,0,0), ftFont );
                     ax -= label->getWidth() / 2.0;
                     textAnims.adopt(
                         new RisingTextAnimation( ax, ay, label, 1.0, 100.0 )
@@ -270,6 +268,10 @@ int main(int argc, char *argv[]) {
                 transitioning = true;
                 transitionPhase = 0.0;
                 switch( ev.Key.Code ) {
+                    case sf::Key::M:
+                        win.Close();
+                        transitioning = false;
+                        break;
                     case sf::Key::Q: tdx = -3; tdy = 1; break;
                     case sf::Key::W: tdx = 0; tdy = 2; break;
                     case sf::Key::E: tdx = 3; tdy = 1; break;
