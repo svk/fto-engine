@@ -115,6 +115,9 @@ class LevelBlitter : public HexBlitter {
 
         sf::Sprite tileWall, tileFloor, zoneFog, tileWallMemory, tileFloorMemory;
         sf::Sprite thinGrid;
+        sf::Sprite zoneRed, zoneGreen;
+
+        HexTools::HexRegion regionGreen, regionRed;
 
     public:
         LevelBlitter(World& world, ResourceManager<HexSprite>& sprites, KeyedSpritesheet& sheet) :
@@ -126,8 +129,24 @@ class LevelBlitter : public HexBlitter {
             zoneFog ( sheet.makeSpriteNamed( "zone-fog" ) ),
             tileWallMemory ( sheet.makeSpriteNamed( "tile-wall-memory" ) ),
             tileFloorMemory ( sheet.makeSpriteNamed( "tile-floor-memory" ) ),
-            thinGrid ( sheet.makeSpriteNamed( "thin-grid" ) )
+            thinGrid ( sheet.makeSpriteNamed( "thin-grid" ) ),
+            zoneRed ( sheet.makeSpriteNamed( "zone-red" ) ),
+            zoneGreen ( sheet.makeSpriteNamed( "zone-green" ) )
         {
+        }
+
+        void updateRegions(int px, int py) {
+            regionRed.clear();
+            regionGreen.clear();
+            for(int r=1;r<=2;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
+                int x, y;
+                HexTools::cartesianiseHexCoordinate( i, j, r, x, y );
+                x += px;
+                y += py;
+                if( world.get(x,y).state == Tile::WALL ) continue;
+                if( r == 1 ) regionGreen.add( x, y );
+                else regionRed.add( x, y );
+            }
         }
 
         void putSprite(const sf::Sprite& sprite) {
@@ -143,8 +162,10 @@ class LevelBlitter : public HexBlitter {
 
 
         void drawHex(int x, int y, sf::RenderWindow& win) {
+            const bool rrContains = regionRed.contains( x, y ),
+                       rgContains = regionGreen.contains( x, y );
             if( !world.seen.contains(x,y) ) return;
-            if( world.get(x,y).lit ) switch( world.get(x,y).state ) {
+            if( !(rrContains || rgContains) ) switch( world.get(x,y).state ) {
                 case Tile::WALL:
                     putSprite( tileWall );
                     break;
@@ -158,6 +179,13 @@ class LevelBlitter : public HexBlitter {
                 case Tile::FLOOR:
                     putSprite( tileFloorMemory );
                     break;
+            }
+            if( !world.get(x,y).lit ) {
+                putSprite( zoneFog );
+            } else if( rgContains ) {
+                putSprite( zoneGreen );
+            } else if( rrContains ) {
+                putSprite( zoneRed );
             }
             putSprite( thinGrid );
         }
@@ -178,6 +206,8 @@ int main(int argc, char *argv[]) {
     images.adoptAs( "tile-wall-memory", ToGrayscale().apply(
                                      grid.createSingleColouredImage( sf::Color(100,50,50))));
     images.adoptAs( "zone-fog", grid.createSingleColouredImage( sf::Color( 0,0,0,128 ) ) );
+    images.adoptAs( "zone-red", grid.createSingleColouredImage( sf::Color( 255,0,0,128 ) ) );
+    images.adoptAs( "zone-green", grid.createSingleColouredImage( sf::Color( 0,255,0,128 ) ) );
     images.adoptAs( "thin-grid", loadImageFromFile( "./data/hexthingrid2.png" ) );
 
     ResourceManager<HexSprite> hexSprites;
@@ -187,6 +217,8 @@ int main(int argc, char *argv[]) {
     hexSprites.bind( "tile-floor", new HexSprite( images.makeSpriteNamed( "tile-floor" ), grid ) );
     hexSprites.bind( "tile-floor-memory", new HexSprite( images.makeSpriteNamed( "tile-floor-memory" ), grid ) );
     hexSprites.bind( "zone-fog", new HexSprite( images.makeSpriteNamed( "zone-fog" ), grid ) );
+    hexSprites.bind( "zone-red", new HexSprite( images.makeSpriteNamed( "zone-red" ), grid ) );
+    hexSprites.bind( "zone-green", new HexSprite( images.makeSpriteNamed( "zone-green" ), grid ) );
 
     World world( 40 );
     LevelBlitter levelBlit ( world, hexSprites, images );
@@ -212,6 +244,7 @@ int main(int argc, char *argv[]) {
     MTRand prng ( 1337 );
 
     world.updateVision();
+    levelBlit.updateRegions(0,0);
 
     while( win.IsOpened() ) {
         using namespace std;
@@ -226,6 +259,7 @@ int main(int argc, char *argv[]) {
             if( transitionPhase >= transitionTime ) {
                 if( !drybump ) {
                     world.move( tdx, tdy );
+                    levelBlit.updateRegions( world.px, world.py );
                 } else {
                     int ax = world.px + tdx, ay = world.py + tdy;
                     vp.hexToScreen( ax, ay );
@@ -260,6 +294,7 @@ int main(int argc, char *argv[]) {
                         if( (&world.getDefault()) != (&world.get(x,y)) ) {
                             world.get(x,y).state = (world.get(x,y).state == Tile::FLOOR) ? Tile::WALL : Tile::FLOOR;
                             world.updateVision();
+                            levelBlit.updateRegions(world.px,world.py);
                         }
                     }
                 }
