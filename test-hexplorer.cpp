@@ -163,9 +163,10 @@ class LevelBlitter : public HexBlitter {
 
         void drawHex(int x, int y, sf::RenderWindow& win) {
             const bool rrContains = regionRed.contains( x, y ),
-                       rgContains = regionGreen.contains( x, y );
+                       rgContains = regionGreen.contains( x, y ),
+                       isLit = world.get(x,y).lit;
             if( !world.seen.contains(x,y) ) return;
-            if( !(rrContains || rgContains) ) switch( world.get(x,y).state ) {
+            if( !(!isLit || rrContains || rgContains) ) switch( world.get(x,y).state ) {
                 case Tile::WALL:
                     putSprite( tileWall );
                     break;
@@ -180,7 +181,7 @@ class LevelBlitter : public HexBlitter {
                     putSprite( tileFloorMemory );
                     break;
             }
-            if( !world.get(x,y).lit ) {
+            if( !isLit ) {
                 putSprite( zoneFog );
             } else if( rgContains ) {
                 putSprite( zoneGreen );
