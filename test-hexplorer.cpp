@@ -203,9 +203,9 @@ int main(int argc, char *argv[]) {
     images.adoptAs( "tile-floor", grid.createSingleColouredImage( sf::Color( 100,200,100 ) ) );
     images.adoptAs( "tile-floor-memory", ToGrayscale().apply(
                                       grid.createSingleColouredImage( sf::Color(100,200,100))));
-    images.adoptAs( "tile-wall", grid.createSingleColouredImage( sf::Color( 100,50,50 ) ) );
+    images.adoptAs( "tile-wall", grid.createSingleColouredImage( sf::Color( 50,20,20 ) ) );
     images.adoptAs( "tile-wall-memory", ToGrayscale().apply(
-                                     grid.createSingleColouredImage( sf::Color(100,50,50))));
+                                     grid.createSingleColouredImage( sf::Color(50,20,20))));
     images.adoptAs( "zone-fog", grid.createSingleColouredImage( sf::Color( 0,0,0,128 ) ) );
     images.adoptAs( "zone-red", grid.createSingleColouredImage( sf::Color( 255,0,0,128 ) ) );
     images.adoptAs( "zone-green", grid.createSingleColouredImage( sf::Color( 0,255,0,128 ) ) );
