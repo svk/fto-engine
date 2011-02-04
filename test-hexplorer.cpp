@@ -111,7 +111,7 @@ class LevelBlitter : public HexBlitter {
     private:
         World& world;
         ResourceManager<HexSprite>& sprites;
-        KeyedSpritesheet& sheet;
+        StringKeyedSpritesheet& sheet;
 
         sf::Sprite tileWall, tileFloor, zoneFog, tileWallMemory, tileFloorMemory;
         sf::Sprite thinGrid;
@@ -120,7 +120,7 @@ class LevelBlitter : public HexBlitter {
         HexTools::HexRegion regionGreen, regionRed;
 
     public:
-        LevelBlitter(World& world, ResourceManager<HexSprite>& sprites, KeyedSpritesheet& sheet) :
+        LevelBlitter(World& world, ResourceManager<HexSprite>& sprites, StringKeyedSpritesheet& sheet) :
             world ( world ),
             sprites ( sprites ),
             sheet ( sheet ),
@@ -198,7 +198,7 @@ int main(int argc, char *argv[]) {
 
     ScreenGrid grid ( "./data/hexproto2.png" );
 
-    KeyedSpritesheet images (1024,1024);
+    StringKeyedSpritesheet images (1024,1024);
     images.adopt( "smiley", loadImageFromFile( "./data/smiley32.png" ) );
     images.adopt( "tile-floor", grid.createSingleColouredImage( sf::Color( 100,200,100 ) ) );
     images.adopt( "tile-floor-memory", ToGrayscale().apply(
