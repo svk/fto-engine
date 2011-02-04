@@ -124,14 +124,14 @@ class LevelBlitter : public HexBlitter {
             world ( world ),
             sprites ( sprites ),
             sheet ( sheet ),
-            tileWall ( sheet.makeSpriteNamed( "tile-wall" ) ),
-            tileFloor ( sheet.makeSpriteNamed( "tile-floor" ) ),
-            zoneFog ( sheet.makeSpriteNamed( "zone-fog" ) ),
-            tileWallMemory ( sheet.makeSpriteNamed( "tile-wall-memory" ) ),
-            tileFloorMemory ( sheet.makeSpriteNamed( "tile-floor-memory" ) ),
-            thinGrid ( sheet.makeSpriteNamed( "thin-grid" ) ),
-            zoneRed ( sheet.makeSpriteNamed( "zone-red" ) ),
-            zoneGreen ( sheet.makeSpriteNamed( "zone-green" ) )
+            tileWall ( sheet.makeSprite( "tile-wall" ) ),
+            tileFloor ( sheet.makeSprite( "tile-floor" ) ),
+            zoneFog ( sheet.makeSprite( "zone-fog" ) ),
+            tileWallMemory ( sheet.makeSprite( "tile-wall-memory" ) ),
+            tileFloorMemory ( sheet.makeSprite( "tile-floor-memory" ) ),
+            thinGrid ( sheet.makeSprite( "thin-grid" ) ),
+            zoneRed ( sheet.makeSprite( "zone-red" ) ),
+            zoneGreen ( sheet.makeSprite( "zone-green" ) )
         {
         }
 
@@ -199,27 +199,27 @@ int main(int argc, char *argv[]) {
     ScreenGrid grid ( "./data/hexproto2.png" );
 
     KeyedSpritesheet images (1024,1024);
-    images.adoptAs( "smiley", loadImageFromFile( "./data/smiley32.png" ) );
-    images.adoptAs( "tile-floor", grid.createSingleColouredImage( sf::Color( 100,200,100 ) ) );
-    images.adoptAs( "tile-floor-memory", ToGrayscale().apply(
+    images.adopt( "smiley", loadImageFromFile( "./data/smiley32.png" ) );
+    images.adopt( "tile-floor", grid.createSingleColouredImage( sf::Color( 100,200,100 ) ) );
+    images.adopt( "tile-floor-memory", ToGrayscale().apply(
                                       grid.createSingleColouredImage( sf::Color(100,200,100))));
-    images.adoptAs( "tile-wall", grid.createSingleColouredImage( sf::Color( 50,20,20 ) ) );
-    images.adoptAs( "tile-wall-memory", ToGrayscale().apply(
+    images.adopt( "tile-wall", grid.createSingleColouredImage( sf::Color( 50,20,20 ) ) );
+    images.adopt( "tile-wall-memory", ToGrayscale().apply(
                                      grid.createSingleColouredImage( sf::Color(50,20,20))));
-    images.adoptAs( "zone-fog", grid.createSingleColouredImage( sf::Color( 0,0,0,128 ) ) );
-    images.adoptAs( "zone-red", grid.createSingleColouredImage( sf::Color( 255,0,0,128 ) ) );
-    images.adoptAs( "zone-green", grid.createSingleColouredImage( sf::Color( 0,255,0,128 ) ) );
-    images.adoptAs( "thin-grid", loadImageFromFile( "./data/hexthingrid2.png" ) );
+    images.adopt( "zone-fog", grid.createSingleColouredImage( sf::Color( 0,0,0,128 ) ) );
+    images.adopt( "zone-red", grid.createSingleColouredImage( sf::Color( 255,0,0,128 ) ) );
+    images.adopt( "zone-green", grid.createSingleColouredImage( sf::Color( 0,255,0,128 ) ) );
+    images.adopt( "thin-grid", loadImageFromFile( "./data/hexthingrid2.png" ) );
 
     ResourceManager<HexSprite> hexSprites;
-    hexSprites.bind( "overlay-player", new HexSprite( images.makeSpriteNamed( "smiley"), grid ) );
-    hexSprites.bind( "tile-wall", new HexSprite( images.makeSpriteNamed( "tile-wall" ), grid ) );
-    hexSprites.bind( "tile-wall-memory", new HexSprite( images.makeSpriteNamed( "tile-wall-memory" ), grid ) );
-    hexSprites.bind( "tile-floor", new HexSprite( images.makeSpriteNamed( "tile-floor" ), grid ) );
-    hexSprites.bind( "tile-floor-memory", new HexSprite( images.makeSpriteNamed( "tile-floor-memory" ), grid ) );
-    hexSprites.bind( "zone-fog", new HexSprite( images.makeSpriteNamed( "zone-fog" ), grid ) );
-    hexSprites.bind( "zone-red", new HexSprite( images.makeSpriteNamed( "zone-red" ), grid ) );
-    hexSprites.bind( "zone-green", new HexSprite( images.makeSpriteNamed( "zone-green" ), grid ) );
+    hexSprites.bind( "overlay-player", new HexSprite( images.makeSprite( "smiley"), grid ) );
+    hexSprites.bind( "tile-wall", new HexSprite( images.makeSprite( "tile-wall" ), grid ) );
+    hexSprites.bind( "tile-wall-memory", new HexSprite( images.makeSprite( "tile-wall-memory" ), grid ) );
+    hexSprites.bind( "tile-floor", new HexSprite( images.makeSprite( "tile-floor" ), grid ) );
+    hexSprites.bind( "tile-floor-memory", new HexSprite( images.makeSprite( "tile-floor-memory" ), grid ) );
+    hexSprites.bind( "zone-fog", new HexSprite( images.makeSprite( "zone-fog" ), grid ) );
+    hexSprites.bind( "zone-red", new HexSprite( images.makeSprite( "zone-red" ), grid ) );
+    hexSprites.bind( "zone-green", new HexSprite( images.makeSprite( "zone-green" ), grid ) );
 
     World world( 40 );
     LevelBlitter levelBlit ( world, hexSprites, images );

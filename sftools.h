@@ -186,6 +186,7 @@ class Spritesheet {
 
     public:
         Spritesheet(int,int);
+        virtual ~Spritesheet(void) {}
 
         int adopt(sf::Image*);
         bool hasSpaceFor(int,int) const;
@@ -207,19 +208,19 @@ class SimpleKeyedSpritesheet : public Spritesheet {
         {
         }
 
-        void adoptAs(const T& str, sf::Image* img) {
-            int rv = adopt( img );
+        void adopt(const T& str, sf::Image* img) {
+            int rv = Spritesheet::adopt( img );
             keys[str] = rv;
         }
 
-        sf::Sprite makeSpriteNamed(const T& key) const {
+        sf::Sprite makeSprite(const T& key) const {
             typename std::map< T, int >::const_iterator i = keys.find( key );
-            return makeSprite( i->second );
+            return Spritesheet::makeSprite( i->second );
         }
 
-        sf::FloatRect getSpriteRectNamed(const T& key) const {
+        sf::FloatRect getSpriteRect(const T& key) const {
             typename std::map< T, int >::const_iterator i = keys.find( key );
-            return getSpriteRect( i->second );
+            return Spritesheet::getSpriteRect( i->second );
         }
 };
 
