@@ -176,21 +176,8 @@ sf::Sprite Spritesheet::makeSprite(int j) const {
     return rv;
 }
 
-KeyedSpritesheet::KeyedSpritesheet(int w, int h) :
-    Spritesheet ( w , h ),
-    keys () 
-{
-}
 
-void KeyedSpritesheet::adoptAs(const std::string& str, sf::Image* img) {
-    int rv = adopt( img );
-    keys[str] = rv;
-}
 
-sf::Sprite KeyedSpritesheet::makeSpriteNamed(const std::string& key) const {
-    std::map< std::string, int >::const_iterator i = keys.find( key );
-    return makeSprite( i->second );
-}
 
 sf::Image* loadImageFromFile(const std::string& fn) {
     sf::Image *rv = new sf::Image();
@@ -200,15 +187,6 @@ sf::Image* loadImageFromFile(const std::string& fn) {
     }
     rv->SetSmooth( false );
     return rv;
-}
-
-sf::FloatRect Spritesheet::getSpriteRect(int j) const {
-    return sheet.GetTexCoords( rects[j] );
-}
-
-sf::FloatRect KeyedSpritesheet::getSpriteRectNamed(const std::string& key) const {
-    std::map< std::string, int >::const_iterator i = keys.find( key );
-    return getSpriteRect( i->second );
 }
 
 void Spritesheet::bindTexture(void) {

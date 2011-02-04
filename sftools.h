@@ -196,16 +196,34 @@ class Spritesheet {
         void bindTexture(void);
 };
 
-class KeyedSpritesheet : public Spritesheet {
+template<typename T>
+class SimpleKeyedSpritesheet : public Spritesheet {
     private:
-        std::map<std::string,int> keys;
+        std::map<T,int> keys;
     public:
-        KeyedSpritesheet(int,int);
+        SimpleKeyedSpritesheet(int w, int h) :
+            Spritesheet ( w , h ),
+            keys () 
+        {
+        }
 
-        void adoptAs(const std::string& str, sf::Image* resource);
-        sf::Sprite makeSpriteNamed(const std::string&) const;
-        sf::FloatRect getSpriteRectNamed(const std::string&) const;
+        void adoptAs(const T& str, sf::Image* img) {
+            int rv = adopt( img );
+            keys[str] = rv;
+        }
+
+        sf::Sprite makeSpriteNamed(const T& key) const {
+            typename std::map< T, int >::const_iterator i = keys.find( key );
+            return makeSprite( i->second );
+        }
+
+        sf::FloatRect getSpriteRectNamed(const T& key) const {
+            typename std::map< T, int >::const_iterator i = keys.find( key );
+            return getSpriteRect( i->second );
+        }
 };
+
+typedef SimpleKeyedSpritesheet<std::string> KeyedSpritesheet;
 
 sf::Image* loadImageFromFile(const std::string&);
 
