@@ -1,6 +1,9 @@
 #include "TacClient.h"
 
+#include <cstdlib>
+#include <cstdio>
 #include <cassert>
+
 
 namespace Tac {
 
@@ -64,7 +67,9 @@ ClientUnit* ClientUnitManager::operator[](int id) const {
 ClientTile::ClientTile(void) :
     tileType ( 0 ),
     highlight ( NONE ),
-    inactive ( true )
+    inactive ( true ),
+    x ( 0 ),
+    y ( 0 )
 {
     clearUnits();
 }
@@ -77,7 +82,7 @@ void ClientTile::setActive(void) {
     inactive = false;
 }
 
-int ClearUnit::clearUnitById(int id) {
+int ClientTile::clearUnitById(int id) {
     for(int i=0;i<UNIT_LAYERS;i++) if( unitId[i] == id ) {
         unitId[i] = 0;
         return i;
@@ -85,8 +90,19 @@ int ClearUnit::clearUnitById(int id) {
     return -1;
 }
 
+void CMLevelBlitterGL::putSprite( const sf::Sprite& sprite ) {
+    const float width = sprite.GetSize().x, height = sprite.GetSize().y;
+    const sf::FloatRect rect = sprite.GetImage()->GetTexCoords( sprite.GetSubRect() );
+    glBegin( GL_QUADS );
+    glTexCoord2f( rect.Left, rect.Top ); glVertex2f(0+0.5,0+0.5);
+    glTexCoord2f( rect.Left, rect.Bottom ); glVertex2f(0+0.5,height+0.5);
+    glTexCoord2f( rect.Right, rect.Bottom ); glVertex2f(width+0.5,height+0.5);
+    glTexCoord2f( rect.Right, rect.Top ); glVertex2f(width+0.5,0+0.5);
+    glEnd();
+}
+
 void ClientTile::clearUnits(void) {
-    for(int i=0;i<UNIT_LAYERS;i++) {
+    for(int i=0;i<UNIT_LAYERS;i++) {
         unitId[i] = INVALID_ID;
     }
 }
@@ -96,10 +112,10 @@ void ClientTile::setInactive(void) {
     clearUnits();
 }
 
-void ClientMap::updateActive(const HexRegion& visible) {
+void ClientMap::updateActive(const HexTools::HexRegion& visible) {
     for(int r=0;r<radius;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
         int x, y;
-        cartesianiseHexCoordinate( i, j, r, x, y );
+        HexTools::cartesianiseHexCoordinate( i, j, r, x, y );
         if( !visible.contains( x,y ) ) {
             tiles.get(x,y).setInactive();
         } else {
@@ -137,8 +153,11 @@ void ClientMap::placeUnitAt(int id,int x,int y,int layer) {
     unit->enterTile( tiles.get( x, y ), layer );
 }
 
-void ClientUnit::enterTile(ClientTile& tile, int layer) {
-    tile.setUnit( id, layer );
+void ClientUnit::enterTile(ClientTile& tile, int layer_) {
+    tile.setUnit( id, layer_ );
+    layer = layer_;
+    x = tile.getX();
+    y = tile.getY();
 }
 
 int ClientUnit::leaveTile(ClientTile& tile) {
@@ -151,14 +170,19 @@ void ClientTile::setUnit(int id, int layer) {
 }
 
 ClientMap::ClientMap(int radius) :
-    radius ( radius )
+    radius ( radius ),
     tiles ( radius ),
     units (),
     animatedUnit ( 0 )
 {
+    for(int r=0;r<radius;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
+        int x, y;
+        HexTools::cartesianiseHexCoordinate( i, j, r, x, y );
+        tiles.get(x,y).setXY(x,y);
+    }
 }
 
-bool LineCurveAnimation::done(void) {
+bool LineCurveAnimation::done(void) const {
     return phase >= duration;
 }
 
@@ -218,8 +242,9 @@ void ClientMap::animate(double dt) {
 }
 
 ClientActionQueue::~ClientActionQueue(void) {
-    while( !actions.empty() ) {
-        delete actions.pop();
+    while( !actions.empty() ) {
+        delete actions.front();
+        actions.pop();
     }
 }
 
@@ -271,11 +296,17 @@ ClientUnit* ClientMap::getUnitById(int id) {
     return units[id];
 }
 
-void MovementAnimationCAction::operator() const {
-    ClientUnit *unit = cmap.getUnitById(id);
+void MovementAnimationCAction::operator()(void) const {
+    ClientUnit *unit = cmap.getUnitById(unitId);
     if( unit ) {
         unit->startMovementAnimation( dx, dy );
     }
+}
+
+void CMLevelBlitterGL::drawHex(int x, int y, sf::RenderWindow& win) {
+    ClientTileType *tt = cmap.tiles.get(x,y).getTileType();
+    if( !tt ) return;
+    putSprite( tilesheet.makeSprite( tt->spriteno ) );
 }
 
 };

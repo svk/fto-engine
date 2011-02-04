@@ -2,7 +2,18 @@
 #define H_TAC_CLIENT
 
 #define INVALID_ID 0
-#define UNIT_LAYERS 2
+#define UNIT_LAYERS 1
+
+#include "sftools.h"
+#include "HexTools.h"
+
+#include <map>
+#include <vector>
+#include <string>
+#include <queue>
+
+#include <SFML/System.hpp>
+#include <SFML/Graphics.hpp>
 
 namespace Tac {
 
@@ -38,32 +49,34 @@ namespace Type {
 
 class CurveAnimation {
     public:
-        virtual ~CurveAnimation(void) {}
+        virtual ~CurveAnimation(void) {}
         virtual void animate(double) = 0;
         virtual bool done(void) const = 0;
         virtual void get(double&,double&) const = 0;
-}
+};
 
-class LineCurveAnimation {
+class LineCurveAnimation : public CurveAnimation {
     private:
         const double duration;
         double x0, y0, x1, y1;
         double phase;
 
     public:
+        LineCurveAnimation(double,double,double,double,double);
+
         void animate(double);
         bool done(void) const;
         void get(double&,double&) const;
 };
 
-struct ClientUnitType {
+struct ClientUnitType {
     int spriteno;
 };
 
 struct ClientTileType {
     int spriteno;
-    Mobility mobility;
-    Opacity opacity;
+    Type::Mobility mobility;
+    Type::Opacity opacity;
     bool border;
     int baseCost;
 
@@ -84,7 +97,7 @@ class ClientUnit {
             DEAD
         } state; // this might not be accurate -- illusions etc
 
-        int x, y;
+        int x, y, layer;
         bool hasPosition;
 
         CurveAnimation *curveAnim;
@@ -101,7 +114,7 @@ class ClientUnit {
         void setNoPosition(void);
 
         void enterTile(ClientTile&, int);
-        void leaveTile(ClientTile&);
+        int leaveTile(ClientTile&);
         void move(int,int);
 
         bool getPosition(int&, int&);
@@ -140,9 +153,15 @@ class ClientTile {
 
         int unitId[ UNIT_LAYERS ];
 
+        int x, y;
+
         void clearUnits(void);
 
     public:
+        ClientTile(void);
+
+        ClientTileType *getTileType(void) const { return tileType; }
+
         void setHighlight( Highlight );
 
         int clearUnitById(int);
@@ -150,6 +169,10 @@ class ClientTile {
 
         void setActive(void);
         void setInactive(void);
+
+        void setXY(int x_, int y_) { x = x_; y = y_; }
+        int getX() const { return x; }
+        int getY() const { return y; }
 
         bool getActive(void) const { return !inactive; }
 };
@@ -181,7 +204,7 @@ class ClientAction {
         virtual ~ClientAction(void) {}
 
         virtual ClientAction* duplicate(void) const = 0;
-        virtual void operator() const = 0;
+        virtual void operator()(void) const = 0;
         virtual bool isCosmetic(void) const = 0;
 };
 
@@ -210,18 +233,38 @@ struct MovementAnimationCAction : public ClientAction {
     {
     }
 
-    ClientAction* duplicate(void) { return new MovementAnimationCAction( cmap, unitId, dx, dy ); }
+    ClientAction* duplicate(void) const { return new MovementAnimationCAction( cmap, unitId, dx, dy ); }
 
-    void operator() const;
+    void operator()(void) const;
 
     bool isCosmetic(void) const { return true; }
+};
+
+class ClientMap;
+
+class CMLevelBlitterGL {
+    private:
+        ClientMap& cmap;
+        Spritesheet& tilesheet;
+
+    public:
+        CMLevelBlitterGL( ClientMap& cmap,
+                          Spritesheet& tilesheet ) :
+            cmap ( cmap ),
+            tilesheet ( tilesheet )
+        {
+        }
+
+        void putSprite( const sf::Sprite& sprite );
+        void drawHex(int, int, sf::RenderWindow&);
+
 };
 
 
 class ClientMap {
     private:
         int radius;
-        HexMap<ClientTile> tiles;
+        HexTools::HexMap<ClientTile> tiles;
         ClientUnitManager units;
 
         ClientActionQueue caq;
@@ -231,10 +274,12 @@ class ClientMap {
         bool shouldBlock(void) const;
         bool isInBlockingAnimation(void) const;
 
+        friend class CMLevelBlitterGL;
+
     public:
         ClientMap(int);
 
-        void updateActive(const HexRegion&);
+        void updateActive(const HexTools::HexRegion&);
 
         void adoptUnit(ClientUnit*);
 
