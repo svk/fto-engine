@@ -164,6 +164,9 @@ class LevelBlitter : public HexBlitter {
 };
 
 int main(int argc, char *argv[]) {
+    FreetypeLibrary ftLib;
+    FreetypeFace ftFont ("./data/BienetBold.ttf", 20);
+
     ScreenGrid grid ( "./data/hexproto2.png" );
 
     KeyedSpritesheet images (1024,1024);
@@ -207,6 +210,9 @@ int main(int argc, char *argv[]) {
     win.SetView( mainView );
     win.SetFramerateLimit( 30 );
 
+    typedef FiniteLifetimeObjectList<RisingTextAnimation> RTAManager;
+    RTAManager textAnims;
+
     world.updateVision();
 
     while( win.IsOpened() ) {
@@ -222,6 +228,14 @@ int main(int argc, char *argv[]) {
             if( transitionPhase >= transitionTime ) {
                 if( !drybump ) {
                     world.move( tdx, tdy );
+                } else {
+                    int ax = world.px + tdx, ay = world.py + tdy;
+                    vp.hexToScreen( ax, ay );
+                    LabelSprite *label = new LabelSprite( "42", sf::Color(200,0,0), ftFont );
+                    ax -= label->getWidth() / 2.0;
+                    textAnims.adopt(
+                        new RisingTextAnimation( ax, ay, label, 1.0, 100.0 )
+                    );
                 }
                 transitioning = false;
             }
@@ -315,8 +329,15 @@ int main(int argc, char *argv[]) {
         vp.drawGL( levelBlit, win, win.GetWidth(), win.GetHeight() );
 
         mainView.SetCenter( 0, 0 );
+        for(RTAManager::List::iterator i = textAnims.objects.begin(); i != textAnims.objects.end(); i++) {
+            (*i)->animate( dt );
+            win.Draw( **i );
+        }
+        textAnims.prune();
 
         vp.beginClip( win.GetWidth(), win.GetHeight() );
+
+
         vp.translateToHex( world.px, world.py, win.GetWidth(), win.GetHeight(), mainView );
         if( transitioning ) {
             mainView.Move( -tdxv, -tdyv );

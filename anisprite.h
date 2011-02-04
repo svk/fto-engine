@@ -5,7 +5,17 @@
 
 #include <SFML/Graphics.hpp>
 
-class AnimatedSprite : public sf::Drawable {
+#include "typesetter.h"
+
+#include "sftools.h"
+
+class Animation {
+    public:
+        virtual void animate(double) = 0;
+};
+
+class AnimatedSprite : public sf::Drawable,
+                       public Animation {
     private:
         typedef std::vector<sf::Sprite*> SpriteList;
         SpriteList sprites;
@@ -24,6 +34,28 @@ class AnimatedSprite : public sf::Drawable {
 
         virtual void Render(sf::RenderTarget& target) const;
         void SetColor(const sf::Color&);
+};
+
+class RisingTextAnimation : public sf::Drawable,
+                            public Animation,
+                            public FiniteLifetimeObject {
+    private:
+        LabelSprite* labelSprite; // owned
+        const double duration;
+
+        const double x;
+        double y;
+        const double yspeed;
+        double alpha;
+
+    public:
+        RisingTextAnimation(double, double, LabelSprite*, double, double);
+        ~RisingTextAnimation(void);
+
+        void animate(double);
+        virtual void Render(sf::RenderTarget& target) const;
+
+        bool done(void) const;
 };
 
 #endif

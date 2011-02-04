@@ -257,7 +257,9 @@ class LabelSprite {
         int getWidth(void) const;
         int getHeight(void) const;
 
-        void draw(sf::RenderWindow&) const;
+        void draw(sf::RenderTarget&) const;
+
+        void setAlpha(int);
 };
 
 struct ChatLine {

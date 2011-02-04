@@ -8,6 +8,36 @@
 
 #include <vector>
 
+class FiniteLifetimeObject {
+    public:
+        virtual ~FiniteLifetimeObject(void) {}
+
+        virtual bool done(void) const = 0;
+};
+
+template
+<class T>
+struct FiniteLifetimeObjectList {
+    typedef std::vector<T*> List;
+    List objects;
+
+    void prune(void) {
+        typename List::iterator i = objects.begin();
+        while( i != objects.end() ) {
+            if( (*i)->done() ) {
+                delete *i;
+                i = objects.erase( i );
+            } else {
+                i++;
+            }
+        }
+    }
+
+    void adopt(T* arg) {
+        objects.push_back( arg );
+    }
+};
+
 class PixelTransform {
     public:
         virtual sf::Color transform(const sf::Color&) = 0;

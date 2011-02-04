@@ -487,7 +487,7 @@ void LabelSprite::setPosition(int x, int y) {
     sprite->SetPosition( 0.5 + (double) x, 0.5 + (double) y );
 }
 
-void LabelSprite::draw(sf::RenderWindow& win) const {
+void LabelSprite::draw(sf::RenderTarget& win) const {
     win.Draw( *sprite );
 }
 
@@ -815,4 +815,8 @@ void LineBuilder::clear(void) {
 void ChatInputLine::clear(void) {
     builder.clear();
     ready = false;
+}
+
+void LabelSprite::setAlpha(int alpha) {
+    sprite->SetColor( sf::Color(255,255,255,alpha) );
 }

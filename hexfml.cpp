@@ -441,3 +441,9 @@ void HexViewport::setBackgroundColour( const sf::Color& bgColor_ ) {
 void HexViewport::setNoBackgroundColour(void) {
     drawBackground = false;
 }
+
+void HexViewport::hexToScreen(int& x, int& y) {
+    grid.hexToScreen( x, y );
+    x += screenXOffset - centerX;
+    y += screenYOffset - centerY;
+}

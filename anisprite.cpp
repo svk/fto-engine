@@ -7,7 +7,6 @@
 
 using namespace std;
 
-
 AnimatedSprite::AnimatedSprite(double duration, bool doLoop) :
     sprites (),
     spriteDuration ( duration ),
@@ -55,4 +54,35 @@ void AnimatedSprite::SetColor( const sf::Color& col ) {
 void AnimatedSprite::Render(sf::RenderTarget& target) const {
     assert( currentSprite != sprites.end() );
     target.Draw( **currentSprite );
+}
+
+void RisingTextAnimation::animate(double dt) {
+    y -= dt * yspeed;
+    alpha -= dt * (255.0 / duration);
+    if( alpha < 0 ) alpha = 0.0;
+    labelSprite->setPosition( x, y );
+    labelSprite->setAlpha( (int)(0.5+ alpha) );
+}
+
+bool RisingTextAnimation::done(void) const {
+    return alpha <= 0.0;
+}
+
+void RisingTextAnimation::Render(sf::RenderTarget& target) const {
+    labelSprite->draw( target );
+}
+
+RisingTextAnimation::RisingTextAnimation(double x, double y, LabelSprite *labelSprite, double duration, double yspeed) :
+    labelSprite ( labelSprite ),
+    duration ( duration ),
+    x ( x ),
+    y ( y ),
+    yspeed ( yspeed ),
+    alpha ( 255.0 )
+{
+    labelSprite->setPosition( x, y );
+}
+
+RisingTextAnimation::~RisingTextAnimation(void) {
+    delete labelSprite;
 }

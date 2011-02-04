@@ -104,6 +104,8 @@ class HexViewport {
         void translateToHex(int,int,int,int,sf::View&) const;
         void beginClip(int,int);
         void endClip(void);
+
+        void hexToScreen(int&,int&);
 };
 
 class HexSprite {
