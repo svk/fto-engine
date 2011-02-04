@@ -43,4 +43,4 @@ spclient: spclient.o Sise.o SProto.o myabort.o
 spguient: spguient.o Sise.o SProto.o typesetter.o sftools.o myabort.o Nash.o NashClient.o sftools.o hexfml.o HexTools.o
 	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
 
-test-fov: test-fov.o HexFov.o
+test-fov: test-fov.o HexFov.o HexTools.o myabort.o
