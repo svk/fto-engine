@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
     for(int r=1;r<=mapSize;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
         int x, y;
         cartesianiseHexCoordinate( i, j, r, x, y );
-        smap.get(x,y) = prng() < 0.1;
+        smap.get(x,y) = prng() < 0.4;
     }
     smap.get(0,0) = false;
     smap.get(playerX,playerY) = false;

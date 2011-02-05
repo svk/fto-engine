@@ -386,6 +386,8 @@ class ClientMap : public HexOpacityMap {
 
         HexRegion moveHighlightZone, attackHighlightZone;
 
+        HexRegion activeRegion;
+
         ScreenGrid& grid;
 
         typedef FiniteLifetimeObjectList<RisingTextAnimation> RTAManager;

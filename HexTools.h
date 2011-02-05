@@ -32,11 +32,24 @@ class HexRegion {
         List coords;
 
     public:
+        HexRegion(void) {}
+        HexRegion(const HexRegion& that) :
+            coords ( coords ) {}
+
+        const HexRegion& operator=(const HexRegion& that) {
+            if( this != &that ) {
+                coords = that.coords;
+            }
+            return *this;
+        }
+
+
         int size(void) const { return coords.size(); }
         void clear(void);
         void add(int,int);
         void remove(int,int);
         bool contains(int,int) const;
+
 
         const_iterator begin(void) { return coords.begin(); }
         const_iterator end(void) { return coords.end(); }

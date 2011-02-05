@@ -116,15 +116,19 @@ void ClientMap::updateActive(const HexTools::HexRegion& visible) {
     } else {
         tiles.get(0,0).setActive();
     }
-    for(int r=0;r<=radius;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
-        int x, y;
-        HexTools::cartesianiseHexCoordinate( i, j, r, x, y );
+    for(HexRegion::const_iterator i = activeRegion.begin(); i != activeRegion.end(); i++) {
+        const int x = i->first, y = i->second;
         if( !visible.contains( x,y ) ) {
             tiles.get(x,y).setInactive();
-        } else {
+        }
+    }
+    for(HexRegion::const_iterator i = activeRegion.begin(); i != activeRegion.end(); i++) {
+        const int x = i->first, y = i->second;
+        if( visible.contains( x,y ) ) {
             tiles.get(x,y).setActive();
         }
     }
+    activeRegion = visible;
 }
 
 bool ClientUnit::getPosition(int& ox, int& oy) const {
