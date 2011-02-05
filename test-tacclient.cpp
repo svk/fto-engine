@@ -41,8 +41,6 @@ int main(int argc, char *argv[]) {
     using namespace Tac;
     using namespace std;
 
-    cerr << sf::PostFX::CanUsePostFX() << endl;
-
     const int mapSize = 40;
 
     SpriteId::bindAlias( "unit-smiley", 0 );
