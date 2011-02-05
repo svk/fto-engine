@@ -18,14 +18,21 @@ void cartesianiseHexCoordinate(int,int,int,int&,int&);
 typedef std::pair<int,int> HexCoordinate;
 
 class HexRegion {
+    public:
+        typedef std::set< HexCoordinate > List;
+        typedef List::const_iterator const_iterator;
+
     private:
-        std::set< HexCoordinate > coords;
+        List coords;
 
     public:
         void clear(void);
         void add(int,int);
         void remove(int,int);
         bool contains(int,int) const;
+
+        const_iterator begin(void) { return coords.begin(); }
+        const_iterator end(void) { return coords.end(); }
 };
 
 template<class T>

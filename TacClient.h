@@ -244,6 +244,7 @@ class ClientTile {
         ClientTile(void);
 
         ClientTileType *getTileType(void) const { return tileType; }
+        void setTileType(ClientTileType*tt) { tileType = tt; }
 
         void setHighlight( Highlight );
         Highlight getHighlight(void) const { return highlight; }
@@ -385,6 +386,8 @@ class ClientMap {
         CMLevelBlitterGL levelBlitter;
         CMUnitBlitterGL groundUnitBlitter;
 
+        HexRegion moveHighlightZone, attackHighlightZone;
+
         bool shouldBlock(void) const;
         bool isInBlockingAnimation(void) const;
 
@@ -409,6 +412,12 @@ class ClientMap {
 
         ClientTile& getTile(int x, int y) { return tiles.get(x,y); }
         ClientUnit* getUnitById(int);
+
+        void setTileType(int, int, ClientTileType*);
+
+        void clearHighlights(void);
+        void addMoveHighlight(int, int);
+        void addAttackHighlight(int, int);
 };
 
 

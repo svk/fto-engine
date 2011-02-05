@@ -380,6 +380,31 @@ ClientTileType::ClientTileType(TacSpritesheet& sheet, const std::string& alias, 
 {
 }
 
+void ClientMap::setTileType(int x, int y, ClientTileType* tt) {
+    tiles.get(x,y).setTileType( tt );
+}
+
+void ClientMap::clearHighlights(void) {
+    for(HexRegion::const_iterator i = moveHighlightZone.begin(); i != moveHighlightZone.end(); i++) {
+        tiles.get( i->first, i->second ).setHighlight( ClientTile::NONE );
+    }
+    for(HexRegion::const_iterator i = attackHighlightZone.begin(); i != attackHighlightZone.end(); i++) {
+        tiles.get( i->first, i->second ).setHighlight( ClientTile::NONE );
+    }
+    moveHighlightZone.clear();
+    attackHighlightZone.clear();
+}
+
+void ClientMap::addAttackHighlight(int x, int y) {
+    tiles.get( x, y ).setHighlight( ClientTile::ATTACK_ZONE );
+    attackHighlightZone.add( x, y );
+}
+
+void ClientMap::addMoveHighlight(int x, int y) {
+    tiles.get( x, y ).setHighlight( ClientTile::MOVE_ZONE );
+    moveHighlightZone.add( x, y );
+}
+
 
 
 };
