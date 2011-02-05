@@ -5,6 +5,12 @@
 
 #include <utility>
 
+#include <cstdlib>
+#include <cstdio>
+#include <cassert>
+#include <stdexcept>
+#include <cmath>
+
 #include <set>
 
 namespace HexTools {
@@ -93,6 +99,10 @@ class HexMap {
         const T& get(int k) const {
             if( k < 0 || k >= size ) return getDefault();
             return tiles[k];
+        }
+
+        bool isDefault(int x, int y) const {
+            return &get(x,y) == &defaultTile;
         }
 
         T& getDefault(void) { return defaultTile; }

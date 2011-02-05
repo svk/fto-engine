@@ -114,7 +114,7 @@ void ClientMap::updateActive(const HexTools::HexRegion& visible) {
     } else {
         tiles.get(0,0).setActive();
     }
-    for(int r=0;r<radius;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
+    for(int r=0;r<=radius;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
         int x, y;
         HexTools::cartesianiseHexCoordinate( i, j, r, x, y );
         if( !visible.contains( x,y ) ) {
@@ -178,7 +178,7 @@ ClientMap::ClientMap(int radius, TacSpritesheet& sheet, ScreenGrid& grid) :
     groundUnitBlitter (*this, sheet, 0),
     grid ( grid )
 {
-    for(int r=0;r<radius;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
+    for(int r=0;r<=radius;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
         int x, y;
         HexTools::cartesianiseHexCoordinate( i, j, r, x, y );
         tiles.get(x,y).setXY(x,y);
@@ -396,7 +396,19 @@ ClientTileType::ClientTileType(TacSpritesheet& sheet, const std::string& alias, 
 }
 
 void ClientMap::setTileType(int x, int y, ClientTileType* tt) {
-    tiles.get(x,y).setTileType( tt );
+    ClientTile& tile = tiles.get(x, y );
+    if( &tile != &tiles.getDefault() ) {
+        tiles.get(x,y).setTileType( tt );
+    }
+}
+
+void ClientTile::setTileType(ClientTileType*tt) {
+    if( tt->border ) {
+        // borders are unknowable.
+        tileType = 0;
+    } else {
+        tileType = tt;
+    }
 }
 
 void ClientMap::clearHighlights(void) {

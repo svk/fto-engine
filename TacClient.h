@@ -247,7 +247,7 @@ class ClientTile {
         ClientTile(void);
 
         ClientTileType *getTileType(void) const { return tileType; }
-        void setTileType(ClientTileType*tt) { tileType = tt; }
+        void setTileType(ClientTileType*);
 
         void setHighlight( Highlight );
         Highlight getHighlight(void) const { return highlight; }

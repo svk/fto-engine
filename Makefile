@@ -1,5 +1,5 @@
 CC=g++
-CPPFLAGS=-g -I/usr/include/freetype2 -Wall
+CPPFLAGS=-g -I/usr/include/freetype2 -Wall -O0
 
 SFML_LIBS=-lsfml-system -lsfml-graphics -lsfml-audio
 CORE_LIBS=-lboost_filesystem -lboost_program_options -lssl
