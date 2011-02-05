@@ -1,5 +1,7 @@
 #include "sftools.h"
 
+#include <iostream>
+
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
@@ -125,7 +127,7 @@ SfmlApplication::~SfmlApplication(void) {
 }
 
 Spritesheet::Spritesheet(int width, int height) :
-    sheet ( width,height, sf::Color(254,0,0)),
+    sheet ( width,height, sf::Color(254,254,0)),
     width ( width ),
     height ( height ),
     x ( 0 ),
@@ -147,24 +149,28 @@ bool Spritesheet::hasSpaceFor(int sw, int sh) const {
 }
 
 int Spritesheet::adopt(sf::Image* img) {
+    const int pad = 1;
     const int sw = img->GetWidth(), sh = img->GetHeight();
     int rv;
-    if( !hasSpaceFor( sw, sh ) ) {
+    if( !hasSpaceFor( sw + 2*pad, sh + 2*pad ) ) {
         throw SpritesheetFull();
     }
-    if( sw > (width-x) ) {
+    if( (sw+2*pad) > (width-x) ) {
         y += rowHeight;
         x = 0;
         rowHeight = 0;
     }
-    rowHeight = MAX( sh, rowHeight );
+    rowHeight = MAX( sh + 2 * pad, rowHeight );
     rv = rects.size();
-    sf::IntRect rect ( x, y, x + sw, y + sh );
+    sf::IntRect rect ( x + pad, y + pad, x + pad + sw, y + pad + sh );
     rects.push_back( rect );
-    for(int sx=0;sx<sw;sx++) for(int sy=0;sy<sh;sy++) {
-        sheet.SetPixel( x + sx, y + sy, img->GetPixel( sx, sy ) );
+    for(int sx=0;sx<(sw+2*pad);sx++) for(int sy=0;sy<(sh+2*pad);sy++) {
+        sheet.SetPixel( x + sx, y + sy, sf::Color(255,0,255,0) );
     }
-    x += width;
+    for(int sx=0;sx<sw;sx++) for(int sy=0;sy<sh;sy++) {
+        sheet.SetPixel( x + pad + sx, y + pad + sy, img->GetPixel( sx, sy ) );
+    }
+    x += width + 2 * pad;
     delete img;
     return rv;
 }
@@ -196,6 +202,7 @@ void Spritesheet::bindTexture(void) {
 void drawBoundSprite( const sf::Sprite& sprite ) {
     const float width = sprite.GetSize().x, height = sprite.GetSize().y;
     const sf::FloatRect rect = sprite.GetImage()->GetTexCoords( sprite.GetSubRect() );
+    using namespace std;
     glBegin( GL_QUADS );
     glTexCoord2f( rect.Left, rect.Top ); glVertex2f(0+0.5,0+0.5);
     glTexCoord2f( rect.Left, rect.Bottom ); glVertex2f(0+0.5,height+0.5);

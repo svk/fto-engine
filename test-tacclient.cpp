@@ -113,8 +113,6 @@ int main(int argc, char *argv[]) {
     win.SetFramerateLimit( 30 );
     while( win.IsOpened() ) {
         using namespace std;
-        cerr << win.GetWidth() << " " << win.GetHeight() << endl;
-
         cmap.animate( win.GetFrameTime() );
         cmap.processActions();
 

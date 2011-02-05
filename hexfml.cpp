@@ -308,6 +308,7 @@ void HexViewport::drawGL(HexBlitter& blitter, sf::RenderWindow& win, double view
     my(0,0) = 2.0 / viewWidth;
     my(1,1) = -2.0 / viewHeight;
 
+
     int rsw = win.GetWidth(), rsh = win.GetHeight();
     int htw = grid.getHexWidth()/2, hth = grid.getHexHeight()/2;
     int hw = screenWidth/2, hh = screenHeight/2;
