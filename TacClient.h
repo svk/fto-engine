@@ -313,47 +313,6 @@ class ClientActionQueue {
 
 class ClientMap;
 
-struct NormalMovementCAction : public ClientAction {
-    ClientMap& cmap;
-    int unitId;
-    int dx, dy;
-
-    NormalMovementCAction(ClientMap& cmap, int unitId, int dx, int dy) :
-        cmap( cmap ), unitId( unitId ), dx ( dx ), dy ( dy )
-    {
-    }
-
-    ClientAction* duplicate(void) const { return new NormalMovementCAction( cmap, unitId, dx, dy ); }
-
-    void operator()(void) const;
-
-    bool isCosmetic(void) const { return false; }
-};
-
-struct BumpAnimationCAction : public ClientAction {
-    // this animation is an animation of movement, but it is also used
-    // as an attack animation -- as such, obv. it has no actual movement
-    // semantics. (in fact, the plan is that actions should be either
-    // purely cosmetic or purely functional.)
-
-    ClientMap& cmap;
-    int unitId;
-    int dx, dy;
-
-    BumpAnimationCAction(ClientMap& cmap, int unitId, int dx, int dy) :
-        cmap( cmap ), unitId( unitId ), dx ( dx ), dy ( dy )
-    {
-    }
-
-    ClientAction* duplicate(void) const { return new BumpAnimationCAction( cmap, unitId, dx, dy ); }
-
-    void operator()(void) const;
-
-    bool isCosmetic(void) const { return true; }
-};
-
-class ClientMap;
-
 class CMUnitBlitterGL : public HexBlitter {
     private:
         ClientMap& cmap;
@@ -456,6 +415,9 @@ class ClientMap : public HexOpacityMap {
         void addAttackHighlight(int, int);
 
         bool unitMayMove(int,int,int) const;
+        bool unitMayMoveTo(int,int,int) const;
+
+        bool getUnitScreenPositionById( int, double&, double& ) const;
 };
 
 

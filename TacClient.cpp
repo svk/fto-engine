@@ -315,16 +315,6 @@ ClientUnit* ClientMap::getUnitById(int id) {
     return units[id];
 }
 
-void BumpAnimationCAction::operator()(void) const {
-    ClientUnit *unit = cmap.getUnitById(unitId);
-    if( unit ) {
-        int x = dx, y = dy;
-        cmap.getGrid().hexToScreen( x, y );
-        unit->startMovementAnimation( x, y );
-        cmap.setAnimatedUnit( unit );
-    }
-}
-
 void CMUnitBlitterGL::drawHex(int x, int y, sf::RenderWindow& win) {
     double xadjust, yadjust;
     int id = cmap.getTile(x,y).getUnitIdAt( layer );
@@ -439,16 +429,10 @@ bool ClientMap::isOpaque(int x,int y) const {
     }
 }
 
-void NormalMovementCAction::operator()(void) const {
-    cmap.moveUnit( unitId, dx, dy );
-}
-
-bool ClientMap::unitMayMove(int id, int dx, int dy) const {
+bool ClientMap::unitMayMoveTo(int id, int x, int y) const {
     const ClientUnit *unit = getUnitById( id );
     if( !unit ) return false;
-    int x, y;
-    if( !unit->getPosition( x, y ) ) return false;
-    const ClientTile& tile = tiles.get( x + dx, y + dy );
+    const ClientTile& tile = tiles.get( x, y );
     const ClientTileType* tileType = tile.getTileType();
     if( !tileType ) return false; // FOV should ensure that this is never possible anyway
                                   // exception for blinded units? probably best if even
@@ -459,6 +443,26 @@ bool ClientMap::unitMayMove(int id, int dx, int dy) const {
                                   //  how is it indicated, how is the memory indicated?
                                   //  etc. -- unnecessary complications]
     return tileType->mayTraverse( unit->getUnitType() );
+}
+
+bool ClientMap::unitMayMove(int id, int dx, int dy) const {
+    const ClientUnit *unit = getUnitById( id );
+    if( !unit ) return false;
+    int x, y;
+    if( !unit->getPosition( x, y ) ) return false;
+    return unitMayMoveTo( id, x + dx, y + dy);
+}
+
+bool ClientMap::getUnitScreenPositionById( int id, double& x, double& y ) const {
+    const ClientUnit *unit = getUnitById( id );
+    if( !unit ) return false;
+    int hx, hy;
+    if( !unit->getPosition( hx, hy ) ) return false;
+    unit->getCenterOffset( x, y );
+    grid.hexToScreen( hx, hy );
+    x += hx;
+    y += hy;
+    return true;
 }
 
 

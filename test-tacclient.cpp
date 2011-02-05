@@ -2,23 +2,29 @@
 
 #include "HexFov.h"
 #include "TacClient.h"
+#include "TacClientAction.h"
 
-void updateVision(HexTools::HexMap<bool>& smap, Tac::ClientMap& cmap, ResourceManager<Tac::ClientTileType>& tileTypes, int x, int y) {
+void getVisionRegion(const HexTools::HexMap<bool>& smap, int x, int y, HexTools::HexFovRegion& region) {
     using namespace HexTools;
     using namespace Tac;
     struct OpacMap : public HexOpacityMap {
-        HexMap<bool>& smap;
+        const HexMap<bool>& smap;
 
-        OpacMap(HexMap<bool>& smap) : smap(smap) {}
+        OpacMap(const HexMap<bool>& smap) : smap(smap) {}
         bool isOpaque(int x, int y) const {
             return smap.get(x,y);
         }
     };
-
-    HexFovRegion region;
     OpacMap smapopac ( smap );
     HexFov fov ( smapopac, region, x, y );
     fov.calculate();
+}
+
+void updateVision(HexTools::HexMap<bool>& smap, Tac::ClientMap& cmap, ResourceManager<Tac::ClientTileType>& tileTypes, int x, int y) {
+    using namespace HexTools;
+    using namespace Tac;
+    HexFovRegion region;
+    getVisionRegion( smap, x, y, region );
     for(HexRegion::const_iterator i = region.begin(); i != region.end(); i++) {
         using namespace std;
         if( smap.get(i->first, i->second) ) {
@@ -79,9 +85,11 @@ int main(int argc, char *argv[]) {
     const int playerId = 1;
     const int playerTeam = 0, playerNo = 0;
 
+    int playerX = 3, playerY = 1; // keeping track of pretenses, this is "server side"
+
     ClientMap cmap ( mapSize, sheet, grid );
     cmap.adoptUnit( new ClientUnit( playerId, unitTypes["player"], playerTeam, playerNo ) );
-    cmap.placeUnitAt( playerId, 3, 1, 0 );
+    cmap.placeUnitAt( playerId, playerX, playerY, 0 );
 
     MTRand prng ( 1337 );
     HexMap<bool> smap ( mapSize );
@@ -91,9 +99,9 @@ int main(int argc, char *argv[]) {
         smap.get(x,y) = prng() > 0.5;
     }
     smap.get(0,0) = false;
-    smap.get(3,1) = false;
+    smap.get(playerX,playerY) = false;
 
-    updateVision( smap, cmap, tileTypes, 3, 1 );
+    updateVision( smap, cmap, tileTypes, playerX, playerY );
 
     const int winWidth = 640, winHeight = 480;
     sf::RenderWindow win ( sf::VideoMode( winWidth ,winHeight,32), "TacClient demo" );
@@ -119,9 +127,26 @@ int main(int argc, char *argv[]) {
                         case sf::Key::D: mx = 3; my = -1; break;
                         default: break;
                     }
-                    if( cmap.unitMayMove( playerId, mx, my ) ) {
+                    if( cmap.unitMayMoveTo( playerId, playerX + mx, playerY + my ) ) { // this check should be done both ss and cs
                         cmap.queueAction( new BumpAnimationCAction( cmap, playerId, mx, my ) );
                         cmap.queueAction( new NormalMovementCAction( cmap, playerId, mx, my ) );
+                        playerX += mx;
+                        playerY += my; // position immediately updated serverside
+                        HexFovRegion newVision;
+                        getVisionRegion( smap, playerX, playerY, newVision );
+                        RevealTerrainCAction *rev = new RevealTerrainCAction( cmap );
+                        SetActiveRegionCAction *act = new SetActiveRegionCAction( cmap );
+                        // for now we just Send. Everything. wrt terrain revelations
+                        for(HexFovRegion::const_iterator i = newVision.begin(); i != newVision.end(); i++) {
+                            if( smap.get(i->first, i->second) ) {
+                                rev->add( i->first, i->second, &tileTypes["wall"] );
+                            } else {
+                                rev->add( i->first, i->second, &tileTypes["floor"] );
+                            }
+                            act->add( i->first, i->second );
+                        }
+                        cmap.queueAction( rev );
+                        cmap.queueAction( act );
                     }
                 }
                 break;
@@ -133,6 +158,11 @@ int main(int argc, char *argv[]) {
                 win.Close();
                 break;
         }
+        double cx, cy;
+        if( cmap.getUnitScreenPositionById( playerId, cx, cy ) ) {
+            vp.center( cx, cy );
+        }
+
         win.Clear( sf::Color(0,0,0) );
 
         glViewport( 0, 0, win.GetWidth(), win.GetHeight() );
