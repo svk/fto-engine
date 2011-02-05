@@ -20,7 +20,8 @@ ClientUnit::ClientUnit(int id, ClientUnitType& unitType, int team, int owner) :
     x ( 0 ),
     y ( 0 ),
     layer ( 0 ),
-    hasPosition ( false )
+    hasPosition ( false ),
+    curveAnim ( 0 )
 {
 }
 
