@@ -39,6 +39,9 @@ void updateVision(HexTools::HexMap<bool>& smap, Tac::ClientMap& cmap, ResourceMa
 int main(int argc, char *argv[]) {
     using namespace HexTools;
     using namespace Tac;
+    using namespace std;
+
+    cerr << sf::PostFX::CanUsePostFX() << endl;
 
     const int mapSize = 40;
 
