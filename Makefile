@@ -46,5 +46,5 @@ spguient: spguient.o Sise.o SProto.o typesetter.o sftools.o myabort.o Nash.o Nas
 test-fov: test-fov.o HexFov.o HexTools.o myabort.o
 	$(CC) $(CPPFLAGS) $^ -o $@
 
-test-tacclient: test-tacclient.o HexFov.o HexTools.o myabort.o TacClient.o sftools.o hexfml.o hexfml.o mtrand.o TacClientAction.o
+test-tacclient: test-tacclient.o HexFov.o HexTools.o myabort.o TacClient.o sftools.o hexfml.o hexfml.o mtrand.o TacClientAction.o typesetter.o anisprite.o
 	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@

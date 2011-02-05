@@ -4,6 +4,8 @@
 #define INVALID_ID 0
 #define UNIT_LAYERS 1
 
+#include "typesetter.h"
+
 #include "HexFov.h"
 
 #include "sftools.h"
@@ -17,6 +19,8 @@
 
 #include <SFML/System.hpp>
 #include <SFML/Graphics.hpp>
+
+#include "anisprite.h"
 
 namespace Tac {
 
@@ -361,6 +365,8 @@ class CMLevelBlitterGL : public HexBlitter {
 
 class ClientMap : public HexOpacityMap {
     private:
+        FreetypeFace* risingTextFont;
+
         int radius;
         HexTools::HexMap<ClientTile> tiles;
         ClientUnitManager units;
@@ -376,11 +382,14 @@ class ClientMap : public HexOpacityMap {
 
         ScreenGrid& grid;
 
+        typedef FiniteLifetimeObjectList<RisingTextAnimation> RTAManager;
+        RTAManager animRisingText;
+
         bool shouldBlock(void) const;
         bool isInBlockingAnimation(void) const;
 
     public:
-        ClientMap(int, TacSpritesheet&, ScreenGrid&);
+        ClientMap(int, TacSpritesheet&, ScreenGrid&, FreetypeFace*);
 
         ScreenGrid& getGrid(void) const { return grid; }
 
@@ -414,10 +423,13 @@ class ClientMap : public HexOpacityMap {
         void addMoveHighlight(int, int);
         void addAttackHighlight(int, int);
 
+        void addRisingText(int,int,const std::string&, const sf::Color&);
+
         bool unitMayMove(int,int,int) const;
         bool unitMayMoveTo(int,int,int) const;
 
         bool getUnitScreenPositionById( int, double&, double& ) const;
+        void drawEffects(sf::RenderWindow&, double, double);
 };
 
 

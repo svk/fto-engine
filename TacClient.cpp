@@ -171,14 +171,16 @@ void ClientTile::setUnit(int id, int layer) {
     unitId[ layer ] = id;
 }
 
-ClientMap::ClientMap(int radius, TacSpritesheet& sheet, ScreenGrid& grid) :
+ClientMap::ClientMap(int radius, TacSpritesheet& sheet, ScreenGrid& grid, FreetypeFace* risingTextFont) :
+    risingTextFont ( risingTextFont ),
     radius ( radius ),
     tiles ( radius ),
     units (),
     animatedUnit ( 0 ),
     levelBlitter (*this, sheet),
     groundUnitBlitter (*this, sheet, 0),
-    grid ( grid )
+    grid ( grid ),
+    animRisingText ()
 {
     for(int r=0;r<=radius;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
         int x, y;
@@ -237,6 +239,10 @@ LineCurveAnimation::LineCurveAnimation(double duration, double x0, double y0, do
 }
 
 void ClientMap::animate(double dt) {
+    for(RTAManager::List::iterator i = animRisingText.objects.begin(); i != animRisingText.objects.end(); i++) {
+        (*i)->animate( dt );
+    }
+    animRisingText.prune();
     if( animatedUnit ) {
         animatedUnit->animate( dt );
         if( animatedUnit->done() ) {
@@ -481,6 +487,24 @@ bool ClientMap::getUnitScreenPositionById( int id, double& x, double& y ) const 
     x = hx + ofx;
     y = hy + ofy;
     return true;
+}
+
+void ClientMap::addRisingText(int x,int y,const std::string& str, const sf::Color& col) {
+    if( risingTextFont ) {
+        LabelSprite *label = new LabelSprite( str, col, *risingTextFont );
+        grid.hexToScreen( x, y );
+        x -= label->getWidth() / 2 - grid.getHexWidth()/2;
+        y -= label->getHeight() / 2 - grid.getHexHeight()/2;
+        animRisingText.adopt( new RisingTextAnimation( x, y, label, 1.0, 100.0 ) );
+    }
+}
+
+void ClientMap::drawEffects(sf::RenderWindow& win, double centerX, double centerY) {
+    // assumes clipping and translation has been done
+    for(RTAManager::List::iterator i = animRisingText.objects.begin(); i != animRisingText.objects.end(); i++) {
+        using namespace std;
+        win.Draw( **i );
+    }
 }
 
 

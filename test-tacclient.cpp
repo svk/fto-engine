@@ -1,5 +1,6 @@
 #include "mtrand.h"
 
+#include "typesetter.h"
 #include "HexFov.h"
 #include "TacClient.h"
 #include "TacClientAction.h"
@@ -40,6 +41,9 @@ int main(int argc, char *argv[]) {
     using namespace HexTools;
     using namespace Tac;
     using namespace std;
+
+    FreetypeLibrary lib;
+    FreetypeFace risingTextFont ("./data/CrimsonText-Bold.otf", 20);
 
     const int mapSize = 40;
 
@@ -93,7 +97,7 @@ int main(int argc, char *argv[]) {
 
     int playerX = 3, playerY = 1; // keeping track of pretenses, this is "server side"
 
-    ClientMap cmap ( mapSize, sheet, grid );
+    ClientMap cmap ( mapSize, sheet, grid, &risingTextFont );
     cmap.adoptUnit( new ClientUnit( playerId, unitTypes["player"], playerTeam, playerNo ) );
     cmap.placeUnitAt( playerId, playerX, playerY, 0 );
 
@@ -131,6 +135,8 @@ int main(int argc, char *argv[]) {
     if( trollLives ) {
         cerr << "troll spawned at " << trollX << ", " << trollY << endl;
     }
+
+    cmap.addRisingText( playerX, playerY, "Hello world!", sf::Color(255,255,0,255) );
 
 
     const int winWidth = 640, winHeight = 480;
@@ -196,7 +202,7 @@ int main(int argc, char *argv[]) {
                 break;
             case sf::Event::Resized:
                 using namespace std;
-                vp.setRectangle(0, 0, win.GetWidth(), win.GetHeight() );
+                vp.setRectangle(100, 100, win.GetWidth() - 400, win.GetHeight() - 400);
                 break;
             case sf::Event::Closed:
                 win.Close();
@@ -223,8 +229,23 @@ int main(int argc, char *argv[]) {
 
         sheet.bindTexture();
 
+        glColor3f(1.0,1.0,1.0);
+
         vp.drawGL( cmap.getLevelBlitter(), win, win.GetWidth(), win.GetHeight() );
         vp.drawGL( cmap.getUnitBlitter(0), win, win.GetWidth(), win.GetHeight() );
+
+
+        vp.beginClip( win.GetWidth(), win.GetHeight() );
+        win.SetView(sf::View( sf::Vector2f(0,0), sf::Vector2f( ((double)win.GetWidth())/2.0, ((double)win.GetHeight())/2.0 ) ) );
+        using namespace std;
+
+        sf::View fxView( sf::Vector2f(0,0), sf::Vector2f( ((double)win.GetWidth())/2.0, ((double)win.GetHeight())/2.0 ) );
+        vp.translateToHex( 0, 0, win.GetWidth(), win.GetHeight(), fxView );
+        win.SetView( fxView );
+        cmap.drawEffects( win, 0, 0 );
+        win.SetView( win.GetDefaultView() );
+
+        vp.endClip();
 
         win.Display();
     }
