@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
     const int playerId = 1;
     const int playerTeam = 0, playerNo = 0;
 
-    ClientMap cmap ( mapSize, sheet );
+    ClientMap cmap ( mapSize, sheet, grid );
     cmap.adoptUnit( new ClientUnit( playerId, unitTypes["player"], playerTeam, playerNo ) );
     cmap.placeUnitAt( playerId, 0, 0, 0 );
 
@@ -100,9 +100,15 @@ int main(int argc, char *argv[]) {
 
     win.SetFramerateLimit( 30 );
     while( win.IsOpened() ) {
+        cmap.animate( win.GetFrameTime() );
+        cmap.processActions();
+
         sf::Event ev;
         while( win.GetEvent( ev ) ) switch( ev.Type ) {
             default: break;
+            case sf::Event::KeyPressed:
+                cmap.queueAction( MovementAnimationCAction( cmap, playerId, 3, 1 ) );
+                break;
             case sf::Event::Resized:
                 using namespace std;
                 vp.setRectangle(0, 0, win.GetWidth(), win.GetHeight() );

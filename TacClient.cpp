@@ -164,13 +164,14 @@ void ClientTile::setUnit(int id, int layer) {
     unitId[ layer ] = id;
 }
 
-ClientMap::ClientMap(int radius, TacSpritesheet& sheet) :
+ClientMap::ClientMap(int radius, TacSpritesheet& sheet, ScreenGrid& grid) :
     radius ( radius ),
     tiles ( radius ),
     units (),
     animatedUnit ( 0 ),
     levelBlitter (*this, sheet),
-    groundUnitBlitter (*this, sheet, 0)
+    groundUnitBlitter (*this, sheet, 0),
+    grid ( grid )
 {
     for(int r=0;r<radius;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
         int x, y;
@@ -258,10 +259,12 @@ void ClientMap::adoptUnit(ClientUnit* unit) {
 }
 
 void ClientMap::queueAction(const ClientAction& action) {
+    using namespace std;
     caq.adopt( action.duplicate() );
 }
 
 void ClientMap::processActions(void) {
+    using namespace std;
     while( !shouldBlock() && !caq.empty() ) {
         ClientAction *action = caq.pop();
         (*action)();
@@ -306,7 +309,10 @@ ClientUnit* ClientMap::getUnitById(int id) {
 void MovementAnimationCAction::operator()(void) const {
     ClientUnit *unit = cmap.getUnitById(unitId);
     if( unit ) {
-        unit->startMovementAnimation( dx, dy );
+        int x = dx, y = dy;
+        cmap.getGrid().hexToScreen( x, y );
+        unit->startMovementAnimation( x, y );
+        cmap.setAnimatedUnit( unit );
     }
 }
 
@@ -318,7 +324,7 @@ void CMUnitBlitterGL::drawHex(int x, int y, sf::RenderWindow& win) {
     if( !unit ) return; // !?
     const ClientUnitType& unitType = unit->getUnitType();
     unit->getCenterOffset( xadjust, yadjust );
-    glTranslatef( xadjust, -yadjust, 0 );
+    glTranslatef( xadjust, yadjust, 0 );
     drawBoundSprite( unitType.spriteNormal );
 }
 

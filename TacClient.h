@@ -390,11 +390,17 @@ class ClientMap : public HexOpacityMap {
 
         HexRegion moveHighlightZone, attackHighlightZone;
 
+        ScreenGrid& grid;
+
         bool shouldBlock(void) const;
         bool isInBlockingAnimation(void) const;
 
     public:
-        ClientMap(int, TacSpritesheet&);
+        ClientMap(int, TacSpritesheet&, ScreenGrid&);
+
+        ScreenGrid& getGrid(void) const { return grid; }
+
+        void setAnimatedUnit( ClientUnit* unit ) { animatedUnit = unit; }
 
         bool isOpaque(int,int) const;
 
