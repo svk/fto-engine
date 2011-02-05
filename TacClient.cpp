@@ -290,9 +290,12 @@ bool ClientActionQueue::empty(void) const {
     return actions.empty();
 }
 
-void ClientUnit::getCenterOffset(double& ox, double& oy) const {
+void ClientUnit::getCenterOffset(int& ox, int& oy) const {
     if( curveAnim ) {
-        curveAnim->get( ox, oy );
+        double dox, doy;
+        curveAnim->get( dox, doy );
+        ox = (int)(0.5 + dox);
+        oy = (int)(0.5 + doy);
     } else {
         ox = oy = 0;
     }
@@ -316,7 +319,7 @@ ClientUnit* ClientMap::getUnitById(int id) {
 }
 
 void CMUnitBlitterGL::drawHex(int x, int y, sf::RenderWindow& win) {
-    double xadjust, yadjust;
+    int xadjust, yadjust;
     int id = cmap.getTile(x,y).getUnitIdAt( layer );
     if( id == INVALID_ID ) return;
     ClientUnit *unit = cmap.getUnitById( id );
@@ -458,10 +461,11 @@ bool ClientMap::getUnitScreenPositionById( int id, double& x, double& y ) const 
     if( !unit ) return false;
     int hx, hy;
     if( !unit->getPosition( hx, hy ) ) return false;
-    unit->getCenterOffset( x, y );
+    int ofx, ofy;
+    unit->getCenterOffset( ofx, ofy );
     grid.hexToScreen( hx, hy );
-    x += hx;
-    y += hy;
+    x = hx + ofx;
+    y = hy + ofy;
     return true;
 }
 

@@ -189,7 +189,7 @@ class ClientUnit {
 
         const ClientUnitType& getUnitType(void) const { return unitType; }
 
-        void getCenterOffset(double&, double&) const;
+        void getCenterOffset(int&, int&) const;
 
         int getId(void) const;
 

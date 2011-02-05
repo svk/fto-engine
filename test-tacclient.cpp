@@ -164,6 +164,7 @@ int main(int argc, char *argv[]) {
         }
         double cx, cy;
         if( cmap.getUnitScreenPositionById( playerId, cx, cy ) ) {
+            cerr << "centering: " << cx << " " << cy << endl;
             vp.center( cx, cy );
         }
 
@@ -183,7 +184,7 @@ int main(int argc, char *argv[]) {
 
         sheet.bindTexture();
 
-//        vp.drawGL( cmap.getLevelBlitter(), win, win.GetWidth(), win.GetHeight() );
+        vp.drawGL( cmap.getLevelBlitter(), win, win.GetWidth(), win.GetHeight() );
         vp.drawGL( cmap.getUnitBlitter(0), win, win.GetWidth(), win.GetHeight() );
 
         win.Display();
