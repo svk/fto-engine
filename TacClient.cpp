@@ -9,15 +9,17 @@ namespace Tac {
 
 const double MovementAnimationDuration = 0.15;
 
+std::map< std::string, int > SpriteId::spritenoAliases;
+
 ClientUnit::ClientUnit(int id, ClientUnitType& unitType, int team, int owner) :
     id ( id ),
     unitType ( unitType ),
     team ( team ),
     owner ( owner ),
     state ( LIVING ),
-    layer ( 0 ),
     x ( 0 ),
     y ( 0 ),
+    layer ( 0 ),
     hasPosition ( false )
 {
 }
@@ -91,14 +93,7 @@ int ClientTile::clearUnitById(int id) {
 }
 
 void CMLevelBlitterGL::putSprite( const sf::Sprite& sprite ) {
-    const float width = sprite.GetSize().x, height = sprite.GetSize().y;
-    const sf::FloatRect rect = sprite.GetImage()->GetTexCoords( sprite.GetSubRect() );
-    glBegin( GL_QUADS );
-    glTexCoord2f( rect.Left, rect.Top ); glVertex2f(0+0.5,0+0.5);
-    glTexCoord2f( rect.Left, rect.Bottom ); glVertex2f(0+0.5,height+0.5);
-    glTexCoord2f( rect.Right, rect.Bottom ); glVertex2f(width+0.5,height+0.5);
-    glTexCoord2f( rect.Right, rect.Top ); glVertex2f(width+0.5,0+0.5);
-    glEnd();
+    drawBoundSprite( sprite );
 }
 
 void ClientTile::clearUnits(void) {
@@ -169,11 +164,13 @@ void ClientTile::setUnit(int id, int layer) {
     unitId[ layer ] = id;
 }
 
-ClientMap::ClientMap(int radius) :
+ClientMap::ClientMap(int radius, TacSpritesheet& sheet) :
     radius ( radius ),
     tiles ( radius ),
     units (),
-    animatedUnit ( 0 )
+    animatedUnit ( 0 ),
+    levelBlitter (*this, sheet),
+    groundUnitBlitter (*this, sheet, 0)
 {
     for(int r=0;r<radius;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
         int x, y;
@@ -271,6 +268,16 @@ void ClientMap::processActions(void) {
     }
 }
 
+void ClientActionQueue::adopt(ClientAction* action) {
+    actions.push( action );
+}
+
+ClientAction* ClientActionQueue::pop(void) {
+    ClientAction* rv = actions.front();
+    actions.pop();
+    return rv;
+}
+
 bool ClientActionQueue::empty(void) const {
     return actions.empty();
 }
@@ -303,10 +310,76 @@ void MovementAnimationCAction::operator()(void) const {
     }
 }
 
-void CMLevelBlitterGL::drawHex(int x, int y, sf::RenderWindow& win) {
-    ClientTileType *tt = cmap.tiles.get(x,y).getTileType();
-    if( !tt ) return;
-    putSprite( tilesheet.makeSprite( tt->spriteno ) );
+void CMUnitBlitterGL::drawHex(int x, int y, sf::RenderWindow& win) {
+    double xadjust, yadjust;
+    int id = cmap.getTile(x,y).getUnitIdAt( layer );
+    if( id == INVALID_ID ) return;
+    ClientUnit *unit = cmap.getUnitById( id );
+    if( !unit ) return; // !?
+    const ClientUnitType& unitType = unit->getUnitType();
+    unit->getCenterOffset( xadjust, yadjust );
+    // xx adjust
+    drawBoundSprite( unitType.spriteNormal );
 }
+
+void CMLevelBlitterGL::drawHex(int x, int y, sf::RenderWindow& win) {
+    const ClientTile& tile = cmap.getTile(x,y);
+    bool isLit = tile.getActive();
+    ClientTileType *tt = tile.getTileType();
+    if( !tt ) return;
+    if( tile.getHighlight() == ClientTile::NONE && isLit ) {
+        putSprite( tt->spriteNormal );
+    } else {
+        putSprite( tt->spriteGrayscale );
+    }
+    if( !isLit ) {
+        putSprite( spriteFogZone );
+    } else switch( tile.getHighlight() ) {
+        case ClientTile::NONE: break;
+        case ClientTile::MOVE_ZONE:
+            putSprite( spriteMoveZone );
+            break;
+        case ClientTile::ATTACK_ZONE:
+            putSprite( spriteAttackZone );
+            break;
+    }
+}
+
+CMUnitBlitterGL& ClientMap::getUnitBlitter(int layer) {
+    // note that the layers don't need to be drawn in
+    // z order -- they're ordered "by importance".
+    // meaning, 0 is the ground layer where most units
+    // are.
+    switch( layer ) {
+        case 0: return groundUnitBlitter;
+    }
+    throw std::logic_error("no such layer");
+}
+
+bool ClientTileType::mayTraverse(ClientUnitType& unitType, int& outCost) const {
+    if( border ) return false;
+    if( mobility == Type::WALL ) return false;
+    outCost = baseCost;
+    return true;
+}
+
+ClientUnitType::ClientUnitType(TacSpritesheet& sheet, const std::string& alias, const std::string& name) :
+    name ( name ),
+    spriteNormal ( sheet.makeSprite( SpriteId( alias, SpriteId::NORMAL ) ) )
+{
+}
+
+ClientTileType::ClientTileType(TacSpritesheet& sheet, const std::string& alias, const std::string& name, Type::Mobility mobility, Type::Opacity opacity, bool border, int baseCost ) :
+    name ( name ),
+    mobility ( mobility ),
+    opacity ( opacity ),
+    border ( border ),
+    baseCost ( baseCost ),
+    spriteNormal ( sheet.makeSprite( SpriteId( alias, SpriteId::NORMAL ) ) ),
+    spriteGrayscale ( sheet.makeSprite( SpriteId( alias, SpriteId::GRAYSCALE ) ) )
+{
+}
+
+
 
 };

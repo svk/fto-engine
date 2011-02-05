@@ -192,3 +192,14 @@ sf::Image* loadImageFromFile(const std::string& fn) {
 void Spritesheet::bindTexture(void) {
     sheet.Bind();
 }
+
+void drawBoundSprite( const sf::Sprite& sprite ) {
+    const float width = sprite.GetSize().x, height = sprite.GetSize().y;
+    const sf::FloatRect rect = sprite.GetImage()->GetTexCoords( sprite.GetSubRect() );
+    glBegin( GL_QUADS );
+    glTexCoord2f( rect.Left, rect.Top ); glVertex2f(0+0.5,0+0.5);
+    glTexCoord2f( rect.Left, rect.Bottom ); glVertex2f(0+0.5,height+0.5);
+    glTexCoord2f( rect.Right, rect.Bottom ); glVertex2f(width+0.5,height+0.5);
+    glTexCoord2f( rect.Right, rect.Top ); glVertex2f(width+0.5,0+0.5);
+    glEnd();
+}

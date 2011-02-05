@@ -227,5 +227,6 @@ class SimpleKeyedSpritesheet : public Spritesheet {
 typedef SimpleKeyedSpritesheet<std::string> StringKeyedSpritesheet;
 
 sf::Image* loadImageFromFile(const std::string&);
+void drawBoundSprite( const sf::Sprite& sprite );
 
 #endif

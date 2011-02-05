@@ -6,6 +6,7 @@
 
 #include "sftools.h"
 #include "HexTools.h"
+#include "hexfml.h"
 
 #include <map>
 #include <vector>
@@ -34,6 +35,62 @@ namespace Tac {
 // door is probably its own mobility/opacity type;
 // passability/opacity depends on state
 // opening a door is an ACTION (like an attack)
+
+
+struct SpriteId {
+    enum Variant {
+        NORMAL = 0,
+        GRAYSCALE,
+        NUMBER_OF_SPRITE_VARIANTS
+    };
+
+    static std::map< std::string, int > spritenoAliases;
+
+    static void bindAlias(const std::string& name, int spriteno) {
+        spritenoAliases[ name ] = spriteno;
+    }
+
+    int spriteno;
+    Variant variant;
+
+    SpriteId(const std::string& spriteAlias, Variant variant) :
+        spriteno ( spritenoAliases[ spriteAlias ] ), // crashing on unbound is appropriate
+        variant ( variant )
+    {
+    }
+
+    SpriteId(int spriteno, Variant variant) :
+        spriteno ( spriteno ),
+        variant ( variant )
+    {
+    }
+    
+    SpriteId( const SpriteId& that ) :
+        spriteno ( that.spriteno ),
+        variant ( that.variant )
+    {
+    }
+
+    const SpriteId& operator=(const SpriteId& that) {
+        if( this != &that ) {
+            spriteno = that.spriteno;
+            variant = that.variant;
+        }
+        return *this;
+    }
+
+    bool operator==(const SpriteId& that) const {
+        return spriteno == that.spriteno && variant == that.variant;
+    }
+
+    bool operator<(const SpriteId& that) const {
+        if( spriteno < that.spriteno ) return true;
+        if( spriteno == that.spriteno && variant < that.variant ) return true;
+        return false;
+    }
+};
+
+typedef SimpleKeyedSpritesheet<SpriteId> TacSpritesheet;
 
 namespace Type {
     enum Mobility {
@@ -69,16 +126,38 @@ class LineCurveAnimation : public CurveAnimation {
         void get(double&,double&) const;
 };
 
+// note: a "unit type / tile type" includes all sorts of
+// variants (that give bonuses/penalties or aesthetic
+// variations) that are not completely individual to a
+// unit (and it's not clear that I'll need the latter).
+// so, if Italian troops have +1 movement, and English
+// troops +1 damage, then an "Italian crossbowman" is
+// a different unit type from an "English crossbowman".
 struct ClientUnitType {
-    int spriteno;
+    std::string name;
+
+    sf::Sprite spriteNormal;
+
+    ClientUnitType(TacSpritesheet&, const std::string&, const std::string&);
 };
 
 struct ClientTileType {
-    int spriteno;
+    std::string name; // the name is NOT the sprite alias -- want to have possibility of many sprites per name
+
     Type::Mobility mobility;
     Type::Opacity opacity;
     bool border;
     int baseCost;
+
+    sf::Sprite spriteNormal, spriteGrayscale;
+
+    ClientTileType(TacSpritesheet&,
+                   const std::string&, // sprite alias
+                   const std::string&, // name
+                   Type::Mobility,
+                   Type::Opacity,
+                   bool,
+                   int);
 
     bool mayTraverse(ClientUnitType&,int&) const;
 };
@@ -104,6 +183,8 @@ class ClientUnit {
 
     public:
         ClientUnit(int, ClientUnitType&, int, int);
+
+        const ClientUnitType& getUnitType(void) const { return unitType; }
 
         void getCenterOffset(double&, double&) const;
 
@@ -138,6 +219,8 @@ class ClientUnitManager {
         ClientUnit* operator[](int) const; // may return 0!
 };
 
+class CMLevelBlitterGL;
+
 class ClientTile {
     public:
         enum Highlight {
@@ -163,9 +246,12 @@ class ClientTile {
         ClientTileType *getTileType(void) const { return tileType; }
 
         void setHighlight( Highlight );
+        Highlight getHighlight(void) const { return highlight; }
 
         int clearUnitById(int);
         void setUnit(int, int);
+
+        int getUnitIdAt(int j) const { return unitId[j]; }
 
         void setActive(void);
         void setInactive(void);
@@ -242,22 +328,47 @@ struct MovementAnimationCAction : public ClientAction {
 
 class ClientMap;
 
-class CMLevelBlitterGL {
+class CMUnitBlitterGL : public HexBlitter {
     private:
         ClientMap& cmap;
-        Spritesheet& tilesheet;
+        TacSpritesheet& unitsheet;
+        int layer;
+
+    public:
+        CMUnitBlitterGL( ClientMap& cmap,
+                         TacSpritesheet& unitsheet,
+                         int layer ) :
+            cmap ( cmap ),
+            unitsheet ( unitsheet ),
+            layer ( layer )
+        {
+        }
+
+        void drawHex(int, int, sf::RenderWindow&);
+};
+
+class CMLevelBlitterGL : public HexBlitter {
+    private:
+        ClientMap& cmap;
+        TacSpritesheet& tilesheet;
+        
+        sf::Sprite spriteFogZone,
+                   spriteMoveZone,
+                   spriteAttackZone;
 
     public:
         CMLevelBlitterGL( ClientMap& cmap,
-                          Spritesheet& tilesheet ) :
+                          TacSpritesheet& tilesheet ) :
             cmap ( cmap ),
-            tilesheet ( tilesheet )
+            tilesheet ( tilesheet ),
+            spriteFogZone ( tilesheet.makeSprite( SpriteId("zone-fog", SpriteId::NORMAL ) ) ),
+            spriteMoveZone ( tilesheet.makeSprite( SpriteId("zone-move", SpriteId::NORMAL ) ) ),
+            spriteAttackZone ( tilesheet.makeSprite( SpriteId("zone-attack", SpriteId::NORMAL ) ) )
         {
         }
 
         void putSprite( const sf::Sprite& sprite );
         void drawHex(int, int, sf::RenderWindow&);
-
 };
 
 
@@ -271,13 +382,17 @@ class ClientMap {
 
         ClientUnit *animatedUnit;
 
+        CMLevelBlitterGL levelBlitter;
+        CMUnitBlitterGL groundUnitBlitter;
+
         bool shouldBlock(void) const;
         bool isInBlockingAnimation(void) const;
 
-        friend class CMLevelBlitterGL;
-
     public:
-        ClientMap(int);
+        ClientMap(int, TacSpritesheet&);
+
+        CMLevelBlitterGL& getLevelBlitter(void) { return levelBlitter; }
+        CMUnitBlitterGL& getUnitBlitter(int);
 
         void updateActive(const HexTools::HexRegion&);
 
@@ -292,6 +407,7 @@ class ClientMap {
         void queueAction(const ClientAction&);
         void processActions(void);
 
+        ClientTile& getTile(int x, int y) { return tiles.get(x,y); }
         ClientUnit* getUnitById(int);
 };
 
