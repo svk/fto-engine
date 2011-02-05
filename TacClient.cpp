@@ -489,13 +489,13 @@ bool ClientMap::getUnitScreenPositionById( int id, double& x, double& y ) const 
     return true;
 }
 
-void ClientMap::addRisingText(int x,int y,const std::string& str, const sf::Color& col) {
+void ClientMap::addRisingText(int x,int y,const std::string& str, const sf::Color& col, int alpha) {
     if( risingTextFont ) {
         LabelSprite *label = new LabelSprite( str, col, *risingTextFont );
         grid.hexToScreen( x, y );
         x -= label->getWidth() / 2 - grid.getHexWidth()/2;
         y -= label->getHeight() / 2 - grid.getHexHeight()/2;
-        animRisingText.adopt( new RisingTextAnimation( x, y, label, 1.5, 100.0 ) );
+        animRisingText.adopt( new RisingTextAnimation( x, y, label, 1.5, 200.0, alpha ) );
     }
 }
 

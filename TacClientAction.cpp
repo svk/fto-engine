@@ -3,7 +3,7 @@
 namespace Tac {
 
 void RisingTextCAction::operator()(void) const {
-    cmap.addRisingText( hexX, hexY, text, sf::Color(r,g,b,a) );
+    cmap.addRisingText( hexX, hexY, text, sf::Color(r,g,b), a );
 }
 
 void RevealTerrainCAction::operator()(void) const {

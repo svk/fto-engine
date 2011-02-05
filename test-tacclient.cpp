@@ -195,7 +195,7 @@ int main(int argc, char *argv[]) {
                             UnitDiscoverCAction *uds = new UnitDiscoverCAction( cmap, trollId, unitTypes["troll"], 1, 1, trollX, trollY, 0 );
                             cmap.queueAction( uds );
                         }
-                        cmap.queueAction( new RisingTextCAction( cmap, playerX, playerY, "Achievement unlocked: Walking the Walk", 255, 255, 255, 255 ) );
+                        cmap.queueAction( new RisingTextCAction( cmap, playerX, playerY, "Achievement unlocked: Walking the Walk", 255, 255, 255, 512 ) );
                     }
                 }
                 break;

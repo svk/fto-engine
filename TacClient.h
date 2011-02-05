@@ -423,7 +423,7 @@ class ClientMap : public HexOpacityMap {
         void addMoveHighlight(int, int);
         void addAttackHighlight(int, int);
 
-        void addRisingText(int,int,const std::string&, const sf::Color&);
+        void addRisingText(int,int,const std::string&, const sf::Color&, int);
 
         bool unitMayMove(int,int,int) const;
         bool unitMayMoveTo(int,int,int) const;

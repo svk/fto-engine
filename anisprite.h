@@ -47,8 +47,10 @@ class RisingTextAnimation : public sf::Drawable,
         double y;
         const double yspeed;
         double alpha;
+        const double alphaspeed;
 
     public:
+        RisingTextAnimation(double, double, LabelSprite*, double, double, int);
         RisingTextAnimation(double, double, LabelSprite*, double, double);
         ~RisingTextAnimation(void);
 

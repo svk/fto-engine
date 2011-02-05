@@ -58,10 +58,14 @@ void AnimatedSprite::Render(sf::RenderTarget& target) const {
 
 void RisingTextAnimation::animate(double dt) {
     y -= dt * yspeed;
-    alpha -= dt * (255.0 / duration);
+    alpha -= dt * alphaspeed;
     if( alpha < 0 ) alpha = 0.0;
     labelSprite->setPosition( x, y );
-    labelSprite->setAlpha( (int)(0.5+ alpha) );
+    if( alpha < 255 ) {
+        labelSprite->setAlpha( (int)(0.5+ alpha) );
+    } else {
+        labelSprite->setAlpha( 255 );
+    }
 }
 
 bool RisingTextAnimation::done(void) const {
@@ -72,13 +76,26 @@ void RisingTextAnimation::Render(sf::RenderTarget& target) const {
     labelSprite->draw( target );
 }
 
+RisingTextAnimation::RisingTextAnimation(double x, double y, LabelSprite *labelSprite, double duration, double yspeed, int alpha) :
+    labelSprite ( labelSprite ),
+    duration ( duration ),
+    x ( x ),
+    y ( y ),
+    yspeed ( yspeed ),
+    alpha ( alpha ),
+    alphaspeed( ((double)alpha) / duration )
+{
+    labelSprite->setPosition( x, y );
+}
+
 RisingTextAnimation::RisingTextAnimation(double x, double y, LabelSprite *labelSprite, double duration, double yspeed) :
     labelSprite ( labelSprite ),
     duration ( duration ),
     x ( x ),
     y ( y ),
     yspeed ( yspeed ),
-    alpha ( 255.0 )
+    alpha ( 255.0 ),
+    alphaspeed( 255.0 / duration )
 {
     labelSprite->setPosition( x, y );
 }
