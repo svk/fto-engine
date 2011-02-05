@@ -405,6 +405,17 @@ void ClientMap::addMoveHighlight(int x, int y) {
     moveHighlightZone.add( x, y );
 }
 
+bool ClientMap::isOpaque(int x,int y) const {
+    ClientTileType *tt = tiles.get(x,y).getTileType();
+    if( !tt ) return true;
+    switch( tt->opacity ) {
+        default:
+        case Type::BLOCK:
+            return true;
+        case Type::CLEAR:
+            return false;
+    }
+}
 
 
 };

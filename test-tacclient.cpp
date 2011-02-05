@@ -1,6 +1,23 @@
 #include "mtrand.h"
 
+#include "HexFov.h"
 #include "TacClient.h"
+
+void updateVision(HexTools::HexMap<bool>& smap, Tac::ClientMap& cmap, ResourceManager<Tac::ClientTileType>& tileTypes, int x, int y) {
+    using namespace HexTools;
+    using namespace Tac;
+    HexFovRegion region;
+    HexFov fov ( cmap, region, x, y );
+    region.add( x, y );
+    fov.calculate();
+    for(HexRegion::const_iterator i = region.begin(); i != region.end(); i++) {
+        if( smap.get(i->first, i->second) ) {
+            cmap.setTileType( i->first, i->second, &tileTypes[ "wall" ] );
+        } else {
+            cmap.setTileType( i->first, i->second, &tileTypes[ "floor" ] );
+        }
+    }
+}
 
 int main(int argc, char *argv[]) {
     using namespace HexTools;
@@ -62,6 +79,9 @@ int main(int argc, char *argv[]) {
         cartesianiseHexCoordinate( i, j, r, x, y );
         smap.get(x,y) = prng() > 0.5;
     }
+    smap.get(0,0) = false;
+
+    updateVision( smap, cmap, tileTypes, 0, 0 );
     
     return 0;
 }

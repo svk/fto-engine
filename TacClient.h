@@ -4,6 +4,8 @@
 #define INVALID_ID 0
 #define UNIT_LAYERS 1
 
+#include "HexFov.h"
+
 #include "sftools.h"
 #include "HexTools.h"
 #include "hexfml.h"
@@ -373,7 +375,7 @@ class CMLevelBlitterGL : public HexBlitter {
 };
 
 
-class ClientMap {
+class ClientMap : public HexOpacityMap {
     private:
         int radius;
         HexTools::HexMap<ClientTile> tiles;
@@ -393,6 +395,8 @@ class ClientMap {
 
     public:
         ClientMap(int, TacSpritesheet&);
+
+        bool isOpaque(int,int) const;
 
         CMLevelBlitterGL& getLevelBlitter(void) { return levelBlitter; }
         CMUnitBlitterGL& getUnitBlitter(int);
