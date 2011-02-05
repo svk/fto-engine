@@ -184,6 +184,15 @@ sf::Sprite Spritesheet::makeSprite(int j) const {
 
 
 
+sf::SoundBuffer* loadSoundBufferFromFile(const std::string& fn) {
+    sf::SoundBuffer *rv = new sf::SoundBuffer();
+    if( !rv->LoadFromFile( fn ) ) {
+        delete rv;
+        return 0;
+    }
+    return rv;
+}
+
 
 sf::Image* loadImageFromFile(const std::string& fn) {
     sf::Image *rv = new sf::Image();

@@ -80,6 +80,17 @@ int main(int argc, char *argv[]) {
     sheet.adopt( SpriteId("grid-thin", SpriteId::NORMAL),
                  loadImageFromFile( "./data/hexthingrid2.png" ) );
 
+    ResourceManager<RandomVariantsCollection<sf::SoundBuffer> > soundBuffers;
+    soundBuffers.bind( "clink", new RandomVariantsCollection<sf::SoundBuffer>() );
+    soundBuffers["clink"].adopt( loadSoundBufferFromFile( "./data-audio/clink1-112.wav" ) );
+    soundBuffers["clink"].adopt( loadSoundBufferFromFile( "./data-audio/clink1-151.wav" ) );
+    soundBuffers["clink"].adopt( loadSoundBufferFromFile( "./data-audio/clink1-170.wav" ) );
+    soundBuffers["clink"].adopt( loadSoundBufferFromFile( "./data-audio/clink1-195.wav" ) );
+    soundBuffers["clink"].adopt( loadSoundBufferFromFile( "./data-audio/clink1-208.wav" ) );
+    soundBuffers["clink"].adopt( loadSoundBufferFromFile( "./data-audio/clink1-222.wav" ) );
+    soundBuffers["clink"].adopt( loadSoundBufferFromFile( "./data-audio/clink1-272.wav" ) );
+    soundBuffers["clink"].adopt( loadSoundBufferFromFile( "./data-audio/clink1-85.wav" ) );
+
     ResourceManager<ClientTileType> tileTypes;
     ResourceManager<ClientUnitType> unitTypes;
 
@@ -203,12 +214,17 @@ int main(int argc, char *argv[]) {
                         int enemyUnitId = cmap.getTile( playerX + mx, playerY + my ).getUnitIdAt(0);
 
                         cmap.queueAction( new BumpAnimationCAction( cmap, playerId, mx, my ) );
-                        cmap.queueAction( new RemoveUnitCAction( cmap, enemyUnitId ) );
+                        cmap.queueAction( new PlaySoundCAction( cmap, soundBuffers["clink"].choose() ) );
                         cmap.queueAction( new RisingTextCAction( cmap, playerX + mx, playerY + my,
-                                                                 cmap.getUnitById( enemyUnitId )->getUnitType().name + " was killed!",
+                                                                 cmap.getUnitById( enemyUnitId )->getUnitType().name + " was attacked!",
                                                                  200,200,200,
                                                                  512 ) );
-                        trollLives = false;
+                        cmap.queueAction( new BumpAnimationCAction( cmap, trollId, -mx, -my ) );
+                        cmap.queueAction( new PlaySoundCAction( cmap, soundBuffers["clink"].choose() ) );
+                        cmap.queueAction( new RisingTextCAction( cmap, playerX + mx, playerY + my,
+                                                                 cmap.getUnitById( playerId )->getUnitType().name + " was attacked!",
+                                                                 200,200,200,
+                                                                 512 ) );
                     }
                 }
                 break;

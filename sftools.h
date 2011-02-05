@@ -4,11 +4,42 @@
 #include <stdexcept>
 
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 
 #include <string>
 #include <map>
 
 #include <vector>
+
+#include "mtrand.h"
+
+template
+<class T>
+class RandomVariantsCollection {
+    private:
+        MTRand_int32 prng;
+        std::vector<T*> elts;
+    public:
+        RandomVariantsCollection(void) :
+            prng (),
+            elts ()
+        {
+        }
+
+        virtual ~RandomVariantsCollection(void) {
+            for(typename std::vector<T*>::iterator i = elts.begin(); i != elts.end(); i++) {
+                delete *i;
+            }
+        }
+
+        void adopt(T* elt) {
+            elts.push_back( elt );
+        }
+
+        T& choose(void) {
+            return *elts[abs( prng() ) % elts.size()];
+        }
+};
 
 class FiniteLifetimeObject {
     public:
@@ -231,6 +262,7 @@ class SimpleKeyedSpritesheet : public Spritesheet {
 
 typedef SimpleKeyedSpritesheet<std::string> StringKeyedSpritesheet;
 
+sf::SoundBuffer* loadSoundBufferFromFile(const std::string&);
 sf::Image* loadImageFromFile(const std::string&);
 void drawBoundSprite( const sf::Sprite& sprite );
 void drawBoundSpriteCentered( const sf::Sprite&, double, double);

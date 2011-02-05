@@ -2,6 +2,10 @@
 
 namespace Tac {
 
+void PlaySoundCAction::operator()(void) const {
+    cmap.playSound( &buffer );
+}
+
 void RisingTextCAction::operator()(void) const {
     cmap.addRisingText( hexX, hexY, text, sf::Color(r,g,b), a );
 }

@@ -240,6 +240,12 @@ LineCurveAnimation::LineCurveAnimation(double duration, double x0, double y0, do
 {
 }
 
+void ClientMap::playSound( sf::SoundBuffer*buf ) {
+    sf::Sound *rv = new sf::Sound( *buf );
+    rv->Play();
+    soundsPlaying.push_back( rv );
+}
+
 void ClientMap::animate(double dt) {
     for(RTAManager::List::iterator i = animRisingText.objects.begin(); i != animRisingText.objects.end(); i++) {
         (*i)->animate( dt );
@@ -250,6 +256,15 @@ void ClientMap::animate(double dt) {
         if( animatedUnit->done() ) {
             animatedUnit->completedAnimation();
             animatedUnit = 0;
+        }
+    }
+
+    for(std::vector< sf::Sound* >::iterator i = soundsPlaying.begin(); i != soundsPlaying.end(); ) {
+        if( (*i)->GetStatus() == sf::Sound::Stopped ) {
+            delete *i;
+            i = soundsPlaying.erase( i );
+        } else {
+            i++;
         }
     }
 }

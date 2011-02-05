@@ -19,6 +19,7 @@
 
 #include <SFML/System.hpp>
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 
 #include "anisprite.h"
 
@@ -393,6 +394,8 @@ class ClientMap : public HexOpacityMap {
         typedef FiniteLifetimeObjectList<RisingTextAnimation> RTAManager;
         RTAManager animRisingText;
 
+        std::vector< sf::Sound* > soundsPlaying;
+
         bool shouldBlock(void) const;
         bool isInBlockingAnimation(void) const;
 
@@ -411,6 +414,8 @@ class ClientMap : public HexOpacityMap {
         void updateActive(const HexTools::HexRegion&);
 
         void adoptUnit(ClientUnit*);
+
+        void playSound( sf::SoundBuffer* );
 
         // low-level movement!
         void placeUnitAt(int,int,int,int);

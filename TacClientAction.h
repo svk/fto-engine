@@ -2,6 +2,18 @@
 
 namespace Tac {
 
+struct PlaySoundCAction : public ClientAction {
+    ClientMap& cmap;
+    sf::SoundBuffer& buffer;
+
+    PlaySoundCAction(ClientMap& cmap, sf::SoundBuffer& buffer) :
+        cmap ( cmap ), buffer ( buffer ) {}
+    ClientAction* duplicate(void) const { return new PlaySoundCAction( cmap, buffer ); }
+    void operator()(void) const;
+    bool isCosmetic(void) const { return true; }
+
+};
+
 struct NormalMovementCAction : public ClientAction {
     ClientMap& cmap;
     int unitId;
