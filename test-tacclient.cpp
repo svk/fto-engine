@@ -111,8 +111,6 @@ int main(int argc, char *argv[]) {
 
     // artifacts at any even height: bugfix go go go
 
-    sf::Clock clock;
-
     win.SetFramerateLimit( 30 );
     while( win.IsOpened() ) {
         using namespace std;
@@ -167,7 +165,6 @@ int main(int argc, char *argv[]) {
         }
         double cx, cy;
         if( cmap.getUnitScreenPositionById( playerId, cx, cy ) ) {
-            cx += clock.GetElapsedTime() * 20;
             vp.center( cx, cy );
         }
 
