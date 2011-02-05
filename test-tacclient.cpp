@@ -147,6 +147,7 @@ int main(int argc, char *argv[]) {
         cerr << "troll spawned at " << trollX << ", " << trollY << endl;
     }
 
+    // sources of classical music: http://en.wikipedia.org/wiki/Wikipedia:Sound/list
     sf::Music musicTest;
     musicTest.OpenFromFile( "./data-audio/test-background-music.ogg" );
     musicTest.Play();
