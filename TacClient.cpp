@@ -262,9 +262,9 @@ void ClientMap::adoptUnit(ClientUnit* unit) {
     units.adopt( unit );
 }
 
-void ClientMap::queueAction(const ClientAction& action) {
+void ClientMap::queueAction(ClientAction* action) {
     using namespace std;
-    caq.adopt( action.duplicate() );
+    caq.adopt( action );
 }
 
 void ClientMap::processActions(void) {

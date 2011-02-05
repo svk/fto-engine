@@ -120,8 +120,8 @@ int main(int argc, char *argv[]) {
                         default: break;
                     }
                     if( cmap.unitMayMove( playerId, mx, my ) ) {
-                        cmap.queueAction( BumpAnimationCAction( cmap, playerId, mx, my ) );
-                        cmap.queueAction( NormalMovementCAction( cmap, playerId, mx, my ) );
+                        cmap.queueAction( new BumpAnimationCAction( cmap, playerId, mx, my ) );
+                        cmap.queueAction( new NormalMovementCAction( cmap, playerId, mx, my ) );
                     }
                 }
                 break;

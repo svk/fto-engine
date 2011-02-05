@@ -442,7 +442,7 @@ class ClientMap : public HexOpacityMap {
 
         void animate(double dt);
 
-        void queueAction(const ClientAction&);
+        void queueAction(ClientAction*); // adopts
         void processActions(void);
 
         ClientTile& getTile(int x, int y) { return tiles.get(x,y); }
