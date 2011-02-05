@@ -7,7 +7,7 @@
 
 namespace Tac {
 
-const double MovementAnimationDuration = 0.15;
+const double MovementAnimationDuration = 20.15;
 
 std::map< std::string, int > SpriteId::spritenoAliases;
 
@@ -304,7 +304,7 @@ void ClientUnit::startMovementAnimation(int dx,int dy) {
     }
     curveAnim = new LineCurveAnimation( MovementAnimationDuration,
                                         0, 0,
-                                        dx, dy );
+                                        10 * dx, 10 * dy );
 }
 
 const ClientUnit* ClientMap::getUnitById(int id) const {
