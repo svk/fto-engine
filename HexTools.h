@@ -51,8 +51,8 @@ class HexRegion {
         bool contains(int,int) const;
 
 
-        const_iterator begin(void) { return coords.begin(); }
-        const_iterator end(void) { return coords.end(); }
+        const_iterator begin(void) const { return coords.begin(); }
+        const_iterator end(void) const { return coords.end(); }
 };
 
 template<class T>

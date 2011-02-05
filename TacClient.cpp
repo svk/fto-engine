@@ -111,20 +111,16 @@ void ClientTile::setInactive(void) {
 }
 
 void ClientMap::updateActive(const HexTools::HexRegion& visible) {
-    if( !visible.contains( 0,0 ) ) {
-        tiles.get(0,0).setInactive();
-    } else {
-        tiles.get(0,0).setActive();
-    }
+    using namespace std;
     for(HexRegion::const_iterator i = activeRegion.begin(); i != activeRegion.end(); i++) {
         const int x = i->first, y = i->second;
         if( !visible.contains( x,y ) ) {
             tiles.get(x,y).setInactive();
         }
     }
-    for(HexRegion::const_iterator i = activeRegion.begin(); i != activeRegion.end(); i++) {
+    for(HexRegion::const_iterator i = visible.begin(); i != visible.end(); i++) {
         const int x = i->first, y = i->second;
-        if( visible.contains( x,y ) ) {
+        if( !activeRegion.contains( x,y ) ) {
             tiles.get(x,y).setActive();
         }
     }
@@ -183,6 +179,7 @@ ClientMap::ClientMap(int radius, TacSpritesheet& sheet, ScreenGrid& grid, Freety
     animatedUnit ( 0 ),
     levelBlitter (*this, sheet),
     groundUnitBlitter (*this, sheet, 0),
+    activeRegion (),
     grid ( grid ),
     animRisingText ()
 {
