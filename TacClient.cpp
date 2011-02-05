@@ -193,7 +193,7 @@ void LineCurveAnimation::get(double& x, double& y) const {
     if( phase <= 0.0 ) {
         x = x0;
         y = y0;
-    } else if( phase >= 1.0 ) {
+    } else if( phase >= duration ) {
         x = x1;
         y = y1;
     } else {
