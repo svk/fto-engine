@@ -240,6 +240,10 @@ HexViewport::HexViewport(const ScreenGrid& grid, int x0, int y0, int w, int h) :
 {
 }
 
+void HexViewport::center(double cx, double cy) {
+    center( (int)(0.5+cx), (int)(0.5+cy) );
+}
+
 void HexViewport::center(int cx, int cy) {
     centerX = cx;
     centerY = cy;

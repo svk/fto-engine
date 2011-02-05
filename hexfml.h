@@ -89,6 +89,7 @@ class HexViewport {
 
         void setRectangle(int,int,int,int);
         void center(int,int);
+        void center(double,double);
 
         int getCenterX(void) { return centerX; }
         int getCenterY(void) { return centerY; }
