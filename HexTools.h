@@ -32,6 +32,7 @@ class HexRegion {
         List coords;
 
     public:
+        int size(void) const { return coords.size(); }
         void clear(void);
         void add(int,int);
         void remove(int,int);

@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
     for(int r=1;r<=mapSize;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
         int x, y;
         cartesianiseHexCoordinate( i, j, r, x, y );
-        smap.get(x,y) = prng() < 0.3;
+        smap.get(x,y) = prng() < 0.1;
     }
     smap.get(0,0) = false;
     smap.get(playerX,playerY) = false;
@@ -176,10 +176,12 @@ int main(int argc, char *argv[]) {
                         SetActiveRegionCAction *act = new SetActiveRegionCAction( cmap );
                         // for now we just Send. Everything. wrt terrain revelations
                         for(HexFovRegion::const_iterator i = newVision.begin(); i != newVision.end(); i++) {
-                            if( smap.get(i->first, i->second) ) {
-                                rev->add( i->first, i->second, &tileTypes["wall"] );
-                            } else {
-                                rev->add( i->first, i->second, &tileTypes["floor"] );
+                            if( cmap.getTile( i->first, i->second ).getTileType() == 0 ) {
+                                if( smap.get(i->first, i->second) ) {
+                                    rev->add( i->first, i->second, &tileTypes["wall"] );
+                                } else {
+                                    rev->add( i->first, i->second, &tileTypes["floor"] );
+                                }
                             }
                             act->add( i->first, i->second );
                         }

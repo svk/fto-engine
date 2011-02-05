@@ -10,6 +10,8 @@ void RevealTerrainCAction::operator()(void) const {
     for(RevelationsType::const_iterator i = revelations.begin(); i != revelations.end(); i++) {
         cmap.setTileType( i->first.first, i->first.second, i->second );
     }
+    using namespace std;
+    cerr << "revelations size: " << revelations.size() << endl;
 }
 
 void RemoveUnitCAction::operator()(void) const {
@@ -22,6 +24,9 @@ void UnitDiscoverCAction::operator()(void) const {
 }
 
 void SetActiveRegionCAction::operator()(void) const {
+    using namespace std;
+    cerr << "active region size: " << region.size() << endl;
+
     cmap.updateActive( region );
 }
 
