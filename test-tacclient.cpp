@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
     SpriteId::bindAlias( "zone-fog", 4 );
     SpriteId::bindAlias( "zone-move", 5 );
     SpriteId::bindAlias( "zone-attack", 6 );
-    SpriteId::bindAlias( "thin-grid", 7 );
+    SpriteId::bindAlias( "grid-thin", 7 );
 
     ScreenGrid grid ( "./data/hexproto2.png" );
     TacSpritesheet sheet ( 1024, 1024 );
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
                  grid.createSingleColouredImage( sf::Color( 255,0,0,128 ) ) );
     sheet.adopt( SpriteId("zone-move", SpriteId::NORMAL),
                  grid.createSingleColouredImage( sf::Color( 0,255,0,128 ) ) );
-    sheet.adopt( SpriteId("thin-grid", SpriteId::NORMAL),
+    sheet.adopt( SpriteId("grid-thin", SpriteId::NORMAL),
                  loadImageFromFile( "./data/hexthingrid2.png" ) );
 
     ResourceManager<ClientTileType> tileTypes;

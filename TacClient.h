@@ -357,7 +357,8 @@ class CMLevelBlitterGL : public HexBlitter {
         
         sf::Sprite spriteFogZone,
                    spriteMoveZone,
-                   spriteAttackZone;
+                   spriteAttackZone,
+                   spriteThinGrid;
 
     public:
         CMLevelBlitterGL( ClientMap& cmap,
@@ -366,7 +367,8 @@ class CMLevelBlitterGL : public HexBlitter {
             tilesheet ( tilesheet ),
             spriteFogZone ( tilesheet.makeSprite( SpriteId("zone-fog", SpriteId::NORMAL ) ) ),
             spriteMoveZone ( tilesheet.makeSprite( SpriteId("zone-move", SpriteId::NORMAL ) ) ),
-            spriteAttackZone ( tilesheet.makeSprite( SpriteId("zone-attack", SpriteId::NORMAL ) ) )
+            spriteAttackZone ( tilesheet.makeSprite( SpriteId("zone-attack", SpriteId::NORMAL ) ) ),
+            spriteThinGrid ( tilesheet.makeSprite( SpriteId("grid-thin", SpriteId::NORMAL ) ) )
         {
         }
 

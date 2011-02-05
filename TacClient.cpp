@@ -349,6 +349,7 @@ void CMLevelBlitterGL::drawHex(int x, int y, sf::RenderWindow& win) {
             putSprite( spriteAttackZone );
             break;
     }
+    putSprite( spriteThinGrid );
 }
 
 CMUnitBlitterGL& ClientMap::getUnitBlitter(int layer) {
