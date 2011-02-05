@@ -329,7 +329,7 @@ void CMUnitBlitterGL::drawHex(int x, int y, sf::RenderWindow& win) {
     const ClientUnitType& unitType = unit->getUnitType();
     unit->getCenterOffset( xadjust, yadjust );
     glTranslatef( xadjust, yadjust, 0 );
-    drawBoundSprite( unitType.spriteNormal );
+    drawBoundSpriteCentered( unitType.spriteNormal, cmap.getGrid().getHexWidth(), cmap.getGrid().getHexHeight() );
 }
 
 void CMLevelBlitterGL::drawHex(int x, int y, sf::RenderWindow& win) {

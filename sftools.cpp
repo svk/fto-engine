@@ -210,3 +210,17 @@ void drawBoundSprite( const sf::Sprite& sprite ) {
     glTexCoord2f( rect.Right, rect.Top ); glVertex2f(width+0.5,0+0.5);
     glEnd();
 }
+
+void drawBoundSpriteCentered( const sf::Sprite& sprite, double spaceWidth, double spaceHeight ) {
+    const float width = sprite.GetSize().x, height = sprite.GetSize().y;
+    const sf::FloatRect rect = sprite.GetImage()->GetTexCoords( sprite.GetSubRect() );
+    int tx = (int)(0.5+(width-spaceWidth)/2.0), ty = (int)(0.5+(height-spaceHeight)/2.0);
+    glTranslatef( -tx, -ty, 0 );
+    using namespace std;
+    glBegin( GL_QUADS );
+    glTexCoord2f( rect.Left, rect.Top ); glVertex2f(0+0.5,0+0.5);
+    glTexCoord2f( rect.Left, rect.Bottom ); glVertex2f(0+0.5,height+0.5);
+    glTexCoord2f( rect.Right, rect.Bottom ); glVertex2f(width+0.5,height+0.5);
+    glTexCoord2f( rect.Right, rect.Top ); glVertex2f(width+0.5,0+0.5);
+    glEnd();
+}

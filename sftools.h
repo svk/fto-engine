@@ -233,5 +233,6 @@ typedef SimpleKeyedSpritesheet<std::string> StringKeyedSpritesheet;
 
 sf::Image* loadImageFromFile(const std::string&);
 void drawBoundSprite( const sf::Sprite& sprite );
+void drawBoundSpriteCentered( const sf::Sprite&, double, double);
 
 #endif
