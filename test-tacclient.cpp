@@ -6,8 +6,18 @@
 void updateVision(HexTools::HexMap<bool>& smap, Tac::ClientMap& cmap, ResourceManager<Tac::ClientTileType>& tileTypes, int x, int y) {
     using namespace HexTools;
     using namespace Tac;
+    struct OpacMap : public HexOpacityMap {
+        HexMap<bool>& smap;
+
+        OpacMap(HexMap<bool>& smap) : smap(smap) {}
+        bool isOpaque(int x, int y) const {
+            return smap.get(x,y);
+        }
+    };
+
     HexFovRegion region;
-    HexFov fov ( cmap, region, x, y );
+    OpacMap smapopac ( smap );
+    HexFov fov ( smapopac, region, x, y );
     region.add( x, y );
     fov.calculate();
     for(HexRegion::const_iterator i = region.begin(); i != region.end(); i++) {
@@ -17,6 +27,7 @@ void updateVision(HexTools::HexMap<bool>& smap, Tac::ClientMap& cmap, ResourceMa
             cmap.setTileType( i->first, i->second, &tileTypes[ "floor" ] );
         }
     }
+    cmap.updateActive( region );
 }
 
 int main(int argc, char *argv[]) {
@@ -49,9 +60,9 @@ int main(int argc, char *argv[]) {
                  ToGrayscale().apply( grid.createSingleColouredImage( sf::Color( 50,20,20 ) ) ) );
     sheet.adopt( SpriteId("zone-fog", SpriteId::NORMAL),
                  grid.createSingleColouredImage( sf::Color( 0,0,0,128 ) ) );
-    sheet.adopt( SpriteId("zone-red", SpriteId::NORMAL),
+    sheet.adopt( SpriteId("zone-attack", SpriteId::NORMAL),
                  grid.createSingleColouredImage( sf::Color( 255,0,0,128 ) ) );
-    sheet.adopt( SpriteId("zone-green", SpriteId::NORMAL),
+    sheet.adopt( SpriteId("zone-move", SpriteId::NORMAL),
                  grid.createSingleColouredImage( sf::Color( 0,255,0,128 ) ) );
     sheet.adopt( SpriteId("thin-grid", SpriteId::NORMAL),
                  loadImageFromFile( "./data/hexthingrid2.png" ) );
@@ -82,6 +93,45 @@ int main(int argc, char *argv[]) {
     smap.get(0,0) = false;
 
     updateVision( smap, cmap, tileTypes, 0, 0 );
+
+    const int winWidth = 640, winHeight = 480;
+    sf::RenderWindow win ( sf::VideoMode( winWidth ,winHeight,32), "TacClient demo" );
+    HexViewport vp ( grid,  0, 0, winWidth, winHeight );
+
+    win.SetFramerateLimit( 30 );
+    while( win.IsOpened() ) {
+        sf::Event ev;
+        while( win.GetEvent( ev ) ) switch( ev.Type ) {
+            default: break;
+            case sf::Event::Resized:
+                using namespace std;
+                vp.setRectangle(0, 0, win.GetWidth(), win.GetHeight() );
+                break;
+            case sf::Event::Closed:
+                win.Close();
+                break;
+        }
+        win.Clear( sf::Color(0,0,0) );
+
+        glViewport( 0, 0, win.GetWidth(), win.GetHeight() );
+
+        glMatrixMode( GL_PROJECTION );
+        glLoadIdentity();
+
+        glMatrixMode( GL_MODELVIEW );
+        glLoadIdentity();
+        sf::Matrix3 myMatrix;
+
+        glEnable( GL_BLEND );
+        glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+
+        sheet.bindTexture();
+
+        vp.drawGL( cmap.getLevelBlitter(), win, win.GetWidth(), win.GetHeight() );
+        vp.drawGL( cmap.getUnitBlitter(0), win, win.GetWidth(), win.GetHeight() );
+
+        win.Display();
+    }
     
     return 0;
 }

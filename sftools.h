@@ -1,6 +1,8 @@
 #ifndef H_SFTOOLS
 #define H_SFTOOLS
 
+#include <stdexcept>
+
 #include <SFML/Graphics.hpp>
 
 #include <string>
@@ -215,6 +217,9 @@ class SimpleKeyedSpritesheet : public Spritesheet {
 
         sf::Sprite makeSprite(const T& key) const {
             typename std::map< T, int >::const_iterator i = keys.find( key );
+            if( i == keys.end() ) {
+                throw std::logic_error( "no such sprite key" );
+            }
             return Spritesheet::makeSprite( i->second );
         }
 

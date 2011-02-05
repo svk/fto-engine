@@ -314,6 +314,8 @@ void CMUnitBlitterGL::drawHex(int x, int y, sf::RenderWindow& win) {
     double xadjust, yadjust;
     int id = cmap.getTile(x,y).getUnitIdAt( layer );
     if( id == INVALID_ID ) return;
+    using namespace std;
+    cerr << "O hai!" << x << " " << y << endl;
     ClientUnit *unit = cmap.getUnitById( id );
     if( !unit ) return; // !?
     const ClientUnitType& unitType = unit->getUnitType();
