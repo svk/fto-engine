@@ -202,7 +202,7 @@ int main(int argc, char *argv[]) {
                 break;
             case sf::Event::Resized:
                 using namespace std;
-                vp.setRectangle(100, 100, win.GetWidth() - 400, win.GetHeight() - 400);
+                vp.setRectangle(0, 0, win.GetWidth(), win.GetHeight());
                 break;
             case sf::Event::Closed:
                 win.Close();
