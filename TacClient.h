@@ -161,7 +161,8 @@ struct ClientTileType {
                    bool,
                    int);
 
-    bool mayTraverse(ClientUnitType&,int&) const;
+    bool mayTraverse(const ClientUnitType&) const;
+    bool mayTraverse(const ClientUnitType&,int&) const;
 };
 
 class ClientTile;
@@ -200,7 +201,7 @@ class ClientUnit {
         int leaveTile(ClientTile&);
         void move(int,int);
 
-        bool getPosition(int&, int&);
+        bool getPosition(int&, int&) const;
 
         void animate(double);
         bool done(void) const;
@@ -312,17 +313,39 @@ class ClientActionQueue {
 
 class ClientMap;
 
-struct MovementAnimationCAction : public ClientAction {
+struct NormalMovementCAction : public ClientAction {
     ClientMap& cmap;
     int unitId;
     int dx, dy;
 
-    MovementAnimationCAction(ClientMap& cmap, int unitId, int dx, int dy) :
+    NormalMovementCAction(ClientMap& cmap, int unitId, int dx, int dy) :
         cmap( cmap ), unitId( unitId ), dx ( dx ), dy ( dy )
     {
     }
 
-    ClientAction* duplicate(void) const { return new MovementAnimationCAction( cmap, unitId, dx, dy ); }
+    ClientAction* duplicate(void) const { return new NormalMovementCAction( cmap, unitId, dx, dy ); }
+
+    void operator()(void) const;
+
+    bool isCosmetic(void) const { return false; }
+};
+
+struct BumpAnimationCAction : public ClientAction {
+    // this animation is an animation of movement, but it is also used
+    // as an attack animation -- as such, obv. it has no actual movement
+    // semantics. (in fact, the plan is that actions should be either
+    // purely cosmetic or purely functional.)
+
+    ClientMap& cmap;
+    int unitId;
+    int dx, dy;
+
+    BumpAnimationCAction(ClientMap& cmap, int unitId, int dx, int dy) :
+        cmap( cmap ), unitId( unitId ), dx ( dx ), dy ( dy )
+    {
+    }
+
+    ClientAction* duplicate(void) const { return new BumpAnimationCAction( cmap, unitId, dx, dy ); }
 
     void operator()(void) const;
 
@@ -424,12 +447,15 @@ class ClientMap : public HexOpacityMap {
 
         ClientTile& getTile(int x, int y) { return tiles.get(x,y); }
         ClientUnit* getUnitById(int);
+        const ClientUnit* getUnitById(int) const;
 
         void setTileType(int, int, ClientTileType*);
 
         void clearHighlights(void);
         void addMoveHighlight(int, int);
         void addAttackHighlight(int, int);
+
+        bool unitMayMove(int,int,int) const;
 };
 
 

@@ -108,7 +108,22 @@ int main(int argc, char *argv[]) {
         while( win.GetEvent( ev ) ) switch( ev.Type ) {
             default: break;
             case sf::Event::KeyPressed:
-                cmap.queueAction( MovementAnimationCAction( cmap, playerId, 3, 1 ) );
+                {
+                    int mx = 0, my = 0;
+                    switch( ev.Key.Code ) {
+                        case sf::Key::Q: mx = -3; my = 1; break;
+                        case sf::Key::W: mx = 0; my = 2; break;
+                        case sf::Key::E: mx = 3; my = 1; break;
+                        case sf::Key::A: mx = -3; my = -1; break;
+                        case sf::Key::S: mx = 0; my = -2; break;
+                        case sf::Key::D: mx = 3; my = -1; break;
+                        default: break;
+                    }
+                    if( cmap.unitMayMove( playerId, mx, my ) ) {
+                        cmap.queueAction( BumpAnimationCAction( cmap, playerId, mx, my ) );
+                        cmap.queueAction( NormalMovementCAction( cmap, playerId, mx, my ) );
+                    }
+                }
                 break;
             case sf::Event::Resized:
                 using namespace std;

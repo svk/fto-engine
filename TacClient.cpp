@@ -124,7 +124,7 @@ void ClientMap::updateActive(const HexTools::HexRegion& visible) {
     }
 }
 
-bool ClientUnit::getPosition(int& ox, int& oy) {
+bool ClientUnit::getPosition(int& ox, int& oy) const {
     if( hasPosition ) {
         ox = x;
         oy = y;
@@ -156,8 +156,7 @@ void ClientMap::placeUnitAt(int id,int x,int y,int layer) {
 void ClientUnit::enterTile(ClientTile& tile, int layer_) {
     tile.setUnit( id, layer_ );
     layer = layer_;
-    x = tile.getX();
-    y = tile.getY();
+    setPosition( tile.getX(), tile.getY() );
 }
 
 int ClientUnit::leaveTile(ClientTile& tile) {
@@ -307,11 +306,15 @@ void ClientUnit::startMovementAnimation(int dx,int dy) {
                                         dx, dy );
 }
 
+const ClientUnit* ClientMap::getUnitById(int id) const {
+    return units[id];
+}
+
 ClientUnit* ClientMap::getUnitById(int id) {
     return units[id];
 }
 
-void MovementAnimationCAction::operator()(void) const {
+void BumpAnimationCAction::operator()(void) const {
     ClientUnit *unit = cmap.getUnitById(unitId);
     if( unit ) {
         int x = dx, y = dy;
@@ -369,7 +372,12 @@ CMUnitBlitterGL& ClientMap::getUnitBlitter(int layer) {
     throw std::logic_error("no such layer");
 }
 
-bool ClientTileType::mayTraverse(ClientUnitType& unitType, int& outCost) const {
+bool ClientTileType::mayTraverse(const ClientUnitType& unitType) const {
+    int disregardThat;
+    return mayTraverse( unitType, disregardThat );
+}
+
+bool ClientTileType::mayTraverse(const ClientUnitType& unitType, int& outCost) const {
     if( border ) return false;
     if( mobility == Type::WALL ) return false;
     outCost = baseCost;
@@ -428,6 +436,28 @@ bool ClientMap::isOpaque(int x,int y) const {
         case Type::CLEAR:
             return false;
     }
+}
+
+void NormalMovementCAction::operator()(void) const {
+    cmap.moveUnit( unitId, dx, dy );
+}
+
+bool ClientMap::unitMayMove(int id, int dx, int dy) const {
+    const ClientUnit *unit = getUnitById( id );
+    if( !unit ) return false;
+    int x, y;
+    if( !unit->getPosition( x, y ) ) return false;
+    const ClientTile& tile = tiles.get( x + dx, y + dy );
+    const ClientTileType* tileType = tile.getTileType();
+    if( !tileType ) return false; // FOV should ensure that this is never possible anyway
+                                  // exception for blinded units? probably best if even
+                                  // they get r=1 vision, otherwise wonky
+                                  // [an extra way to explore, by bumping and trying to
+                                  //  move -- is this accessible without committing to
+                                  //  a move? does it cost movement even if it fails?
+                                  //  how is it indicated, how is the memory indicated?
+                                  //  etc. -- unnecessary complications]
+    return tileType->mayTraverse( unit->getUnitType() );
 }
 
 
