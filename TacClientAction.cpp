@@ -2,6 +2,10 @@
 
 namespace Tac {
 
+void RisingTextCAction::operator()(void) const {
+    cmap.addRisingText( hexX, hexY, text, sf::Color(r,g,b,a) );
+}
+
 void RevealTerrainCAction::operator()(void) const {
     for(RevelationsType::const_iterator i = revelations.begin(); i != revelations.end(); i++) {
         cmap.setTileType( i->first.first, i->first.second, i->second );

@@ -46,6 +46,31 @@ struct SetActiveRegionCAction : public ClientAction {
     bool isCosmetic(void) const { return true; }
 };
 
+struct RisingTextCAction : public ClientAction {
+    ClientMap& cmap;
+    int hexX, hexY;
+    std::string text;
+    int r, g, b, a;
+
+    RisingTextCAction(ClientMap& cmap, int hexX, int hexY, const std::string& text, int r, int g, int b, int a ) :
+        cmap ( cmap ),
+        hexX ( hexX ),
+        hexY ( hexY ),
+        text ( text ),
+        r ( r ),
+        g ( g ),
+        b ( b ),
+        a ( a )
+    {
+    }
+
+    ClientAction* duplicate(void) const { return new RisingTextCAction( cmap, hexX, hexY, text, r, g, b, a ); }
+
+    void operator()(void) const;
+
+    bool isCosmetic(void) const { return true; }
+};
+
 struct RevealTerrainCAction : public ClientAction {
     // new information about terrain
     // may come separately from active set because we need to
@@ -79,7 +104,7 @@ struct RevealTerrainCAction : public ClientAction {
 
     void operator()(void) const;
 
-    bool isCosmetic(void) const { return true; }
+    bool isCosmetic(void) const { return false; }
 };
 
 struct BumpAnimationCAction : public ClientAction {

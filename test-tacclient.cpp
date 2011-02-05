@@ -136,8 +136,6 @@ int main(int argc, char *argv[]) {
         cerr << "troll spawned at " << trollX << ", " << trollY << endl;
     }
 
-    cmap.addRisingText( playerX, playerY, "Hello world!", sf::Color(255,255,0,255) );
-
 
     const int winWidth = 640, winHeight = 480;
     sf::RenderWindow win ( sf::VideoMode( winWidth ,winHeight,32), "TacClient demo" );
@@ -166,7 +164,7 @@ int main(int argc, char *argv[]) {
                         case sf::Key::D: mx = 3; my = -1; break;
                         default: break;
                     }
-                    if( cmap.unitMayMoveTo( playerId, playerX + mx, playerY + my ) ) { // this check should be done both ss and cs
+                    if( (my || mx) && cmap.unitMayMoveTo( playerId, playerX + mx, playerY + my ) ) { // this check should be done both ss and cs
                         cmap.queueAction( new BumpAnimationCAction( cmap, playerId, mx, my ) );
                         cmap.queueAction( new NormalMovementCAction( cmap, playerId, mx, my ) );
                         playerX += mx;
@@ -197,6 +195,7 @@ int main(int argc, char *argv[]) {
                             UnitDiscoverCAction *uds = new UnitDiscoverCAction( cmap, trollId, unitTypes["troll"], 1, 1, trollX, trollY, 0 );
                             cmap.queueAction( uds );
                         }
+                        cmap.queueAction( new RisingTextCAction( cmap, playerX, playerY, "Achievement unlocked: Walking the Walk", 255, 255, 255, 255 ) );
                     }
                 }
                 break;
