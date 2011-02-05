@@ -104,5 +104,23 @@ struct BumpAnimationCAction : public ClientAction {
     bool isCosmetic(void) const { return true; }
 };
 
+struct UnitDiscoverCAction : public ClientAction {
+    ClientMap& cmap;
+    int unitId;
+    ClientUnitType& unitType;
+    int team, owner;
+    int x, y, layer;
+
+    UnitDiscoverCAction(ClientMap& cmap, int unitId, ClientUnitType& unitType, int team, int owner, int x, int y, int layer) :
+        cmap( cmap ), unitId( unitId ), unitType ( unitType ), team (team), owner( owner ), x ( x ), y ( y ), layer ( layer )
+    {
+    }
+
+    ClientAction* duplicate(void) const { return new UnitDiscoverCAction( cmap, unitId, unitType, team, owner, x, y, layer ); }
+
+    void operator()(void) const;
+
+    bool isCosmetic(void) const { return false; }
+};
 
 };

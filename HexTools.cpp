@@ -117,4 +117,10 @@ bool HexRegion::contains(int x, int y) const {
     return i != coords.end();
 }
 
+bool isInvalidHexCoordinate(int x, int y) {
+    if( (x%3) != 0 ) return true;
+    if( ((abs(x)/3)%2) != (abs(y)%2) ) return true;
+    return false;
+}
+
 };

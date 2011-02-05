@@ -8,6 +8,11 @@ void RevealTerrainCAction::operator()(void) const {
     }
 }
 
+void UnitDiscoverCAction::operator()(void) const {
+    cmap.adoptUnit( new ClientUnit( unitId, unitType, team, owner ) );
+    cmap.placeUnitAt( unitId, x, y, layer );
+}
+
 void SetActiveRegionCAction::operator()(void) const {
     cmap.updateActive( region );
 }

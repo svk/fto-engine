@@ -206,6 +206,8 @@ class HexTorusMap {
         }
 };
 
+bool isInvalidHexCoordinate(int,int);
+
 };
 
 #endif

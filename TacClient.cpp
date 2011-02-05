@@ -47,7 +47,9 @@ int ClientUnit::getId(void) const {
 
 void ClientUnitManager::adopt(ClientUnit* unit) {
     ClientUnit *prev = (*this)[unit->getId()];
-    assert( !prev );
+    // actually, there being a previous unit by this ID
+    // is fine. just replace it (this is a simple way
+    // of doing discover)
     if( prev ) {
         delete prev;
     }

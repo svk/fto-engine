@@ -57,6 +57,8 @@ int main(int argc, char *argv[]) {
 
     sheet.adopt( SpriteId( "unit-smiley", SpriteId::NORMAL ),
                  loadImageFromFile( "./data/smiley32.png" ) );
+    sheet.adopt( SpriteId( "unit-troll", SpriteId::NORMAL ),
+                 loadImageFromFile( "./data/trollface32.png" ) );
     sheet.adopt( SpriteId( "tile-floor", SpriteId::NORMAL ),
                  grid.createSingleColouredImage( sf::Color( 100,200,100 ) ) );
     sheet.adopt( SpriteId( "tile-floor", SpriteId::GRAYSCALE ),
@@ -78,6 +80,7 @@ int main(int argc, char *argv[]) {
     ResourceManager<ClientUnitType> unitTypes;
 
     unitTypes.bind( "player", new ClientUnitType( sheet, "unit-smiley", "Player" ) );
+    unitTypes.bind( "troll", new ClientUnitType( sheet, "unit-troll", "Troll" ) );
 
     tileTypes.bind( "border", new ClientTileType( sheet, "tile-wall", "hard wall", Type::WALL, Type::BLOCK, true, 0 ) );
     tileTypes.bind( "floor", new ClientTileType( sheet, "tile-floor", "floor", Type::FLOOR, Type::CLEAR, false, 100 ) );
@@ -86,24 +89,49 @@ int main(int argc, char *argv[]) {
     const int playerId = 1;
     const int playerTeam = 0, playerNo = 0;
 
+    int nextId = playerId + 1;
+
     int playerX = 3, playerY = 1; // keeping track of pretenses, this is "server side"
 
     ClientMap cmap ( mapSize, sheet, grid );
     cmap.adoptUnit( new ClientUnit( playerId, unitTypes["player"], playerTeam, playerNo ) );
     cmap.placeUnitAt( playerId, playerX, playerY, 0 );
 
+
     MTRand prng ( 1337 );
     HexMap<bool> smap ( mapSize );
     for(int r=1;r<=mapSize;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
         int x, y;
         cartesianiseHexCoordinate( i, j, r, x, y );
-        smap.get(x,y) = prng() < 0.5;
+        smap.get(x,y) = prng() < 0.3;
     }
     smap.get(0,0) = false;
     smap.get(playerX,playerY) = false;
     smap.getDefault() = true;
 
     updateVision( smap, cmap, tileTypes, playerX, playerY );
+
+    HexFovRegion nonmonsterspawnRegion;
+    getVisionRegion( smap, playerX, playerY, nonmonsterspawnRegion );
+    int trollX = 0, trollY = 0;
+    int trollId = nextId++;
+    bool trollLives = true;
+    MTRand_int32 iprng (1337+1);
+        // not a very classy way to do this, but eh
+        // much easier/better: select a random serialized index, then
+        // inflateHexCoordinate
+    while( isInvalidHexCoordinate( trollX, trollY )
+           || smap.isDefault(trollX,trollY)
+           || smap.get(trollX,trollY)
+           || nonmonsterspawnRegion.contains( trollX, trollY ) ) {
+        trollX = iprng() % 300;
+        trollY = iprng() % 200;
+    }
+    using namespace std;
+    if( trollLives ) {
+        cerr << "troll spawned at " << trollX << ", " << trollY << endl;
+    }
+
 
     const int winWidth = 640, winHeight = 480;
     sf::RenderWindow win ( sf::VideoMode( winWidth ,winHeight,32), "TacClient demo" );
@@ -152,6 +180,17 @@ int main(int argc, char *argv[]) {
                         }
                         cmap.queueAction( rev );
                         cmap.queueAction( act );
+                        // the troll never moves, so we never need to send UnitMove yet -- just UnitDiscover
+                        // UnitDiscover has to send enough info to actually construct the unit!
+                        // also to place it on the map, because otherwise it wouldn't have been
+                        // discovered.
+                        // on a real server even the initial setup would be done by events like these,
+                        // so this is how your own units would get placed
+                        if( !cmap.getTile(trollX,trollY).getActive() &&
+                            newVision.contains( trollX, trollY ) ) {
+                            UnitDiscoverCAction *uds = new UnitDiscoverCAction( cmap, trollId, unitTypes["troll"], 1, 1, trollX, trollY, 0 );
+                            cmap.queueAction( uds );
+                        }
                     }
                 }
                 break;
