@@ -108,8 +108,13 @@ int main(int argc, char *argv[]) {
     sf::RenderWindow win ( sf::VideoMode( winWidth ,winHeight,32), "TacClient demo" );
     HexViewport vp ( grid,  0, 0, winWidth, winHeight );
 
+    // artifacts at any even height: bugfix go go go
+
     win.SetFramerateLimit( 30 );
     while( win.IsOpened() ) {
+        using namespace std;
+        cerr << win.GetWidth() << " " << win.GetHeight() << endl;
+
         cmap.animate( win.GetFrameTime() );
         cmap.processActions();
 
