@@ -164,7 +164,6 @@ int main(int argc, char *argv[]) {
         }
         double cx, cy;
         if( cmap.getUnitScreenPositionById( playerId, cx, cy ) ) {
-            cerr << "centering: " << cx << " " << cy << endl;
             vp.center( cx, cy );
         }
 
