@@ -147,6 +147,10 @@ int main(int argc, char *argv[]) {
         cerr << "troll spawned at " << trollX << ", " << trollY << endl;
     }
 
+    sf::Music musicTest;
+    musicTest.OpenFromFile( "/tmp/holst.ogg" );
+    musicTest.Play();
+
 
     const int winWidth = 640, winHeight = 480;
     sf::RenderWindow win ( sf::VideoMode( winWidth ,winHeight,32), "TacClient demo" );
