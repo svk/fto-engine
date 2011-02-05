@@ -228,13 +228,14 @@ void LineCurveAnimation::animate(double dt) {
     phase += dt;
 }
 
-LineCurveAnimation::LineCurveAnimation(double duration, double x0, double y0, double x1, double y1) :
+LineCurveAnimation::LineCurveAnimation(double duration, double x0, double y0, double x1, double y1, bool affectsBase) :
     duration ( duration ),
     x0 ( x0 ),
     y0 ( y0 ),
     x1 ( x1 ),
     y1 ( y1 ),
-    phase ( 0.0 )
+    phase ( 0.0 ),
+    affectsBase ( affectsBase )
 {
 }
 
@@ -265,6 +266,14 @@ bool ClientMap::shouldBlock(void) const {
 
 bool ClientMap::isInBlockingAnimation(void) const {
     return animatedUnit != 0;
+}
+
+void ClientMap::removeUnit(int id) {
+    ClientUnit *unit = getUnitById( id );
+    int x, y;
+    if( unit && unit->getPosition(x,y) ) {
+        unit->leaveTile( tiles.get(x,y) );
+    }
 }
 
 void ClientMap::adoptUnit(ClientUnit* unit) {
@@ -298,8 +307,8 @@ bool ClientActionQueue::empty(void) const {
     return actions.empty();
 }
 
-void ClientUnit::getCenterOffset(int& ox, int& oy) const {
-    if( curveAnim ) {
+void ClientUnit::getCenterOffset(int& ox, int& oy, bool baseOnly) const {
+    if( curveAnim && (!baseOnly || curveAnim->affectsBasePosition()) ) {
         double dox, doy;
         curveAnim->get( dox, doy );
         ox = (int)(0.5 + dox);
@@ -315,7 +324,18 @@ void ClientUnit::startMovementAnimation(int dx,int dy) {
     }
     curveAnim = new LineCurveAnimation( MovementAnimationDuration,
                                         0, 0,
-                                        dx, dy );
+                                        dx, dy,
+                                        true );
+}
+
+void ClientUnit::startMeleeAnimation(int dx,int dy) {
+    if( curveAnim ) {
+        delete curveAnim;
+    }
+    curveAnim = new LineCurveAnimation( MovementAnimationDuration,
+                                        0, 0,
+                                        dx, dy,
+                                        false );
 }
 
 const ClientUnit* ClientMap::getUnitById(int id) const {
@@ -333,7 +353,7 @@ void CMUnitBlitterGL::drawHex(int x, int y, sf::RenderWindow& win) {
     ClientUnit *unit = cmap.getUnitById( id );
     if( !unit ) return; // !?
     const ClientUnitType& unitType = unit->getUnitType();
-    unit->getCenterOffset( xadjust, yadjust );
+    unit->getCenterOffset( xadjust, yadjust, false );
     glTranslatef( xadjust, yadjust, 0 );
     drawBoundSpriteCentered( unitType.spriteNormal, cmap.getGrid().getHexWidth(), cmap.getGrid().getHexHeight() );
 }
@@ -465,7 +485,9 @@ bool ClientMap::unitMayMoveTo(int id, int x, int y) const {
                                   //  a move? does it cost movement even if it fails?
                                   //  how is it indicated, how is the memory indicated?
                                   //  etc. -- unnecessary complications]
-    return tileType->mayTraverse( unit->getUnitType() );
+    if(!tileType->mayTraverse( unit->getUnitType() ) ) return false;
+    if( tile.getUnitIdAt( unit->getLayer() ) != INVALID_ID ) return false;
+    return true;
 }
 
 bool ClientMap::unitMayMove(int id, int dx, int dy) const {
@@ -476,13 +498,26 @@ bool ClientMap::unitMayMove(int id, int dx, int dy) const {
     return unitMayMoveTo( id, x + dx, y + dy);
 }
 
+bool ClientMap::getUnitBaseScreenPositionById( int id, double& x, double& y ) const {
+    const ClientUnit *unit = getUnitById( id );
+    if( !unit ) return false;
+    int hx, hy;
+    if( !unit->getPosition( hx, hy ) ) return false;
+    int ofx, ofy;
+    unit->getCenterOffset( ofx, ofy, true );
+    grid.hexToScreen( hx, hy );
+    x = hx + ofx;
+    y = hy + ofy;
+    return true;
+}
+
 bool ClientMap::getUnitScreenPositionById( int id, double& x, double& y ) const {
     const ClientUnit *unit = getUnitById( id );
     if( !unit ) return false;
     int hx, hy;
     if( !unit->getPosition( hx, hy ) ) return false;
     int ofx, ofy;
-    unit->getCenterOffset( ofx, ofy );
+    unit->getCenterOffset( ofx, ofy, false );
     grid.hexToScreen( hx, hy );
     x = hx + ofx;
     y = hy + ofy;

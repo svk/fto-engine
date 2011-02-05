@@ -164,8 +164,9 @@ int main(int argc, char *argv[]) {
                         case sf::Key::D: mx = 3; my = -1; break;
                         default: break;
                     }
-                    if( (my || mx) && cmap.unitMayMoveTo( playerId, playerX + mx, playerY + my ) ) { // this check should be done both ss and cs
-                        cmap.queueAction( new BumpAnimationCAction( cmap, playerId, mx, my ) );
+                    if( !mx && !my ) break;
+                    if( cmap.unitMayMoveTo( playerId, playerX + mx, playerY + my ) ) { // this check should be done both ss and cs
+                        cmap.queueAction( new MovementAnimationCAction( cmap, playerId, mx, my ) );
                         cmap.queueAction( new NormalMovementCAction( cmap, playerId, mx, my ) );
                         playerX += mx;
                         playerY += my; // position immediately updated serverside
@@ -191,10 +192,21 @@ int main(int argc, char *argv[]) {
                         // on a real server even the initial setup would be done by events like these,
                         // so this is how your own units would get placed
                         if( !cmap.getTile(trollX,trollY).getActive() &&
-                            newVision.contains( trollX, trollY ) ) {
+                            newVision.contains( trollX, trollY ) &&
+                            trollLives ) {
                             UnitDiscoverCAction *uds = new UnitDiscoverCAction( cmap, trollId, unitTypes["troll"], 1, 1, trollX, trollY, 0 );
                             cmap.queueAction( uds );
                         }
+                    } else if( cmap.getTile( playerX + mx, playerY + my ).getUnitIdAt(0) != INVALID_ID ) {
+                        int enemyUnitId = cmap.getTile( playerX + mx, playerY + my ).getUnitIdAt(0);
+
+                        cmap.queueAction( new BumpAnimationCAction( cmap, playerId, mx, my ) );
+                        cmap.queueAction( new RemoveUnitCAction( cmap, enemyUnitId ) );
+                        cmap.queueAction( new RisingTextCAction( cmap, playerX + mx, playerY + my,
+                                                                 cmap.getUnitById( enemyUnitId )->getUnitType().name + " was killed!",
+                                                                 200,200,200,
+                                                                 512 ) );
+                        trollLives = false;
                     }
                 }
                 break;
@@ -207,7 +219,7 @@ int main(int argc, char *argv[]) {
                 break;
         }
         double cx, cy;
-        if( cmap.getUnitScreenPositionById( playerId, cx, cy ) ) {
+        if( cmap.getUnitBaseScreenPositionById( playerId, cx, cy ) ) {
             vp.center( cx, cy );
         }
 

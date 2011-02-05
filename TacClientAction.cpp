@@ -12,6 +12,10 @@ void RevealTerrainCAction::operator()(void) const {
     }
 }
 
+void RemoveUnitCAction::operator()(void) const {
+    cmap.removeUnit( unitId );
+}
+
 void UnitDiscoverCAction::operator()(void) const {
     cmap.adoptUnit( new ClientUnit( unitId, unitType, team, owner ) );
     cmap.placeUnitAt( unitId, x, y, layer );
@@ -25,7 +29,18 @@ void NormalMovementCAction::operator()(void) const {
     cmap.moveUnit( unitId, dx, dy );
 }
 
+
 void BumpAnimationCAction::operator()(void) const {
+    ClientUnit *unit = cmap.getUnitById(unitId);
+    if( unit ) {
+        int x = dx, y = dy;
+        cmap.getGrid().hexToScreen( x, y );
+        unit->startMeleeAnimation( x, y );
+        cmap.setAnimatedUnit( unit );
+    }
+}
+
+void MovementAnimationCAction::operator()(void) const {
     ClientUnit *unit = cmap.getUnitById(unitId);
     if( unit ) {
         int x = dx, y = dy;

@@ -46,6 +46,24 @@ struct SetActiveRegionCAction : public ClientAction {
     bool isCosmetic(void) const { return true; }
 };
 
+struct RemoveUnitCAction : public ClientAction {
+    ClientMap& cmap;
+    int unitId;
+
+    RemoveUnitCAction(ClientMap& cmap, int unitId) :
+        cmap ( cmap ),
+        unitId ( unitId )
+    {
+    }
+
+    ClientAction* duplicate(void) const { return new RemoveUnitCAction( cmap, unitId ); }
+
+    void operator()(void) const;
+
+    bool isCosmetic(void) const { return false; }
+};
+
+
 struct RisingTextCAction : public ClientAction {
     ClientMap& cmap;
     int hexX, hexY;
@@ -107,12 +125,24 @@ struct RevealTerrainCAction : public ClientAction {
     bool isCosmetic(void) const { return false; }
 };
 
-struct BumpAnimationCAction : public ClientAction {
-    // this animation is an animation of movement, but it is also used
-    // as an attack animation -- as such, obv. it has no actual movement
-    // semantics. (in fact, the plan is that actions should be either
-    // purely cosmetic or purely functional.)
+struct MovementAnimationCAction : public ClientAction {
+    ClientMap& cmap;
+    int unitId;
+    int dx, dy;
 
+    MovementAnimationCAction(ClientMap& cmap, int unitId, int dx, int dy) :
+        cmap( cmap ), unitId( unitId ), dx ( dx ), dy ( dy )
+    {
+    }
+
+    ClientAction* duplicate(void) const { return new MovementAnimationCAction( cmap, unitId, dx, dy ); }
+
+    void operator()(void) const;
+
+    bool isCosmetic(void) const { return true; }
+};
+
+struct BumpAnimationCAction : public ClientAction {
     ClientMap& cmap;
     int unitId;
     int dx, dy;

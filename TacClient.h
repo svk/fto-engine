@@ -116,6 +116,7 @@ class CurveAnimation {
         virtual void animate(double) = 0;
         virtual bool done(void) const = 0;
         virtual void get(double&,double&) const = 0;
+        virtual bool affectsBasePosition(void) { return true; }
 };
 
 class LineCurveAnimation : public CurveAnimation {
@@ -123,13 +124,16 @@ class LineCurveAnimation : public CurveAnimation {
         const double duration;
         double x0, y0, x1, y1;
         double phase;
+        bool affectsBase;
 
     public:
-        LineCurveAnimation(double,double,double,double,double);
+        LineCurveAnimation(double,double,double,double,double, bool);
 
         void animate(double);
         bool done(void) const;
         void get(double&,double&) const;
+
+        virtual bool affectsBasePosition(void) { return affectsBase; }
 };
 
 // note: a "unit type / tile type" includes all sorts of
@@ -193,7 +197,7 @@ class ClientUnit {
 
         const ClientUnitType& getUnitType(void) const { return unitType; }
 
-        void getCenterOffset(int&, int&) const;
+        void getCenterOffset(int&, int&, bool) const;
 
         int getId(void) const;
 
@@ -206,12 +210,14 @@ class ClientUnit {
         void move(int,int);
 
         bool getPosition(int&, int&) const;
+        int getLayer(void) const { return layer; }
 
         void animate(double);
         bool done(void) const;
         void completedAnimation(void);
 
         void startMovementAnimation(int,int);
+        void startMeleeAnimation(int,int);
 };
 
 class ClientUnitManager {
@@ -408,6 +414,8 @@ class ClientMap : public HexOpacityMap {
         void placeUnitAt(int,int,int,int);
         void moveUnit(int,int,int);
 
+        void removeUnit(int);
+
         void animate(double dt);
 
         void queueAction(ClientAction*); // adopts
@@ -429,6 +437,7 @@ class ClientMap : public HexOpacityMap {
         bool unitMayMoveTo(int,int,int) const;
 
         bool getUnitScreenPositionById( int, double&, double& ) const;
+        bool getUnitBaseScreenPositionById( int, double&, double& ) const;
         void drawEffects(sf::RenderWindow&, double, double);
 };
 
