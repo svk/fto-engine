@@ -108,6 +108,11 @@ void ClientTile::setInactive(void) {
 }
 
 void ClientMap::updateActive(const HexTools::HexRegion& visible) {
+    if( !visible.contains( 0,0 ) ) {
+        tiles.get(0,0).setInactive();
+    } else {
+        tiles.get(0,0).setActive();
+    }
     for(int r=0;r<radius;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
         int x, y;
         HexTools::cartesianiseHexCoordinate( i, j, r, x, y );
@@ -332,6 +337,7 @@ void CMLevelBlitterGL::drawHex(int x, int y, sf::RenderWindow& win) {
     const ClientTile& tile = cmap.getTile(x,y);
     bool isLit = tile.getActive();
     ClientTileType *tt = tile.getTileType();
+    using namespace std;
     if( !tt ) return;
     if( tile.getHighlight() == ClientTile::NONE && isLit ) {
         putSprite( tt->spriteNormal );

@@ -18,9 +18,9 @@ void updateVision(HexTools::HexMap<bool>& smap, Tac::ClientMap& cmap, ResourceMa
     HexFovRegion region;
     OpacMap smapopac ( smap );
     HexFov fov ( smapopac, region, x, y );
-    region.add( x, y );
     fov.calculate();
     for(HexRegion::const_iterator i = region.begin(); i != region.end(); i++) {
+        using namespace std;
         if( smap.get(i->first, i->second) ) {
             cmap.setTileType( i->first, i->second, &tileTypes[ "wall" ] );
         } else {
@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
 
     ClientMap cmap ( mapSize, sheet, grid );
     cmap.adoptUnit( new ClientUnit( playerId, unitTypes["player"], playerTeam, playerNo ) );
-    cmap.placeUnitAt( playerId, 0, 0, 0 );
+    cmap.placeUnitAt( playerId, 3, 1, 0 );
 
     MTRand prng ( 1337 );
     HexMap<bool> smap ( mapSize );
@@ -91,8 +91,9 @@ int main(int argc, char *argv[]) {
         smap.get(x,y) = prng() > 0.5;
     }
     smap.get(0,0) = false;
+    smap.get(3,1) = false;
 
-    updateVision( smap, cmap, tileTypes, 0, 0 );
+    updateVision( smap, cmap, tileTypes, 3, 1 );
 
     const int winWidth = 640, winHeight = 480;
     sf::RenderWindow win ( sf::VideoMode( winWidth ,winHeight,32), "TacClient demo" );

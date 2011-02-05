@@ -276,6 +276,9 @@ HexFovBeam::~HexFovBeam(void) {
 }
 
 HexFov::HexFov(HexOpacityMap& map, HexLightReceiver& receiver, int cx, int cy) :
+    cx ( cx ),
+    cy ( cy ),
+    receiver ( receiver ),
     north ( map, receiver, 0, cx, cy ),
     northwest ( map, receiver, 1, cx, cy ),
     southwest ( map, receiver, 2, cx, cy ),
@@ -286,6 +289,7 @@ HexFov::HexFov(HexOpacityMap& map, HexLightReceiver& receiver, int cx, int cy) :
 }
 
 void HexFov::calculate(void) {
+    receiver.setLit(cx,cy);
     north.calculate();
     northwest.calculate();
     southwest.calculate();

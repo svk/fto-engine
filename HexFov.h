@@ -108,6 +108,8 @@ class HexFovBeam {
 
 class HexFov {
     private:
+        int cx, cy;
+        HexLightReceiver& receiver;
         HexFovBeam north, northwest, southwest, south, southeast, northeast;
     public:
         HexFov( HexOpacityMap&, HexLightReceiver&, int, int );
