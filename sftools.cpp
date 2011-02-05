@@ -149,7 +149,7 @@ bool Spritesheet::hasSpaceFor(int sw, int sh) const {
 }
 
 int Spritesheet::adopt(sf::Image* img) {
-    const int pad = 0;
+    const int pad = 1;
     const int sw = img->GetWidth(), sh = img->GetHeight();
     int rv;
     if( !hasSpaceFor( sw + 2*pad, sh + 2*pad ) ) {
