@@ -423,6 +423,12 @@ class ClientMap : public HexOpacityMap {
         void drawEffects(sf::RenderWindow&, double, double);
 };
 
+typedef RandomVariantsCollection<sf::SoundBuffer> RandomizedSoundEffect;
+
+void loadSoundsFromFile(const std::string&, ResourceManager<RandomizedSoundEffect>& );
+void loadSpritesFromFile(const std::string&, TacSpritesheet&, ScreenGrid& );
+
+
 
 };
 

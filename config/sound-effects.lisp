@@ -1,0 +1,10 @@
+(clink
+    "./data-audio/clink1-85.wav"
+    "./data-audio/clink1-112.wav"
+    "./data-audio/clink1-151.wav"
+    "./data-audio/clink1-170.wav"
+    "./data-audio/clink1-195.wav"
+    "./data-audio/clink1-208.wav"
+    "./data-audio/clink1-222.wav"
+    "./data-audio/clink1-272.wav"
+    "./data-audio/clink1-85.wav")

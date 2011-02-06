@@ -47,49 +47,13 @@ int main(int argc, char *argv[]) {
 
     const int mapSize = 40;
 
-    SpriteId::bindAlias( "unit-smiley", 0 );
-    SpriteId::bindAlias( "unit-troll", 1 );
-    SpriteId::bindAlias( "tile-floor", 2 );
-    SpriteId::bindAlias( "tile-wall", 3 );
-    SpriteId::bindAlias( "zone-fog", 4 );
-    SpriteId::bindAlias( "zone-move", 5 );
-    SpriteId::bindAlias( "zone-attack", 6 );
-    SpriteId::bindAlias( "grid-thin", 7 );
-
     ScreenGrid grid ( "./data/hexproto2.png" );
-    TacSpritesheet sheet ( 1024, 1024 );
 
-    sheet.adopt( SpriteId( "unit-smiley", SpriteId::NORMAL ),
-                 loadImageFromFile( "./data/smiley32.png" ) );
-    sheet.adopt( SpriteId( "unit-troll", SpriteId::NORMAL ),
-                 loadImageFromFile( "./data/trollface32.png" ) );
-    sheet.adopt( SpriteId( "tile-floor", SpriteId::NORMAL ),
-                 grid.createSingleColouredImage( sf::Color( 100,200,100 ) ) );
-    sheet.adopt( SpriteId( "tile-floor", SpriteId::GRAYSCALE ),
-                 ToGrayscale().apply( grid.createSingleColouredImage( sf::Color( 100,200,100 ) ) ) );
-    sheet.adopt( SpriteId( "tile-wall", SpriteId::NORMAL ),
-                 grid.createSingleColouredImage( sf::Color( 50,20,20 ) ) );
-    sheet.adopt( SpriteId( "tile-wall", SpriteId::GRAYSCALE ),
-                 ToGrayscale().apply( grid.createSingleColouredImage( sf::Color( 50,20,20 ) ) ) );
-    sheet.adopt( SpriteId("zone-fog", SpriteId::NORMAL),
-                 grid.createSingleColouredImage( sf::Color( 0,0,0,128 ) ) );
-    sheet.adopt( SpriteId("zone-attack", SpriteId::NORMAL),
-                 grid.createSingleColouredImage( sf::Color( 255,0,0,128 ) ) );
-    sheet.adopt( SpriteId("zone-move", SpriteId::NORMAL),
-                 grid.createSingleColouredImage( sf::Color( 0,255,0,128 ) ) );
-    sheet.adopt( SpriteId("grid-thin", SpriteId::NORMAL),
-                 loadImageFromFile( "./data/hexthingrid2.png" ) );
+    TacSpritesheet sheet ( 1024, 1024 );
+    loadSpritesFromFile( "./config/sprites.lisp", sheet, grid );
 
     ResourceManager<RandomVariantsCollection<sf::SoundBuffer> > soundBuffers;
-    soundBuffers.bind( "clink", new RandomVariantsCollection<sf::SoundBuffer>() );
-    soundBuffers["clink"].adopt( loadSoundBufferFromFile( "./data-audio/clink1-112.wav" ) );
-    soundBuffers["clink"].adopt( loadSoundBufferFromFile( "./data-audio/clink1-151.wav" ) );
-    soundBuffers["clink"].adopt( loadSoundBufferFromFile( "./data-audio/clink1-170.wav" ) );
-    soundBuffers["clink"].adopt( loadSoundBufferFromFile( "./data-audio/clink1-195.wav" ) );
-    soundBuffers["clink"].adopt( loadSoundBufferFromFile( "./data-audio/clink1-208.wav" ) );
-    soundBuffers["clink"].adopt( loadSoundBufferFromFile( "./data-audio/clink1-222.wav" ) );
-    soundBuffers["clink"].adopt( loadSoundBufferFromFile( "./data-audio/clink1-272.wav" ) );
-    soundBuffers["clink"].adopt( loadSoundBufferFromFile( "./data-audio/clink1-85.wav" ) );
+    loadSoundsFromFile( "./config/sound-effects.lisp", soundBuffers );
 
     ResourceManager<ClientTileType> tileTypes;
     ResourceManager<ClientUnitType> unitTypes;

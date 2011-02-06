@@ -4,6 +4,12 @@
 #include <cstdio>
 #include <cassert>
 
+#include <iostream>
+#include <stdexcept>
+#include <fstream>
+
+#include "Sise.h"
+
 namespace Tac {
 
 const double MovementAnimationDuration = 0.15;
@@ -539,6 +545,101 @@ void ClientMap::drawEffects(sf::RenderWindow& win, double centerX, double center
     for(RTAManager::List::iterator i = animRisingText.objects.begin(); i != animRisingText.objects.end(); i++) {
         using namespace std;
         win.Draw( **i );
+    }
+}
+
+sf::Image* loadSpriteFromSExpDesc(Sise::Cons *sexp, ScreenGrid& grid) {
+    using namespace Sise;
+    const std::string type = *asSymbol( sexp->nthcar(0) );
+    if( type == "file" ) {
+        const std::string filename = *asString( sexp->nthcar(1) );
+        return loadImageFromFile( filename );
+    } else if( type == "solid-colour" ) {
+        int r, g, b, a;
+        r = *asInt( sexp->nthcar(1) );
+        g = *asInt( sexp->nthcar(2) );
+        b = *asInt( sexp->nthcar(3) );
+        if( sexp->nthtail(4) ) {
+            a = *asInt( sexp->nthcar(4) );
+        } else {
+            a = 255;
+        }
+        return grid.createSingleColouredImage( sf::Color( r, g, b, a ) );
+    } else throw std::runtime_error( "unknown sprite sexp descriptor type");
+}
+
+void loadSpritesFromFile(const std::string& filename, TacSpritesheet& sprites, ScreenGrid& grid) {
+    using namespace Sise;
+    using namespace std;
+    SExpStreamParser streamParser;
+    ifstream is ( filename.c_str(), ios::in );
+    char byte;
+    int spriteno = 1;
+    if( !is.good() ) {
+        throw FileInputError();
+    }
+    while( !is.eof() ) {
+        is.read( &byte, 1 );
+        streamParser.feed( byte );
+    }
+    streamParser.end();
+    while( !streamParser.empty() ) {
+        Cons *sprite = asProperCons( streamParser.pop() );
+        std::string name = * asSymbol(sprite->nthcar(0) );
+        Cons *variants = asCons( sprite->nthcar(1) );
+        Cons *baseImageDesc = asCons( sprite->nthcar(2) );
+
+        SpriteId::bindAlias( name, spriteno ); // becoming apparent that this staticness is a hack
+                                               // xx bind ids to sheets? why not?
+
+        Cons *current = variants;
+        while( current ) {
+            std::string variantName = * asSymbol( current->getcar() );
+            sf::Image *image = loadSpriteFromSExpDesc( baseImageDesc, grid );
+            SpriteId::Variant variant;
+            if( variantName == "normal" ) {
+                variant = SpriteId::NORMAL;
+            } else if( variantName == "grayscale" ) {
+                variant = SpriteId::GRAYSCALE;
+                image = ToGrayscale().apply( image );
+            } else throw std::runtime_error( "unknown variant: " + variantName );
+
+            sprites.adopt( SpriteId( spriteno, variant ),
+                           image );
+
+            current = asCons( current->getcdr() );
+        }
+        delete sprite;
+        spriteno++;
+    }
+}
+
+void loadSoundsFromFile(const std::string& filename, ResourceManager<RandomizedSoundEffect>& sounds) {
+    using namespace Sise;
+    using namespace std;
+    SExpStreamParser streamParser;
+    ifstream is ( filename.c_str(), ios::in );
+    char byte;
+    if( !is.good() ) {
+        throw FileInputError();
+    }
+    while( !is.eof() ) {
+        is.read( &byte, 1 );
+        streamParser.feed( byte );
+    }
+    streamParser.end();
+    while( !streamParser.empty() ) {
+        Cons *sound = asProperCons( streamParser.pop() );
+        std::string name = * asSymbol(sound->getcar() );
+        Cons *current = asCons( sound->getcdr() );
+        RandomizedSoundEffect *rse = new RandomizedSoundEffect();
+        while( current ) {
+            std::string soundFilename = * asString( current->getcar() );
+            rse->adopt( loadSoundBufferFromFile( soundFilename ) );
+            current = asCons( current->getcdr() );
+        }
+        delete sound;
+        sounds.bind( name, rse );
     }
 }
 
