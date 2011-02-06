@@ -121,6 +121,8 @@ namespace Sise {
             void setcar(SExp*);
             void setcdr(SExp*);
 
+            SExp *alistGet(const std::string&);
+
             SExp *nthcar(int);
             SExp *nthtail(int);
 
