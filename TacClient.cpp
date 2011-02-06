@@ -8,6 +8,7 @@
 namespace Tac {
 
 const double MovementAnimationDuration = 0.15;
+const double MeleeAnimationDuration = 0.3;
 
 std::map< std::string, int > SpriteId::spritenoAliases;
 
@@ -348,7 +349,7 @@ void ClientUnit::startMeleeAnimation(int dx,int dy) {
     if( curveAnim ) {
         delete curveAnim;
     }
-    curveAnim = new LineCurveAnimation( MovementAnimationDuration,
+    curveAnim = new LineCurveAnimation( MeleeAnimationDuration,
                                         0, 0,
                                         dx, dy,
                                         false );
