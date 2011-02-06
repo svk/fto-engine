@@ -2,6 +2,8 @@
 
 #include "HexTools.h"
 
+#include <iostream>
+
 namespace Tac {
 
 int IdGenerator::generate(void) {
@@ -47,10 +49,11 @@ ServerTile::ServerTile(void) :
 
 ServerMap::ServerMap(int mapSize, TileType *defaultTt) :
     mapSize ( mapSize ),
-    players (),
     unitIdGen (),
     playerIdGen (),
-    tiles ( mapSize )
+    tiles ( mapSize ),
+    players (),
+    units ()
 {
     for(int r=0;r<=mapSize;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
         int x, y;
@@ -158,6 +161,23 @@ ServerTile* ServerMap::getRandomTileFor(const ServerUnit* unit) {
     return 0;
 }
 
+ServerMap::~ServerMap(void) {
+    for(std::map<int,ServerUnit*>::iterator i = units.begin(); i != units.end(); i++) {
+        delete i->second;
+    }
+    for(std::map<int,ServerPlayer*>::iterator i = players.begin(); i != players.end(); i++) {
+        delete i->second;
+    }
+}
+
+void ServerMap::adoptUnit(ServerUnit* unit) {
+    std::map<int, ServerUnit*>::iterator i = units.find( unit->getId() );
+    if( i != units.end() ) {
+        throw std::runtime_error( "oops: reusing unit id or readopting unit" );
+    }
+    units[ unit->getId() ] = unit;
+}
+
 void ServerUnit::gatherFov( const ServerMap& smap, HexTools::HexFovRegion& region ) const {
     if( tile ) {
         int x, y;
@@ -176,6 +196,123 @@ void ServerPlayer::gatherIndividualFov(const ServerMap& smap) {
     for(std::vector<ServerUnit*>::iterator i = controlledUnits.begin(); i != controlledUnits.end(); i++) {
         (*i)->gatherFov( smap, individualFov );
     }
+}
+
+ServerUnit* ServerMap::getUnitById(int id) {
+    std::map<int,ServerUnit*>::iterator i = units.find( id );
+    if( units.end() == i ) return 0;
+    return i->second;
+}
+
+bool ServerMap::actionRemoveUnit(ServerUnit *unit) {
+    unit->leaveTile();
+    return true;
+}
+
+bool ServerMap::actionPlaceUnit(ServerUnit *unit, int x, int y ) {
+    ServerTile& enteringTile = tiles.get( x, y );
+    if( !enteringTile.mayEnter( unit ) ) return false;
+
+    unit->enterTile( &enteringTile, unit->getLayer() );
+
+    evtUnitAppears( *unit, enteringTile );
+
+    return true;
+}
+
+bool ServerMap::actionMoveUnit(ServerUnit *unit, int dx, int dy) {
+    if( !((abs(dx) == 3 && abs(dy) == 1)
+          ||(dx == 0 && abs(dy) == 2)) ) return false;
+    ServerTile *leavingTile = unit->getTile();
+    if( !leavingTile ) return false;
+    int x, y;
+    leavingTile->getXY( x, y );
+    ServerTile& enteringTile = tiles.get( x + dx, y + dy );
+    if( !enteringTile.mayEnter( unit ) ) return false;
+
+    // ok!
+    unit->enterTile( &enteringTile, unit->getLayer() );
+
+    // that was an event which might mean we need to send data to
+    // several players
+    evtUnitMoved( *unit, *leavingTile, enteringTile );
+
+    return true;
+}
+
+bool ServerMap::cmdMoveUnit(ServerPlayer* player,int unitId, int dx, int dy) {
+    ServerUnit *unit = getUnitById(unitId);
+    if( !player || !unit ) return false;
+    if( player != unit->getController() ) return false;
+    return actionMoveUnit( unit, dx, dy );
+}
+
+void ServerPlayer::updateFov(const ServerMap& smap) {
+    gatherIndividualFov( smap );
+    // and share with allies!
+}
+
+bool ServerPlayer::isObserving(const ServerTile& tile) const {
+    // or check allies here?
+    int x, y;
+    tile.getXY( x, y );
+    return individualFov.contains( x, y );
+}
+
+void ServerMap::evtUnitAppears(ServerUnit& unit, ServerTile& tile) {
+    for(std::map<int,ServerPlayer*>::iterator i = players.begin(); i != players.end(); i++) {
+        ServerPlayer *player = i->second;
+        if( player->isObserving( tile ) ) {
+            player->sendUnitDiscovered( unit );
+        }
+    }
+}
+
+void ServerMap::evtUnitDisappears(ServerUnit& unit, ServerTile& tile) {
+    for(std::map<int,ServerPlayer*>::iterator i = players.begin(); i != players.end(); i++) {
+        ServerPlayer *player = i->second;
+        if( player->isObserving( tile ) ) {
+            player->sendUnitDisappears( unit );
+        }
+    }
+}
+
+void ServerMap::evtUnitMoved(ServerUnit& unit, ServerTile& sourceTile, ServerTile& destinationTile) {
+    // what happened was that the unit _moved_ (different from:
+    // appeared, disappeared, etc.)
+    // this event is atomically observed, does that go for all reasonable
+    // events? [you either see all of the event or none of it]
+    // probably not, best not to assume
+    // who will see this event?
+    //   -everyone observing (having in the active set) either tile
+    // what will they see?
+    //   -discover the unit at the source tile, if not already discovered
+    //   -observe the movement
+    for(std::map<int,ServerPlayer*>::iterator i = players.begin(); i != players.end(); i++) {
+        ServerPlayer *player = i->second;
+        bool observedSource = player->isObserving( sourceTile );
+        if( observedSource || player->isObserving( destinationTile ) ) {
+            if( !observedSource ) {
+                player->sendUnitDiscovered( unit );
+            }
+            player->sendUnitMoved( unit, sourceTile, destinationTile );
+        }
+    }
+}
+
+void ServerPlayer::sendUnitDisappears(const ServerUnit& unit) {
+    using namespace std;
+    cerr << "would send unit discovered" << endl;
+}
+
+void ServerPlayer::sendUnitDiscovered(const ServerUnit& unit) {
+    using namespace std;
+    cerr << "would send unit discovered" << endl;
+}
+
+void ServerPlayer::sendUnitMoved(const ServerUnit& unit, const ServerTile& fromTile, const ServerTile& toTile) {
+    using namespace std;
+    cerr << "would send unit moved" << endl;
 }
 
 };

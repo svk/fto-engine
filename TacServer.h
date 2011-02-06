@@ -5,6 +5,7 @@
 
 #include "mtrand.h"
 #include <vector>
+#include <map>
 #include <set>
 #include "HexTools.h"
 
@@ -80,11 +81,18 @@ class ServerPlayer {
         void removeControlledUnit(ServerUnit*);
         
         void gatherIndividualFov(const ServerMap&);
+        void updateFov(const ServerMap&);
+
+        bool isObserving(const ServerTile&) const;
+
+        void sendUnitDisappears(const ServerUnit&);
+        void sendUnitDiscovered(const ServerUnit&);
+        void sendUnitMoved(const ServerUnit&, const ServerTile&, const ServerTile&);
 };
 
 class ServerUnit {
     private:
-        int id;
+        const int id;
         const UnitType& unitType;
         ServerPlayer *controller;
 
@@ -93,7 +101,11 @@ class ServerUnit {
     public:
         ServerUnit(int,const UnitType&);
 
+        ServerTile* getTile(void) { return tile; }
+        int getId(void) const { return id; }
+
         void setController(ServerPlayer*);
+        ServerPlayer* getController(void) { return controller; }
     
         const UnitType& getUnitType(void) const { return unitType; }
 
@@ -133,14 +145,28 @@ class ServerMap : public HexTools::HexOpacityMap {
     private:
         int mapSize;
 
-        ResourceManager<ServerPlayer> players; // indexed by username
         IdGenerator unitIdGen;
         IdGenerator playerIdGen;
 
         HexTools::HexMap<ServerTile> tiles;
 
+        std::map<int, ServerPlayer*> players;
+        std::map<int, ServerUnit*> units;
+
+        void evtUnitAppears(ServerUnit&, ServerTile&);
+        void evtUnitDisappears(ServerUnit&, ServerTile&);
+        void evtUnitMoved(ServerUnit&, ServerTile&, ServerTile&);
+
     public:
         ServerMap(int,TileType*);
+        ~ServerMap(void);
+
+        int generatePlayerId(void) { return playerIdGen.generate(); }
+        int generateUnitId(void) { return unitIdGen.generate(); }
+
+        ServerUnit* getUnitById(int);
+
+        void adoptUnit(ServerUnit*);
 
         ServerTile& getTile(int x, int y) { return tiles.get(x,y); }
         const ServerTile& getTile(int x, int y) const { return tiles.get(x,y); }
@@ -150,6 +176,21 @@ class ServerMap : public HexTools::HexOpacityMap {
         ServerTile* getRandomTileFor(const ServerUnit*);
 
         bool isOpaque(int,int) const;
+
+
+        // the "cmd" family handle direct responses from the player, responses
+        // which may be unreasonable. return true for success or false for failure
+        // of any kind. may send information to the player (d'oh), even on failure.
+        // [such as reason for failure]
+        bool cmdMoveUnit(ServerPlayer*,int,int,int);
+
+        // actions, like cmds, but originate from the server and so authority
+        // does not need to be checked
+        // return bool for delegation purposes (many cmds can be -- check auth -- delegate)
+        bool actionMoveUnit(ServerUnit*,int,int);
+        bool actionPlaceUnit(ServerUnit*,int,int);
+        bool actionRemoveUnit(ServerUnit*);
+
 };
 
 void trivialLevelGenerator(ServerMap&, TileType*, TileType*, double = 0.5);
