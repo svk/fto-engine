@@ -3,6 +3,9 @@
 
 #include <string>
 
+#define INVALID_ID 0
+#define UNIT_LAYERS 1
+
 namespace Tac {
 
 // this contains what both the server and the client need to know about

@@ -4,7 +4,6 @@
 #include <cstdio>
 #include <cassert>
 
-
 namespace Tac {
 
 const double MovementAnimationDuration = 0.15;

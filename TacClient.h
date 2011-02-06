@@ -1,9 +1,6 @@
 #ifndef H_TAC_CLIENT
 #define H_TAC_CLIENT
 
-#define INVALID_ID 0
-#define UNIT_LAYERS 1
-
 #include "typesetter.h"
 
 #include "HexFov.h"
