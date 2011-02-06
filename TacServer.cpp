@@ -1,5 +1,7 @@
 #include "TacServer.h"
 
+#include "HexTools.h"
+
 namespace Tac {
 
 int IdGenerator::generate(void) {
@@ -65,6 +67,17 @@ ServerUnit::ServerUnit(int id, const UnitType& unitType, ServerPlayer *controlle
     tile ( 0 ),
     controller ( controller )
 {
+}
+
+void trivialLevelGenerator(ServerMap& smap, TileType* wall, TileType* floor, double wallDensity) {
+    const int mapSize = smap.getMapSize();
+    MTRand prng;
+    smap.getTile(0,0).setTileType( (prng() < wallDensity) ? wall : floor );
+    for(int r=1;r<=mapSize;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
+        int x, y;
+        HexTools::cartesianiseHexCoordinate( i, j, r, x, y );
+        smap.getTile(x,y).setTileType( (prng() < wallDensity) ? wall : floor );
+    }
 }
 
 

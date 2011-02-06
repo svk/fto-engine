@@ -183,7 +183,6 @@ class ClientUnit {
 
         void enterTile(ClientTile&, int);
         int leaveTile(ClientTile&);
-        void move(int,int);
 
         bool getPosition(int&, int&) const;
         int getLayer(void) const { return layer; }

@@ -66,6 +66,8 @@ class ServerPlayer {
         int id;
         std::string username;
         RememberedInformation memory;
+        HexTools::HexRegion active;
+        std::vector<ServerUnit*> units;
 
     public:
         ServerPlayer(int, const std::string&, const ServerMap&);
@@ -75,11 +77,14 @@ class ServerUnit {
     private:
         int id;
         const UnitType& unitType;
-        ServerTile *tile;
         ServerPlayer *controller;
+
+        ServerTile *tile;
     
     public:
         ServerUnit(int,const UnitType&,ServerPlayer*);
+
+        const UnitType& getUnitType(void) const { return unitType; }
 };
 
 class ServerTile {
@@ -115,6 +120,8 @@ class ServerMap {
 
         int getMapSize(void) const { return mapSize; }
 };
+
+void trivialLevelGenerator(ServerMap&, TileType*, TileType*, double = 0.5);
 
 };
 
