@@ -16,3 +16,4 @@ test-fov
 test-tacclient
 data-audio/
 test-tacserver
+.*.swp
