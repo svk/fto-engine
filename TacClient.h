@@ -23,6 +23,8 @@
 
 #include "anisprite.h"
 
+#include "Tac.h"
+
 namespace Tac {
 
 // for now we have universal mobility; this
@@ -99,18 +101,6 @@ struct SpriteId {
 
 typedef SimpleKeyedSpritesheet<SpriteId> TacSpritesheet;
 
-namespace Type {
-    enum Mobility {
-        FLOOR,
-        WALL
-    };
-
-    enum Opacity {
-        CLEAR,
-        BLOCK
-    };
-};
-
 class CurveAnimation {
     public:
         virtual ~CurveAnimation(void) {}
@@ -144,22 +134,13 @@ class LineCurveAnimation : public CurveAnimation {
 // so, if Italian troops have +1 movement, and English
 // troops +1 damage, then an "Italian crossbowman" is
 // a different unit type from an "English crossbowman".
-struct ClientUnitType {
-    std::string name;
-
+struct ClientUnitType : public UnitType {
     sf::Sprite spriteNormal;
 
     ClientUnitType(TacSpritesheet&, const std::string&, const std::string&);
 };
 
-struct ClientTileType {
-    std::string name; // the name is NOT the sprite alias -- want to have possibility of many sprites per name
-
-    Type::Mobility mobility;
-    Type::Opacity opacity;
-    bool border;
-    int baseCost;
-
+struct ClientTileType : public TileType {
     sf::Sprite spriteNormal, spriteGrayscale;
 
     ClientTileType(TacSpritesheet&,
@@ -169,9 +150,6 @@ struct ClientTileType {
                    Type::Opacity,
                    bool,
                    int);
-
-    bool mayTraverse(const ClientUnitType&) const;
-    bool mayTraverse(const ClientUnitType&,int&) const;
 };
 
 class ClientTile;

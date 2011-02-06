@@ -410,30 +410,14 @@ CMUnitBlitterGL& ClientMap::getUnitBlitter(int layer) {
     throw std::logic_error("no such layer");
 }
 
-bool ClientTileType::mayTraverse(const ClientUnitType& unitType) const {
-    int disregardThat;
-    return mayTraverse( unitType, disregardThat );
-}
-
-bool ClientTileType::mayTraverse(const ClientUnitType& unitType, int& outCost) const {
-    if( border ) return false;
-    if( mobility == Type::WALL ) return false;
-    outCost = baseCost;
-    return true;
-}
-
 ClientUnitType::ClientUnitType(TacSpritesheet& sheet, const std::string& alias, const std::string& name) :
-    name ( name ),
+    UnitType ( name ),
     spriteNormal ( sheet.makeSprite( SpriteId( alias, SpriteId::NORMAL ) ) )
 {
 }
 
 ClientTileType::ClientTileType(TacSpritesheet& sheet, const std::string& alias, const std::string& name, Type::Mobility mobility, Type::Opacity opacity, bool border, int baseCost ) :
-    name ( name ),
-    mobility ( mobility ),
-    opacity ( opacity ),
-    border ( border ),
-    baseCost ( baseCost ),
+    TileType( name, mobility, opacity, border, baseCost ),
     spriteNormal ( sheet.makeSprite( SpriteId( alias, SpriteId::NORMAL ) ) ),
     spriteGrayscale ( sheet.makeSprite( SpriteId( alias, SpriteId::GRAYSCALE ) ) )
 {
