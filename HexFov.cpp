@@ -253,7 +253,7 @@ void HexFovBeam::setLit(int x, int y) {
     receiver.setLit( x + cx, y + cy );
 }
 
-HexFovBeam::HexFovBeam( HexOpacityMap& map, HexLightReceiver& receiver, int dirindex, int cx, int cy ) :
+HexFovBeam::HexFovBeam( const HexOpacityMap& map, HexLightReceiver& receiver, int dirindex, int cx, int cy ) :
     map ( map ),
     cx ( cx ),
     cy ( cy ),
@@ -275,7 +275,7 @@ HexFovBeam::~HexFovBeam(void) {
     delete secondary;
 }
 
-HexFov::HexFov(HexOpacityMap& map, HexLightReceiver& receiver, int cx, int cy) :
+HexFov::HexFov(const HexOpacityMap& map, HexLightReceiver& receiver, int cx, int cy) :
     cx ( cx ),
     cy ( cy ),
     receiver ( receiver ),

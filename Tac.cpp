@@ -3,7 +3,8 @@
 namespace Tac {
 
 UnitType::UnitType(const std::string& name) :
-    name ( name )
+    name ( name ),
+    nativeLayer ( 0 ) // xx
 {
 }
 

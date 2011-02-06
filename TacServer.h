@@ -10,6 +10,9 @@
 
 #include "Manager.h"
 
+#include "HexFov.h"
+
+
 /* Thoughts.
    
    Server needs: - to keep track of the REAL map,
@@ -66,11 +69,17 @@ class ServerPlayer {
         int id;
         std::string username;
         RememberedInformation memory;
-        HexTools::HexRegion active;
-        std::vector<ServerUnit*> units;
+        HexTools::HexRegion transmittedActive;
+        HexTools::HexFovRegion individualFov;
+        std::vector<ServerUnit*> controlledUnits;
 
     public:
         ServerPlayer(int, const std::string&, const ServerMap&);
+
+        void addControlledUnit(ServerUnit* unit) { controlledUnits.push_back( unit ); }
+        void removeControlledUnit(ServerUnit*);
+        
+        void gatherIndividualFov(const ServerMap&);
 };
 
 class ServerUnit {
@@ -80,11 +89,20 @@ class ServerUnit {
         ServerPlayer *controller;
 
         ServerTile *tile;
-    
-    public:
-        ServerUnit(int,const UnitType&,ServerPlayer*);
 
+    public:
+        ServerUnit(int,const UnitType&);
+
+        void setController(ServerPlayer*);
+    
         const UnitType& getUnitType(void) const { return unitType; }
+
+        int getLayer(void) const;
+
+        void enterTile(ServerTile*, int);
+        int leaveTile(void);
+
+        void gatherFov( const ServerMap&, HexTools::HexFovRegion& ) const;
 };
 
 class ServerTile {
@@ -92,17 +110,26 @@ class ServerTile {
         TileType* tileType; // shan't be null but can change
                             // however, will be null when first constructing
                             // the map for practical reasons
-        ServerUnit *unit[ UNIT_LAYERS ];
+        ServerUnit *units[ UNIT_LAYERS ];
+
         int x, y;
 
     public:
         ServerTile(void);
         void setXY(int x_, int y_) { x = x_; y = y_; }
+        void getXY(int& x_, int& y_) const { x_ = x; y_ = y; }
 
         void setTileType(TileType*tt) { tileType = tt; }
+        const TileType& getTileType(void) const { return *tileType; }
+
+        void setUnit(ServerUnit*, int);
+        int clearUnit(const ServerUnit*);
+        int findUnit(const ServerUnit*) const;
+
+        bool mayEnter(const ServerUnit*) const;
 };
 
-class ServerMap {
+class ServerMap : public HexTools::HexOpacityMap {
     private:
         int mapSize;
 
@@ -119,6 +146,10 @@ class ServerMap {
         const ServerTile& getTile(int x, int y) const { return tiles.get(x,y); }
 
         int getMapSize(void) const { return mapSize; }
+
+        ServerTile* getRandomTileFor(const ServerUnit*);
+
+        bool isOpaque(int,int) const;
 };
 
 void trivialLevelGenerator(ServerMap&, TileType*, TileType*, double = 0.5);

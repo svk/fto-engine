@@ -84,7 +84,7 @@ class HexFovBeam {
     // (but still a beam!)
     // this class assumes center at (0,0) and uses translators
     private:
-        HexOpacityMap& map;
+        const HexOpacityMap& map;
         int cx, cy;
 
         HexLightReceiver& receiver;
@@ -100,7 +100,7 @@ class HexFovBeam {
         bool isOpaque(int,int) const;
 
     public:
-        HexFovBeam( HexOpacityMap&, HexLightReceiver&, int, int, int); 
+        HexFovBeam( const HexOpacityMap&, HexLightReceiver&, int, int, int); 
         ~HexFovBeam(void);
 
         void calculate(void);
@@ -112,7 +112,7 @@ class HexFov {
         HexLightReceiver& receiver;
         HexFovBeam north, northwest, southwest, south, southeast, northeast;
     public:
-        HexFov( HexOpacityMap&, HexLightReceiver&, int, int );
+        HexFov( const HexOpacityMap&, HexLightReceiver&, int, int );
         void calculate(void);
 };
 

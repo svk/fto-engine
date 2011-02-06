@@ -40,6 +40,8 @@ namespace Type {
 struct UnitType {
     std::string name;
 
+    int nativeLayer;
+
     UnitType(const std::string&);
     virtual ~UnitType(void) {}
 };

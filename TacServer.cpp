@@ -39,7 +39,7 @@ ServerTile::ServerTile(void) :
     tileType(  0 )
 {
     for(int i=0;i<UNIT_LAYERS;i++) {
-        unit[i] = 0;
+        units[i] = 0;
     }
     // map will initialize xy when appropriate -- no sense destroying the valgrind
     // warnings if we miss that
@@ -61,11 +61,10 @@ ServerMap::ServerMap(int mapSize, TileType *defaultTt) :
     tiles.getDefault().setTileType( defaultTt );
 }
 
-ServerUnit::ServerUnit(int id, const UnitType& unitType, ServerPlayer *controller) :
+ServerUnit::ServerUnit(int id, const UnitType& unitType) :
     id ( id ),
     unitType ( unitType ),
-    tile ( 0 ),
-    controller ( controller )
+    tile ( 0 )
 {
 }
 
@@ -80,5 +79,103 @@ void trivialLevelGenerator(ServerMap& smap, TileType* wall, TileType* floor, dou
     }
 }
 
+void ServerTile::setUnit(ServerUnit* unit, int layer) {
+    units[layer] = unit;
+}
+
+int ServerTile::findUnit(const ServerUnit* unit ) const {
+    for(int i=0;i<UNIT_LAYERS;i++) {
+        if( units[i] == unit ) return i;
+    }
+    return -1;
+}
+
+int ServerTile::clearUnit(const ServerUnit* unit ) {
+    int index = findUnit( unit );
+    if( index >= 0 ) {
+        units[ index ] = 0;
+    }
+    return index;
+}
+
+void ServerUnit::enterTile(ServerTile* tile, int layer ) {
+    if( tile ) {
+        tile->clearUnit( this );
+        tile = 0;
+    }
+    tile->setUnit( this, layer );
+}
+
+int ServerUnit::leaveTile(void) {
+    if( tile ) {
+        return tile->clearUnit( this );
+    }
+    return -1;
+}
+
+bool ServerTile::mayEnter(const ServerUnit* unit) const {
+    if( !tileType->mayTraverse( unit->getUnitType() ) ) return false;
+    int layer = unit->getLayer();
+    if( layer < 0 ) return false; // !?
+    return units[layer] == 0;
+}
+
+int ServerUnit::getLayer(void) const {
+    if( tile ) {
+        int layer = tile->findUnit( this );
+        return (layer >= 0) ? layer : unitType.nativeLayer;
+    }
+    return unitType.nativeLayer;
+}
+
+void ServerPlayer::removeControlledUnit(ServerUnit* unit) {
+    std::vector<ServerUnit*>::iterator i = find( controlledUnits.begin(), controlledUnits.end(), unit );
+    if( i != controlledUnits.end() ) {
+        controlledUnits.erase( i );
+    }
+}
+
+void ServerUnit::setController(ServerPlayer* player) {
+    if( controller ) {
+        controller->removeControlledUnit( this );
+    }
+    controller = player;
+    controller->addControlledUnit( this );
+}
+
+ServerTile* ServerMap::getRandomTileFor(const ServerUnit* unit) {
+    int tries = 1000;
+    int mapIndexableSize = tiles.getSize();
+    MTRand prng;
+
+    while( tries-- > 0 ) {
+        int guess = abs(prng()) % mapIndexableSize;
+        if( tiles.get( guess ).mayEnter( unit ) ) {
+            return &tiles.get( guess );
+        }
+    }
+
+    return 0;
+}
+
+void ServerUnit::gatherFov( const ServerMap& smap, HexTools::HexFovRegion& region ) const {
+    if( tile ) {
+        int x, y;
+        tile->getXY( x, y );
+        HexTools::HexFov fov ( smap, region, x, y );
+        fov.calculate();
+    }
+}
+
+bool ServerMap::isOpaque(int x, int y) const {
+    return tiles.get(x,y).getTileType().opacity == Type::CLEAR;
+}
+
+void ServerPlayer::gatherIndividualFov(const ServerMap& smap) {
+    individualFov.clear();
+    for(std::vector<ServerUnit*>::iterator i = controlledUnits.begin(); i != controlledUnits.end(); i++) {
+        (*i)->gatherFov( smap, individualFov );
+    }
+}
 
 };
