@@ -13,6 +13,8 @@
 
 #include "HexFov.h"
 
+#include "SProto.h"
+
 
 /* Thoughts.
    
@@ -194,6 +196,20 @@ class ServerMap : public HexTools::HexOpacityMap {
 };
 
 void trivialLevelGenerator(ServerMap&, TileType*, TileType*, double = 0.5);
+
+class TacTestServer : public SProto::SubServer {
+    // this is a "test" server because it contains only one "game", and that game doesn't
+    // really look much like Tac yet -- everyone moves at once, for one
+    private:
+        TileType borderType, wallType, floorType;
+        ServerMap myMap;
+
+    public:
+        TacTestServer(SProto::Server&, int);
+
+        bool handle( SProto::RemoteClient*, const std::string&, Sise::SExp* );
+        
+};
 
 };
 

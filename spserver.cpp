@@ -1,6 +1,7 @@
 #include "SProto.h"
 
 #include "NashServer.h"
+#include "TacServer.h"
 
 #include <csignal>
 
@@ -18,6 +19,7 @@ int main(int argc, char *argv[]) {
     SProto::Server server;
 
     Nash::NashSubserver ssNash ( server );
+    Tac::TacTestServer ssTacTest ( server, 40 );
 
     server.addListener( SPROTO_STANDARD_PORT );
 

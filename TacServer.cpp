@@ -315,4 +315,28 @@ void ServerPlayer::sendUnitMoved(const ServerUnit& unit, const ServerTile& fromT
     cerr << "would send unit moved" << endl;
 }
 
+TacTestServer::TacTestServer(SProto::Server& server, int radius) :
+    SProto::SubServer( "tactest", server ),
+    borderType( "impassable wall", Type::WALL, Type::BLOCK, true, 0 ),
+    wallType ( "wall", Type::WALL, Type::BLOCK, false, 0 ),
+    floorType ( "floor", Type::FLOOR, Type::CLEAR, false, 100 ),
+    myMap ( radius, &borderType )
+{
+    trivialLevelGenerator( myMap, &wallType, &floorType, 0.4 );
+}
+
+bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, Sise::SExp *arg) {
+    using namespace SProto;
+    using namespace Sise;
+    if( cmd == "test" ) {
+        cli->delsend(( List()(new Symbol( "hello" ))
+                              (new Symbol( "world" ))
+                              (new String( cli->getUsername() ))
+                        .make() ));
+    } else {
+        return false;
+    }
+    return true;
+}
+
 };
