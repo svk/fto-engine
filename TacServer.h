@@ -43,17 +43,6 @@ namespace Tac {
 
 class ServerMap;
 
-class RememberedInformation {
-    // for a single player
-    // this is only used for recovery
-    private:
-        HexTools::HexMap<TileType*> memory;
-        // 0 is valid and means not remembered
-
-    public:
-        RememberedInformation(int);
-};
-
 class IdGenerator {
     private:
         MTRand_int32 prng;
@@ -70,15 +59,22 @@ class ServerTile;
 class ServerPlayer {
     private:
         int id;
-        std::string username;
-        RememberedInformation memory;
+        const std::string username;
+        HexTools::HexMap<const TileType*> memory;
         HexTools::HexRegion transmittedActive;
         HexTools::HexFovRegion individualFov;
         std::vector<ServerUnit*> controlledUnits;
 
-    public:
-        ServerPlayer(int, const std::string&, const ServerMap&);
+        SProto::Server& server; // use getConnectedUser to, well, get a connected user
+        ServerMap& smap;
 
+    public:
+        ServerPlayer(SProto::Server&, ServerMap&, int, const std::string&);
+
+        const std::string& getUsername(void) const { return username; }
+        int getId(void) const { return id; }
+
+        const HexTools::HexRegion& getTotalFov(void);
         void addControlledUnit(ServerUnit* unit) { controlledUnits.push_back( unit ); }
         void removeControlledUnit(ServerUnit*);
         
@@ -86,7 +82,9 @@ class ServerPlayer {
         void updateFov(const ServerMap&);
 
         bool isObserving(const ServerTile&) const;
+        bool isReceivingFovFrom(const ServerUnit&) const;
 
+        void sendFovDelta(void);
         void sendUnitDisappears(const ServerUnit&);
         void sendUnitDiscovered(const ServerUnit&);
         void sendUnitMoved(const ServerUnit&, const ServerTile&, const ServerTile&);
@@ -103,11 +101,13 @@ class ServerUnit {
     public:
         ServerUnit(int,const UnitType&);
 
+        const ServerTile* getTile(void) const { return tile; }
         ServerTile* getTile(void) { return tile; }
         int getId(void) const { return id; }
 
         void setController(ServerPlayer*);
         ServerPlayer* getController(void) { return controller; }
+        const ServerPlayer* getController(void) const { return controller; }
     
         const UnitType& getUnitType(void) const { return unitType; }
 
@@ -136,6 +136,9 @@ class ServerTile {
         void setTileType(TileType*tt) { tileType = tt; }
         const TileType& getTileType(void) const { return *tileType; }
 
+        ServerUnit *getUnit(int j) { return units[j]; }
+        const ServerUnit *getUnit(int j) const { return units[j]; }
+
         void setUnit(ServerUnit*, int);
         int clearUnit(const ServerUnit*);
         int findUnit(const ServerUnit*) const;
@@ -163,11 +166,14 @@ class ServerMap : public HexTools::HexOpacityMap {
         ServerMap(int,TileType*);
         ~ServerMap(void);
 
+        ServerPlayer* getPlayerByUsername(const std::string&);
+
         int generatePlayerId(void) { return playerIdGen.generate(); }
         int generateUnitId(void) { return unitIdGen.generate(); }
 
         ServerUnit* getUnitById(int);
 
+        void adoptPlayer(ServerPlayer*);
         void adoptUnit(ServerUnit*);
 
         ServerTile& getTile(int x, int y) { return tiles.get(x,y); }
@@ -202,8 +208,10 @@ class TacTestServer : public SProto::SubServer {
     // really look much like Tac yet -- everyone moves at once, for one
     private:
         TileType borderType, wallType, floorType;
+        UnitType pcType, trollType;
         ServerMap myMap;
 
+        
     public:
         TacTestServer(SProto::Server&, int);
 

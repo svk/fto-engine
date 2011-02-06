@@ -2,13 +2,15 @@
 
 namespace Tac {
 
-UnitType::UnitType(const std::string& name) :
+UnitType::UnitType(const std::string& symbol, const std::string& name) :
+    symbol ( symbol ),
     name ( name ),
     nativeLayer ( 0 ) // xx
 {
 }
 
-TileType::TileType(const std::string& name, Type::Mobility mobility, Type::Opacity opacity, bool border, int baseCost ) :
+TileType::TileType(const std::string& symbol, const std::string& name, Type::Mobility mobility, Type::Opacity opacity, bool border, int baseCost ) :
+    symbol ( symbol ),
     name ( name ),
     mobility ( mobility ),
     opacity ( opacity ),

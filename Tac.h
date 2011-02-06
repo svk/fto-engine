@@ -38,15 +38,17 @@ namespace Type {
 };
 
 struct UnitType {
+    std::string symbol;
     std::string name;
 
     int nativeLayer;
 
-    UnitType(const std::string&);
+    UnitType(const std::string&, const std::string&);
     virtual ~UnitType(void) {}
 };
 
 struct TileType {
+    std::string symbol; // this can double as the sprite alias
     std::string name; // the name is NOT the sprite alias -- want to have possibility of many sprites per name
 
     Type::Mobility mobility;
@@ -57,7 +59,8 @@ struct TileType {
     bool mayTraverse(const UnitType&) const;
     bool mayTraverse(const UnitType&, int&) const;
 
-    TileType(const std::string&, // name
+    TileType(const std::string&,
+             const std::string&, // name
              Type::Mobility,
              Type::Opacity,
              bool,

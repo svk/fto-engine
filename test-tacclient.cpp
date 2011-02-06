@@ -61,9 +61,9 @@ int main(int argc, char *argv[]) {
     unitTypes.bind( "player", new ClientUnitType( sheet, "unit-smiley", "Player" ) );
     unitTypes.bind( "troll", new ClientUnitType( sheet, "unit-troll", "Troll" ) );
 
-    tileTypes.bind( "border", new ClientTileType( sheet, "tile-wall", "hard wall", Type::WALL, Type::BLOCK, true, 0 ) );
-    tileTypes.bind( "floor", new ClientTileType( sheet, "tile-floor", "floor", Type::FLOOR, Type::CLEAR, false, 100 ) );
-    tileTypes.bind( "wall", new ClientTileType( sheet, "tile-wall", "wall", Type::WALL, Type::BLOCK, false, 0 ) );
+    tileTypes.bind( "border", new ClientTileType( sheet, "border", "tile-wall", "hard wall", Type::WALL, Type::BLOCK, true, 0 ) );
+    tileTypes.bind( "floor", new ClientTileType( sheet, "floor", "tile-floor", "floor", Type::FLOOR, Type::CLEAR, false, 100 ) );
+    tileTypes.bind( "wall", new ClientTileType( sheet, "wall", "tile-wall", "wall", Type::WALL, Type::BLOCK, false, 0 ) );
 
     const int playerId = 1;
     const int playerTeam = 0, playerNo = 0;
