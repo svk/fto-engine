@@ -919,12 +919,13 @@ void Socket::debugSetOutputSpy(bool spy_){
 }
 
 SExp *Cons::alistGet(const std::string& key) {
-    SExp *current = this;
+    Cons *current = this;
     while( current ) {
-        SExp *candidate = asProperCons( current->getcar() );
-        if( key == *asSymbol(candidate->getcar()) ) {
+        Cons *candidate = asProperCons( current->getcar() );
+        if( key == (std::string)*asSymbol(candidate->getcar()) ) {
             return candidate->getcdr();
         }
+        current = asCons( current->getcdr() );
     }
     return 0;
 }
