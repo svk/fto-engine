@@ -10,6 +10,8 @@
 
 #include "Sise.h"
 
+#include "TacClientAction.h"
+
 namespace Tac {
 
 const double MovementAnimationDuration = 0.15;
@@ -122,7 +124,7 @@ void ClientMap::darkenTile(int x, int y) {
     activeRegion.remove( x, y );
 }
 
-void ClientMap::brightenTile(int x, int y, ClientTileType * ctt) {
+void ClientMap::brightenTile(int x, int y, const ClientTileType * ctt) {
     // note that the dummy meaning of null works here even though
     // null is a valid value for memory -- you can never _brighten_
     // a square to become darkness
@@ -195,7 +197,7 @@ void ClientTile::setUnit(int id, int layer) {
     unitId[ layer ] = id;
 }
 
-ClientMap::ClientMap(int radius, TacSpritesheet& sheet, ScreenGrid& grid, FreetypeFace* risingTextFont) :
+ClientMap::ClientMap(int radius, TacSpritesheet& sheet, ScreenGrid& grid, FreetypeFace* risingTextFont, ResourceManager<ClientTileType>& tileTypes, ResourceManager<ClientUnitType>& unitTypes ) :
     risingTextFont ( risingTextFont ),
     radius ( radius ),
     tiles ( radius ),
@@ -205,7 +207,9 @@ ClientMap::ClientMap(int radius, TacSpritesheet& sheet, ScreenGrid& grid, Freety
     groundUnitBlitter (*this, sheet, 0),
     activeRegion (),
     grid ( grid ),
-    animRisingText ()
+    animRisingText (),
+    tileTypes ( tileTypes ),
+    unitTypes ( unitTypes )
 {
     for(int r=0;r<=radius;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
         int x, y;
@@ -401,7 +405,7 @@ void CMUnitBlitterGL::drawHex(int x, int y, sf::RenderWindow& win) {
 void CMLevelBlitterGL::drawHex(int x, int y, sf::RenderWindow& win) {
     const ClientTile& tile = cmap.getTile(x,y);
     bool isLit = tile.getActive();
-    ClientTileType *tt = tile.getTileType();
+    const ClientTileType *tt = tile.getTileType();
     using namespace std;
     if( !tt ) return;
     if( tile.getHighlight() == ClientTile::NONE && isLit ) {
@@ -447,14 +451,14 @@ ClientTileType::ClientTileType(const std::string& symbol, TacSpritesheet& sheet,
 {
 }
 
-void ClientMap::setTileType(int x, int y, ClientTileType* tt) {
+void ClientMap::setTileType(int x, int y, const ClientTileType* tt) {
     ClientTile& tile = tiles.get(x, y );
     if( &tile != &tiles.getDefault() ) {
         tiles.get(x,y).setTileType( tt );
     }
 }
 
-void ClientTile::setTileType(ClientTileType*tt) {
+void ClientTile::setTileType(const ClientTileType*tt) {
     if( tt->border ) {
         // borders are unknowable.
         tileType = 0;
@@ -485,7 +489,7 @@ void ClientMap::addMoveHighlight(int x, int y) {
 }
 
 bool ClientMap::isOpaque(int x,int y) const {
-    ClientTileType *tt = tiles.get(x,y).getTileType();
+    const ClientTileType *tt = tiles.get(x,y).getTileType();
     if( !tt ) return true;
     switch( tt->opacity ) {
         default:
@@ -659,6 +663,67 @@ void loadSoundsFromFile(const std::string& filename, ResourceManager<RandomizedS
         delete sound;
         sounds.bind( name, rse );
     }
+}
+
+bool ClientMap::handleNetworkInfo(const std::string& cmd, Sise::SExp* sexp) {
+    using namespace Sise;
+    // create CActions and send them to queueFromNetwork
+    // they might not be executed at once since user might be watching replay
+    Cons *args = asCons( sexp );
+    if( cmd == "fov-new-bright" ) {
+        BrightenCAction *act = new BrightenCAction(*this);
+        while( args ) {
+            Cons *xyn = asProperCons( args->getcar() );
+            if( xyn->nthtail(2) ) {
+                act->add( *asInt(xyn->nthcar(0)),
+                          *asInt(xyn->nthcar(1)),
+                          &tileTypes[ *asSymbol(xyn->nthcar(2)) ] );
+            } else {
+                act->add( *asInt(xyn->nthcar(0)),
+                          *asInt(xyn->nthcar(1)) );
+            }
+            args = asCons( args->getcdr() );
+        }
+        queueAction( act );
+    } else if( cmd == "fov-new-dark" ) {
+        DarkenCAction *act = new DarkenCAction(*this);
+        while( args ) {
+            Cons *xyn = asProperCons( args->getcar() );
+            act->add( *asInt(xyn->nthcar(0)),
+                      *asInt(xyn->nthcar(1)) );
+            args = asCons( args->getcdr() );
+        }
+        queueAction( act );
+    } else if( cmd == "unit-disappears" ) {
+        RemoveUnitCAction *act = new RemoveUnitCAction(
+            *this,
+            *asInt( args->nthcar(0) )
+        );
+        queueAction( act );
+    } else if( cmd == "unit-discovered" ) {
+        UnitDiscoverCAction *act = new UnitDiscoverCAction(
+            *this,
+            *asInt( args->nthcar(0) ),
+            unitTypes[ *asSymbol( args->nthcar(1) ) ],
+            *asInt( args->nthcar(2) ),
+            *asInt( args->nthcar(3) ),
+            *asInt( args->nthcar(4) ),
+            *asInt( args->nthcar(5) ),
+            *asInt( args->nthcar(6) )
+        );
+        queueAction( act );
+    } else if( cmd == "unit-moved" ) {
+        NormalMovementCAction *act = new NormalMovementCAction(
+            *this,
+            *asInt( args->nthcar(0) ),
+            *asInt( args->nthcar(1) ),
+            *asInt( args->nthcar(2) )
+        );
+        queueAction( act );
+    } else {
+        return false;
+    }
+    return true;
 }
 
 

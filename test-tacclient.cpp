@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
 
     int playerX = 3, playerY = 1; // keeping track of pretenses, this is "server side"
 
-    ClientMap cmap ( mapSize, sheet, grid, &risingTextFont );
+    ClientMap cmap ( mapSize, sheet, grid, &risingTextFont, tileTypes, unitTypes );
     cmap.adoptUnit( new ClientUnit( playerId, unitTypes["pc"], playerTeam, playerNo ) );
     cmap.placeUnitAt( playerId, playerX, playerY, 0 );
 

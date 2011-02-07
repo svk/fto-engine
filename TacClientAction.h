@@ -58,12 +58,11 @@ struct DarkenCAction : public ClientAction {
 
 struct BrightenCAction : public ClientAction {
     ClientMap& cmap;
-    ResourceManager<ClientTileType>& tileType;
 
     struct BrightenTile {
         int x, y;
-        ClientTileType *tt;
-        BrightenTile(int x, int y, ClientTileType* tt) :
+        const ClientTileType *tt;
+        BrightenTile(int x, int y, const ClientTileType* tt) :
             x ( x ) , y ( y ), tt ( tt )
         {}
     };
@@ -74,17 +73,17 @@ struct BrightenCAction : public ClientAction {
         brightenTiles.push_back( BrightenTile(x,y,0) );
     }
 
-    void add(int x, int y, const std::string& name) {
-        brightenTiles.push_back( BrightenTile(x,y,&tileType[name]) );
+    void add(int x, int y, const ClientTileType*tt) {
+        brightenTiles.push_back( BrightenTile(x,y,tt) );
     }
 
-    BrightenCAction(ClientMap& cmap, ResourceManager<ClientTileType>& tileType ) :
-        cmap( cmap ), tileType ( tileType ), brightenTiles ()
+    BrightenCAction(ClientMap& cmap) :
+        cmap( cmap ), brightenTiles ()
     {
     }
 
     BrightenCAction(const BrightenCAction& that ) :
-        cmap( that.cmap ), tileType ( that.tileType ), brightenTiles ( brightenTiles )
+        cmap( that.cmap ), brightenTiles ( brightenTiles )
     {
     }
 

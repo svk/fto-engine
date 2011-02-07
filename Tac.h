@@ -6,6 +6,8 @@
 #define INVALID_ID 0
 #define UNIT_LAYERS 1
 
+#include "Manager.h"
+
 namespace Tac {
 
 // this contains what both the server and the client need to know about
@@ -67,7 +69,6 @@ struct TileType {
              int);
     virtual ~TileType(void) {}
 };
-
 
 };
 

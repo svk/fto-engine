@@ -22,6 +22,8 @@
 
 #include "Tac.h"
 
+#include "Sise.h"
+
 namespace Tac {
 
 // for now we have universal mobility; this
@@ -219,7 +221,7 @@ class ClientTile {
         };
 
     private:
-        ClientTileType *tileType; // 0 for unknown
+        const ClientTileType *tileType; // 0 for unknown
         Highlight highlight;
         bool inactive; // show fog of war and don't trust completely
 
@@ -232,8 +234,8 @@ class ClientTile {
     public:
         ClientTile(void);
 
-        ClientTileType *getTileType(void) const { return tileType; }
-        void setTileType(ClientTileType*);
+        const ClientTileType *getTileType(void) const { return tileType; }
+        void setTileType(const ClientTileType*);
 
         void setHighlight( Highlight );
         Highlight getHighlight(void) const { return highlight; }
@@ -374,8 +376,11 @@ class ClientMap : public HexOpacityMap {
         bool shouldBlock(void) const;
         bool isInBlockingAnimation(void) const;
 
+        ResourceManager<ClientTileType>& tileTypes;
+        ResourceManager<ClientUnitType>& unitTypes;
+
     public:
-        ClientMap(int, TacSpritesheet&, ScreenGrid&, FreetypeFace*);
+        ClientMap(int, TacSpritesheet&, ScreenGrid&, FreetypeFace*, ResourceManager<ClientTileType>&, ResourceManager<ClientUnitType>&);
 
         ScreenGrid& getGrid(void) const { return grid; }
 
@@ -387,7 +392,7 @@ class ClientMap : public HexOpacityMap {
         CMUnitBlitterGL& getUnitBlitter(int);
 
         void darkenTile(int,int);
-        void brightenTile(int,int,ClientTileType*);
+        void brightenTile(int,int,const ClientTileType*);
         void updateActive(const HexTools::HexRegion&);
 
         void adoptUnit(ClientUnit*);
@@ -409,7 +414,7 @@ class ClientMap : public HexOpacityMap {
         ClientUnit* getUnitById(int);
         const ClientUnit* getUnitById(int) const;
 
-        void setTileType(int, int, ClientTileType*);
+        void setTileType(int, int, const ClientTileType*);
 
         void clearHighlights(void);
         void addMoveHighlight(int, int);
@@ -423,6 +428,8 @@ class ClientMap : public HexOpacityMap {
         bool getUnitScreenPositionById( int, double&, double& ) const;
         bool getUnitBaseScreenPositionById( int, double&, double& ) const;
         void drawEffects(sf::RenderWindow&, double, double);
+
+        bool handleNetworkInfo(const std::string&, Sise::SExp*);
 };
 
 typedef RandomVariantsCollection<sf::SoundBuffer> RandomizedSoundEffect;

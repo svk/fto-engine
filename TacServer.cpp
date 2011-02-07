@@ -376,6 +376,7 @@ void ServerPlayer::sendUnitDiscovered(const ServerUnit& unit) {
                        ( new Int( unitTeam ) ) // hack: no teams yet xx
                        ( new Int( x ) )
                        ( new Int( y ) )
+                       ( new Int( unit.getLayer() ) )
                  .make() );
 }
 
