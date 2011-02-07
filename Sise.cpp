@@ -480,7 +480,7 @@ Socket::Socket(RawSocket sock) :
 
 OutputBuffer::OutputBuffer(void) :
     capacity ( INITIAL_BUFFER_CAPACITY ),
-    data ( new char [ capacity + 1000 ] ),
+    data ( new char [ capacity ] ),
     spy ( false )
 {
     setp( data, data + capacity - 1 );
@@ -498,7 +498,8 @@ void OutputBuffer::consume(int n) {
 int OutputBuffer::overflow(int c) {
     using namespace std;
     int sz = pptr() - pbase();
-    if( sz == capacity ) {
+    cerr << "HRMMMR overflow?" << sz << " vs " << capacity << endl;
+    if( (sz+1) == capacity ) {
         capacity *= 2;
         char * nd = new char [ capacity ];
         memcpy( nd, data, sz );
