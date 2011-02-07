@@ -480,7 +480,7 @@ Socket::Socket(RawSocket sock) :
 
 OutputBuffer::OutputBuffer(void) :
     capacity ( INITIAL_BUFFER_CAPACITY ),
-    data ( new char [ capacity ] ),
+    data ( new char [ capacity + 1000 ] ),
     spy ( false )
 {
     setp( data, data + capacity - 1 );

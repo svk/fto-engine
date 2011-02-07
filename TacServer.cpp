@@ -430,19 +430,24 @@ bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, S
                         .make() ));
     } else if( cmd == "move-unit" ) {
         using namespace std;
-        cerr << "o hai" << endl;
         Cons *args = asProperCons( arg );
         if( !player ) return false;
-        cerr << "allswell" << endl;
         int unitId = *asInt( args->nthcar(0) );
         int dx = *asInt( args->nthcar(1) );
         int dy = *asInt( args->nthcar(2) );
         myMap.cmdMoveUnit( player, unitId, dx, dy );
     } else if( cmd == "test-spawn" ) {
         if( player ) {
+            ServerUnit *unit = player->getAnyControlledUnit();
+            player->sendMemories();
+            player->assumeAmnesia();
+            player->sendFovDelta();
             cli->delsend(( List()(new Symbol( "tactest" ))
-                                 (new Symbol( "nope" ))
+                                 (new Symbol( "welcome" ))
+                                 (new String( cli->getUsername() ))
+                                 (new Int( unit->getId() ) )
                             .make() ));
+            // no recovery of memories yet
             return true;
         }
         player = new ServerPlayer( server, myMap, myMap.generatePlayerId(), cli->getUsername() );
@@ -488,6 +493,34 @@ const HexTools::HexRegion& ServerPlayer::getTotalFov(void) {
 bool ServerPlayer::isReceivingFovFrom(const ServerUnit& unit) const {
     // no allies yet
     return unit.getController() == this;
+}
+
+void ServerPlayer::sendMemories(void) {
+    using namespace HexTools;
+    using namespace Sise;
+    using namespace SProto;
+    Cons *recall = 0;
+    int sz = memory.getSize();
+    for(int i=0;i<sz;i++) {
+        int x, y;
+        inflateHexCoordinate( i, x, y );
+        const TileType *tt = memory.get(i);
+        if( tt ) {
+            recall = new Cons( List()( new Int( x ) )
+                                     ( new Int( y ) )
+                                     ( new Symbol( tt->symbol ) )
+                               .make(),
+                               recall );
+        }
+    }
+    if( recall ) {
+        RemoteClient *rc = server.getConnectedUser( username );
+        if( !rc ) return;
+        rc->delsend( new Cons( new Symbol( "tac" ),
+                     new Cons( new Symbol( "terrain-discovered" ),
+                               recall )));
+        recall = 0;
+    }
 }
 
 void ServerPlayer::sendFovDelta(void) {

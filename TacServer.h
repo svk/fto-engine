@@ -71,6 +71,10 @@ class ServerPlayer {
     public:
         ServerPlayer(SProto::Server&, ServerMap&, int, const std::string&);
 
+        void assumeAmnesia(void) { transmittedActive.clear();}
+
+        ServerUnit* getAnyControlledUnit(void) { if(controlledUnits.size() > 0) return controlledUnits[0]; return 0; }
+
         const std::string& getUsername(void) const { return username; }
         int getId(void) const { return id; }
 
@@ -84,6 +88,7 @@ class ServerPlayer {
         bool isObserving(const ServerTile&) const;
         bool isReceivingFovFrom(const ServerUnit&) const;
 
+        void sendMemories(void);
         void sendFovDelta(void);
         void sendUnitDisappears(const ServerUnit&);
         void sendUnitDiscovered(const ServerUnit&);

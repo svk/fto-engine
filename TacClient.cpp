@@ -687,6 +687,16 @@ bool ClientMap::handleNetworkInfo(const std::string& cmd, Sise::SExp* sexp) {
             args = asCons( args->getcdr() );
         }
         queueAction( act );
+    } else if( cmd == "terrain-discovered" ) {
+        RevealTerrainCAction *act = new RevealTerrainCAction(*this);
+        while( args ) {
+            Cons *xyn = asProperCons( args->getcar() );
+            act->add( *asInt(xyn->nthcar(0)),
+                      *asInt(xyn->nthcar(1)),
+                      &tileTypes[ *asSymbol(xyn->nthcar(2)) ] );
+            args = asCons( args->getcdr() );
+        }
+        queueAction( act );
     } else if( cmd == "fov-new-dark" ) {
         DarkenCAction *act = new DarkenCAction(*this);
         while( args ) {

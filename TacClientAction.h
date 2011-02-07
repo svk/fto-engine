@@ -177,10 +177,10 @@ struct RevealTerrainCAction : public ClientAction {
 
     ClientMap& cmap;
 
-    typedef std::map< std::pair<int,int>, ClientTileType* > RevelationsType;
+    typedef std::map< std::pair<int,int>, const ClientTileType* > RevelationsType;
     RevelationsType revelations;
 
-    void add(int x, int y, ClientTileType* ctt) {
+    void add(int x, int y, const ClientTileType* ctt) {
         revelations[std::pair<int,int>(x,y)] = ctt;
     }
 
