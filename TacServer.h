@@ -92,6 +92,7 @@ class ServerPlayer {
         void sendFovDelta(void);
         void sendUnitDisappears(const ServerUnit&);
         void sendUnitDiscovered(const ServerUnit&);
+        void sendUnitDiscoveredAt(const ServerUnit&, const ServerTile&);
         void sendUnitMoved(const ServerUnit&, const ServerTile&, const ServerTile&);
 };
 

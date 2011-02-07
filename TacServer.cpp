@@ -339,15 +339,20 @@ void ServerMap::evtUnitMoved(ServerUnit& unit, ServerTile& sourceTile, ServerTil
     }
     for(std::map<int,ServerPlayer*>::iterator i = players.begin(); i != players.end(); i++) {
         ServerPlayer *player = i->second;
+        if( !player ) continue;
         bool observedSource = player->isObserving( sourceTile );
+        bool observedDest = player->isObserving( destinationTile );
         if( player->isReceivingFovFrom( unit ) ) {
             player->sendFovDelta();
         }
-        if( observedSource || player->isObserving( destinationTile ) ) {
+        if( observedSource || observedDest ) {
             if( !observedSource ) {
-                player->sendUnitDiscovered( unit );
+                player->sendUnitDiscoveredAt( unit, sourceTile );
             }
             player->sendUnitMoved( unit, sourceTile, destinationTile );
+            if( !observedDest ) {
+                player->sendUnitDisappears( unit );
+            }
         }
     }
 }
@@ -357,6 +362,7 @@ void ServerPlayer::sendUnitDisappears(const ServerUnit& unit) {
     using namespace SProto;
     using namespace Sise;
     RemoteClient *rc = server.getConnectedUser( username );
+    if( !rc ) return;
     rc->delsend( List()( new Symbol( "tac" ) )
                        ( new Symbol( "unit-disappears" ) )
                        ( new Int( unit.getId() ) )
@@ -364,6 +370,13 @@ void ServerPlayer::sendUnitDisappears(const ServerUnit& unit) {
 }
 
 void ServerPlayer::sendUnitDiscovered(const ServerUnit& unit) {
+    const ServerTile* tile = unit.getTile();
+    if( tile ) {
+        sendUnitDiscoveredAt( unit, *tile );
+    }
+}
+
+void ServerPlayer::sendUnitDiscoveredAt(const ServerUnit& unit, const ServerTile& tile) {
     using namespace std;
     using namespace SProto;
     using namespace Sise;
@@ -371,7 +384,8 @@ void ServerPlayer::sendUnitDiscovered(const ServerUnit& unit) {
     int unitTeam = 0;
     const ServerPlayer* controller = unit.getController();
     RemoteClient *rc = server.getConnectedUser( username );
-    unit.getTile()->getXY( x, y );
+    if( !rc ) return;
+    tile.getXY( x, y );
     rc->delsend( List()( new Symbol( "tac" ) )
                        ( new Symbol( "unit-discovered" ) )
                        ( new Int( unit.getId() ) )

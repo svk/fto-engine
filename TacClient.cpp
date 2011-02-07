@@ -164,6 +164,11 @@ bool ClientUnit::getPosition(int& ox, int& oy) const {
 
 void ClientMap::moveUnit(int id,int dx,int dy) {
     ClientUnit *unit = units[id];
+    if( !unit ) {
+        using namespace std;
+        cerr << "warning: moving unknown unit: " << id << " " << dx << " " << dy << endl;
+        return;
+    }
     int lx, ly, layer;
     assert( unit );
     if( !unit->getPosition( lx, ly ) ) {
