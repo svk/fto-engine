@@ -53,6 +53,7 @@ namespace SProto {
             void setAutoRegister(void) { autoregister = true; }
 
             void setCore(ClientCore*);
+            ClientCore *getCore(void){ return clientCore;}
 
             void identify( const std::string&, const std::string& );
 
