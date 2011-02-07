@@ -5,37 +5,127 @@
 #include "TacClient.h"
 #include "TacClientAction.h"
 
-void getVisionRegion(const HexTools::HexMap<bool>& smap, int x, int y, HexTools::HexFovRegion& region) {
-    using namespace HexTools;
-    using namespace Tac;
-    struct OpacMap : public HexOpacityMap {
-        const HexMap<bool>& smap;
+#include "sftools.h"
+#include "SProto.h"
 
-        OpacMap(const HexMap<bool>& smap) : smap(smap) {}
-        bool isOpaque(int x, int y) const {
-            return smap.get(x,y);
-        }
-    };
-    OpacMap smapopac ( smap );
-    HexFov fov ( smapopac, region, x, y );
-    fov.calculate();
-}
+using namespace Tac;
 
-void updateVision(HexTools::HexMap<bool>& smap, Tac::ClientMap& cmap, ResourceManager<Tac::ClientTileType>& tileTypes, int x, int y) {
-    using namespace HexTools;
-    using namespace Tac;
-    HexFovRegion region;
-    getVisionRegion( smap, x, y, region );
-    for(HexRegion::const_iterator i = region.begin(); i != region.end(); i++) {
-        using namespace std;
-        if( smap.get(i->first, i->second) ) {
-            cmap.setTileType( i->first, i->second, &tileTypes[ "wall" ] );
-        } else {
-            cmap.setTileType( i->first, i->second, &tileTypes[ "floor" ] );
+class TestTacTPScreen : public SfmlScreen,
+                        public SProto::ClientCore {
+    private:
+        const int mapSize;
+        FreetypeFace& font;
+        ScreenGrid& grid;
+        TacSpritesheet& sheet;
+        ResourceManager<RandomVariantsCollection<sf::SoundBuffer> >& soundBuffers;
+        ResourceManager<ClientTileType>& tileTypes;
+        ResourceManager<ClientUnitType>& unitTypes;
+
+        ClientMap cmap;
+        int unitId;
+
+        HexViewport vp;
+
+    public:
+        TestTacTPScreen(
+            const int mapSize,
+            FreetypeFace& font,
+            ScreenGrid& grid,
+            TacSpritesheet& sheet,
+            ResourceManager<RandomVariantsCollection<sf::SoundBuffer> >& soundBuffers,
+            ResourceManager<ClientTileType>& tileTypes,
+            ResourceManager<ClientUnitType>& unitTypes
+        ) : mapSize (mapSize),
+            font ( font ),
+            grid ( grid ),
+            sheet ( sheet ),
+            soundBuffers ( soundBuffers ),
+            tileTypes ( tileTypes ),
+            unitTypes ( unitTypes ),
+            cmap ( mapSize, sheet, grid, &font, tileTypes, unitTypes ),
+            unitId ( INVALID_ID ),
+            vp ( grid,  0, 0, 640, 480 )
+        {
         }
-    }
-    cmap.updateActive( region );
-}
+
+        void tick(double dt) {
+            cmap.animate( dt );
+            cmap.processActions();
+        }
+
+        void resize(int width, int height) {
+            vp.setRectangle( 0, 0, width, height );
+        }
+
+        void draw(sf::RenderWindow& win) {
+            double cx, cy;
+            if( unitId != INVALID_ID && cmap.getUnitBaseScreenPositionById( unitId, cx, cy ) ) {
+                vp.center( cx, cy );
+            }
+
+            win.Clear( sf::Color(0,0,0) );
+
+            glViewport( 0, 0, win.GetWidth(), win.GetHeight() );
+
+            glMatrixMode( GL_PROJECTION );
+            glLoadIdentity();
+
+            glMatrixMode( GL_MODELVIEW );
+            glLoadIdentity();
+            sf::Matrix3 myMatrix;
+
+            glEnable( GL_BLEND );
+            glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+
+            sheet.bindTexture();
+
+            glColor3f(1.0,1.0,1.0);
+
+            vp.drawGL( cmap.getLevelBlitter(), win, win.GetWidth(), win.GetHeight() );
+            vp.drawGL( cmap.getUnitBlitter(0), win, win.GetWidth(), win.GetHeight() );
+
+
+            vp.beginClip( win.GetWidth(), win.GetHeight() );
+            win.SetView(sf::View( sf::Vector2f(0,0), sf::Vector2f( ((double)win.GetWidth())/2.0, ((double)win.GetHeight())/2.0 ) ) );
+            using namespace std;
+
+            sf::View fxView( sf::Vector2f(0,0), sf::Vector2f( ((double)win.GetWidth())/2.0, ((double)win.GetHeight())/2.0 ) );
+            vp.translateToHex( 0, 0, win.GetWidth(), win.GetHeight(), fxView );
+            win.SetView( fxView );
+            cmap.drawEffects( win, 0, 0 );
+            win.SetView( win.GetDefaultView() );
+
+            vp.endClip();
+        }
+
+        bool handleKey(const sf::Event::KeyEvent& key) {
+            return false;
+        }
+
+        bool handleEvent(const sf::Event& ev) {
+            switch( ev.Type ) {
+                case sf::Event::KeyPressed:
+                    return handleKey( ev.Key );
+                default: break;
+            }
+            return false;
+        }
+
+        void handle( const std::string& name, Sise::SExp* arg ) {
+            using namespace Sise;
+            if( name == "tac" ) {
+                Cons *args = asProperCons( arg );
+                cmap.handleNetworkInfo( *asString( args->getcar() ),
+                                        args->getcdr() );
+            } else if( name == "tactest" ) {
+                Cons *args = asProperCons( arg );
+                const std::string& subcmd = *asString( args->nthcar(0) );
+                if( subcmd == "welcome" ) {
+                    unitId = *asInt( args->nthcar(2) );
+                }
+            }
+        }
+};
 
 int main(int argc, char *argv[]) {
     using namespace HexTools;
@@ -64,6 +154,8 @@ int main(int argc, char *argv[]) {
     tileTypes.bind( "border", new ClientTileType( "border", sheet, "tile-wall", "hard wall", Type::WALL, Type::BLOCK, true, 0 ) );
     tileTypes.bind( "floor", new ClientTileType( "floor", sheet, "tile-floor", "floor", Type::FLOOR, Type::CLEAR, false, 100 ) );
     tileTypes.bind( "wall", new ClientTileType( "wall", sheet, "tile-wall", "wall", Type::WALL, Type::BLOCK, false, 0 ) );
+
+#if 0
 
     const int playerId = 1;
     const int playerTeam = 0, playerNo = 0;
@@ -231,7 +323,6 @@ int main(int argc, char *argv[]) {
 
         vp.beginClip( win.GetWidth(), win.GetHeight() );
         win.SetView(sf::View( sf::Vector2f(0,0), sf::Vector2f( ((double)win.GetWidth())/2.0, ((double)win.GetHeight())/2.0 ) ) );
-        using namespace std;
 
         sf::View fxView( sf::Vector2f(0,0), sf::Vector2f( ((double)win.GetWidth())/2.0, ((double)win.GetHeight())/2.0 ) );
         vp.translateToHex( 0, 0, win.GetWidth(), win.GetHeight(), fxView );
@@ -243,6 +334,7 @@ int main(int argc, char *argv[]) {
 
         win.Display();
     }
+#endif
     
     return 0;
 }
