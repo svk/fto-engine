@@ -152,7 +152,7 @@ void ServerUnit::setController(ServerPlayer* player) {
 ServerTile* ServerMap::getRandomTileFor(const ServerUnit* unit) {
     int tries = 1000;
     int mapIndexableSize = tiles.getSize();
-    MTRand prng;
+    MTRand_int32 prng;
     
     while( tries-- > 0 ) {
         int guess = abs(prng()) % mapIndexableSize;
@@ -201,7 +201,6 @@ void ServerUnit::gatherFov( const ServerMap& smap, HexTools::HexFovRegion& regio
         int x, y;
         tile->getXY( x, y );
         using namespace std;
-        cerr << "calcing fov around " << x << " " << y << endl;
         HexTools::HexFov fov ( smap, region, x, y );
         fov.calculate();
     }
@@ -550,13 +549,10 @@ void ServerPlayer::sendFovDelta(void) {
     }
 
     for(HexRegion::const_iterator i = currentFov.begin(); i != currentFov.end(); i++) {
-        cerr << "now bright: " << i->first << " " << i->second << " ";
         if( !transmittedActive.contains( i->first, i->second ) ) {
             const ServerTile& tile = smap.getTile( i->first, i->second );
             const TileType *tt = &tile.getTileType();
             const TileType*& mem = memory.get( i->first, i->second );
-
-            cerr << "sending." << endl;
 
             for(int j=0;j<UNIT_LAYERS;j++) {
                 const ServerUnit * u = tile.getUnit(j);
@@ -566,7 +562,6 @@ void ServerPlayer::sendFovDelta(void) {
             }
 
             if( tt != mem ) {
-                cerr << tt->symbol << endl;
                 newlyBright = new Cons( List()( new Int( i->first ) )
                                               ( new Int( i->second ) )
                                               ( new Symbol( tt->symbol ) )

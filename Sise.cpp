@@ -498,7 +498,6 @@ void OutputBuffer::consume(int n) {
 int OutputBuffer::overflow(int c) {
     using namespace std;
     int sz = pptr() - pbase();
-    cerr << "HRMMMR overflow?" << sz << " vs " << capacity << endl;
     if( (sz+1) == capacity ) {
         capacity *= 2;
         char * nd = new char [ capacity ];
