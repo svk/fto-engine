@@ -116,6 +116,24 @@ void ClientTile::setInactive(void) {
     clearUnits();
 }
 
+void ClientMap::darkenTile(int x, int y) {
+    ClientTile& tile = tiles.get(x,y);
+    tile.setInactive();
+    activeRegion.remove( x, y );
+}
+
+void ClientMap::brightenTile(int x, int y, ClientTileType * ctt) {
+    // note that the dummy meaning of null works here even though
+    // null is a valid value for memory -- you can never _brighten_
+    // a square to become darkness
+    ClientTile& tile = tiles.get(x,y);
+    tile.setActive();
+    if( ctt ) {
+        tile.setTileType( ctt );
+    }
+    activeRegion.add( x, y );
+}
+
 void ClientMap::updateActive(const HexTools::HexRegion& visible) {
     using namespace std;
     for(HexRegion::const_iterator i = activeRegion.begin(); i != activeRegion.end(); i++) {
@@ -416,14 +434,14 @@ CMUnitBlitterGL& ClientMap::getUnitBlitter(int layer) {
     throw std::logic_error("no such layer");
 }
 
-ClientUnitType::ClientUnitType(TacSpritesheet& sheet, const std::string& alias, const std::string& name) :
-    UnitType ( name ),
+ClientUnitType::ClientUnitType(const std::string& symbol, TacSpritesheet& sheet, const std::string& alias, const std::string& name) :
+    UnitType ( symbol, name ),
     spriteNormal ( sheet.makeSprite( SpriteId( alias, SpriteId::NORMAL ) ) )
 {
 }
 
-ClientTileType::ClientTileType(TacSpritesheet& sheet, const std::string& alias, const std::string& name, Type::Mobility mobility, Type::Opacity opacity, bool border, int baseCost ) :
-    TileType( name, mobility, opacity, border, baseCost ),
+ClientTileType::ClientTileType(const std::string& symbol, TacSpritesheet& sheet, const std::string& alias, const std::string& name, Type::Mobility mobility, Type::Opacity opacity, bool border, int baseCost ) :
+    TileType( symbol, name, mobility, opacity, border, baseCost ),
     spriteNormal ( sheet.makeSprite( SpriteId( alias, SpriteId::NORMAL ) ) ),
     spriteGrayscale ( sheet.makeSprite( SpriteId( alias, SpriteId::GRAYSCALE ) ) )
 {

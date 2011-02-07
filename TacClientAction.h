@@ -31,6 +31,71 @@ struct NormalMovementCAction : public ClientAction {
     bool isCosmetic(void) const { return false; }
 };
 
+struct DarkenCAction : public ClientAction {
+    ClientMap& cmap;
+    std::vector<std::pair<int,int> > darkenTiles;
+
+    void add(int x, int y) {
+        darkenTiles.push_back( std::pair<int,int>( x, y ) );
+    }
+
+    DarkenCAction(ClientMap& cmap) :
+        cmap( cmap ), darkenTiles ()
+    {
+    }
+
+    DarkenCAction(const DarkenCAction& that ) :
+        cmap( that.cmap ), darkenTiles ( darkenTiles )
+    {
+    }
+
+    ClientAction* duplicate(void) const { return new DarkenCAction( *this ); }
+
+    void operator()(void) const;
+
+    bool isCosmetic(void) const { return false; }
+};
+
+struct BrightenCAction : public ClientAction {
+    ClientMap& cmap;
+    ResourceManager<ClientTileType>& tileType;
+
+    struct BrightenTile {
+        int x, y;
+        ClientTileType *tt;
+        BrightenTile(int x, int y, ClientTileType* tt) :
+            x ( x ) , y ( y ), tt ( tt )
+        {}
+    };
+
+    std::list<BrightenTile> brightenTiles;
+
+    void add(int x, int y) {
+        brightenTiles.push_back( BrightenTile(x,y,0) );
+    }
+
+    void add(int x, int y, const std::string& name) {
+        brightenTiles.push_back( BrightenTile(x,y,&tileType[name]) );
+    }
+
+    BrightenCAction(ClientMap& cmap, ResourceManager<ClientTileType>& tileType ) :
+        cmap( cmap ), tileType ( tileType ), brightenTiles ()
+    {
+    }
+
+    BrightenCAction(const BrightenCAction& that ) :
+        cmap( that.cmap ), tileType ( that.tileType ), brightenTiles ( brightenTiles )
+    {
+    }
+
+    ClientAction* duplicate(void) const { return new BrightenCAction( *this ); }
+
+    void operator()(void) const;
+
+    bool isCosmetic(void) const { return false; }
+};
+
+
 struct SetActiveRegionCAction : public ClientAction {
     // as noted below, this needn't actually be so large
     ClientMap& cmap;

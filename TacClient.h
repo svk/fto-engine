@@ -134,13 +134,14 @@ class LineCurveAnimation : public CurveAnimation {
 struct ClientUnitType : public UnitType {
     sf::Sprite spriteNormal;
 
-    ClientUnitType(TacSpritesheet&, const std::string&, const std::string&);
+    ClientUnitType(const std::string&, TacSpritesheet&, const std::string&, const std::string&);
 };
 
 struct ClientTileType : public TileType {
     sf::Sprite spriteNormal, spriteGrayscale;
 
-    ClientTileType(TacSpritesheet&,
+    ClientTileType(const std::string&, // symbol
+                   TacSpritesheet&,
                    const std::string&, // sprite alias
                    const std::string&, // name
                    Type::Mobility,
@@ -385,6 +386,8 @@ class ClientMap : public HexOpacityMap {
         CMLevelBlitterGL& getLevelBlitter(void) { return levelBlitter; }
         CMUnitBlitterGL& getUnitBlitter(int);
 
+        void darkenTile(int,int);
+        void brightenTile(int,int,ClientTileType*);
         void updateActive(const HexTools::HexRegion&);
 
         void adoptUnit(ClientUnit*);

@@ -2,6 +2,18 @@
 
 namespace Tac {
 
+void DarkenCAction::operator()(void) const {
+    for(std::vector<std::pair<int,int> >::const_iterator i = darkenTiles.begin(); i != darkenTiles.end(); i++) {
+        cmap.darkenTile( i->first, i->second );
+    }
+}
+
+void BrightenCAction::operator()(void) const {
+    for(std::list<BrightenTile>::const_iterator i = brightenTiles.begin(); i != brightenTiles.end(); i++) {
+        cmap.brightenTile( i->x, i->y, i->tt );
+    }
+}
+
 void PlaySoundCAction::operator()(void) const {
     cmap.playSound( &buffer );
 }

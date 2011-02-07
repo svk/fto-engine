@@ -58,12 +58,12 @@ int main(int argc, char *argv[]) {
     ResourceManager<ClientTileType> tileTypes;
     ResourceManager<ClientUnitType> unitTypes;
 
-    unitTypes.bind( "player", new ClientUnitType( sheet, "unit-smiley", "Player" ) );
-    unitTypes.bind( "troll", new ClientUnitType( sheet, "unit-troll", "Troll" ) );
+    unitTypes.bind( "pc", new ClientUnitType( "pc", sheet, "unit-smiley", "Player" ) );
+    unitTypes.bind( "troll", new ClientUnitType( "troll", sheet, "unit-troll", "Troll" ) );
 
-    tileTypes.bind( "border", new ClientTileType( sheet, "border", "tile-wall", "hard wall", Type::WALL, Type::BLOCK, true, 0 ) );
-    tileTypes.bind( "floor", new ClientTileType( sheet, "floor", "tile-floor", "floor", Type::FLOOR, Type::CLEAR, false, 100 ) );
-    tileTypes.bind( "wall", new ClientTileType( sheet, "wall", "tile-wall", "wall", Type::WALL, Type::BLOCK, false, 0 ) );
+    tileTypes.bind( "border", new ClientTileType( "border", sheet, "tile-wall", "hard wall", Type::WALL, Type::BLOCK, true, 0 ) );
+    tileTypes.bind( "floor", new ClientTileType( "floor", sheet, "tile-floor", "floor", Type::FLOOR, Type::CLEAR, false, 100 ) );
+    tileTypes.bind( "wall", new ClientTileType( "wall", sheet, "tile-wall", "wall", Type::WALL, Type::BLOCK, false, 0 ) );
 
     const int playerId = 1;
     const int playerTeam = 0, playerNo = 0;
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
     int playerX = 3, playerY = 1; // keeping track of pretenses, this is "server side"
 
     ClientMap cmap ( mapSize, sheet, grid, &risingTextFont );
-    cmap.adoptUnit( new ClientUnit( playerId, unitTypes["player"], playerTeam, playerNo ) );
+    cmap.adoptUnit( new ClientUnit( playerId, unitTypes["pc"], playerTeam, playerNo ) );
     cmap.placeUnitAt( playerId, playerX, playerY, 0 );
 
 
