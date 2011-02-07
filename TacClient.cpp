@@ -129,7 +129,6 @@ void ClientMap::brightenTile(int x, int y, const ClientTileType * ctt) {
     // null is a valid value for memory -- you can never _brighten_
     // a square to become darkness
     using namespace std;
-    cerr << "brighten " << x << " " << y << " " << ctt << endl;
     ClientTile& tile = tiles.get(x,y);
     tile.setActive();
     if( ctt ) {
