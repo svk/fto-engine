@@ -473,7 +473,8 @@ Socket::Socket(RawSocket sock) :
     instream (),
     outstream ( &outbuffer ),
     errorstate ( false ),
-    gcShutdownMode ( false )
+    gcShutdownMode ( false ),
+    doSpyInput ( false )
 {
 }
 
@@ -557,6 +558,9 @@ void Socket::receive(void) {
     if( rv <= 0 ) {
         errorstate = true;
     } else if( !gcShutdownMode ) for(int i=0;i<rv;i++) {
+        if( doSpyInput ) {
+            cerr << buffer[i];
+        }
         instream.feed( buffer[i] );
     }
 }
@@ -912,6 +916,10 @@ void removeAllFilesWithExtension( const std::string& dirname, const std::string&
 
 void OutputBuffer::debugSetSpy(bool spy_) {
     spy = spy_;
+}
+
+void Socket::debugSetInputSpy(bool spy_){
+    doSpyInput = spy_;
 }
 
 void Socket::debugSetOutputSpy(bool spy_){

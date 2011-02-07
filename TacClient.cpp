@@ -128,6 +128,8 @@ void ClientMap::brightenTile(int x, int y, const ClientTileType * ctt) {
     // note that the dummy meaning of null works here even though
     // null is a valid value for memory -- you can never _brighten_
     // a square to become darkness
+    using namespace std;
+    cerr << "brighten " << x << " " << y << " " << ctt << endl;
     ClientTile& tile = tiles.get(x,y);
     tile.setActive();
     if( ctt ) {
@@ -713,13 +715,20 @@ bool ClientMap::handleNetworkInfo(const std::string& cmd, Sise::SExp* sexp) {
         );
         queueAction( act );
     } else if( cmd == "unit-moved" ) {
-        NormalMovementCAction *act = new NormalMovementCAction(
+        MovementAnimationCAction *act1 = new MovementAnimationCAction (
             *this,
             *asInt( args->nthcar(0) ),
             *asInt( args->nthcar(1) ),
             *asInt( args->nthcar(2) )
         );
-        queueAction( act );
+        NormalMovementCAction *act2 = new NormalMovementCAction(
+            *this,
+            *asInt( args->nthcar(0) ),
+            *asInt( args->nthcar(1) ),
+            *asInt( args->nthcar(2) )
+        );
+        queueAction( act1 );
+        queueAction( act2 );
     } else {
         return false;
     }

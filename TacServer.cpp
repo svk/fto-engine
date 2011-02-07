@@ -161,9 +161,12 @@ ServerTile* ServerMap::getRandomTileFor(const ServerUnit* unit) {
         if( tile.mayEnter( unit ) ) {
             int x, y;
             tile.getXY( x, y );
+            using namespace std;
+            cerr << "chose random tile " << x << " " << y << endl;
             return &tiles.get( guess );
         }
     }
+
 
     return 0;
 }
@@ -197,13 +200,15 @@ void ServerUnit::gatherFov( const ServerMap& smap, HexTools::HexFovRegion& regio
     if( tile ) {
         int x, y;
         tile->getXY( x, y );
+        using namespace std;
+        cerr << "calcing fov around " << x << " " << y << endl;
         HexTools::HexFov fov ( smap, region, x, y );
         fov.calculate();
     }
 }
 
 bool ServerMap::isOpaque(int x, int y) const {
-    return tiles.get(x,y).getTileType().opacity == Type::CLEAR;
+    return tiles.get(x,y).getTileType().opacity == Type::BLOCK;
 }
 
 void ServerPlayer::gatherIndividualFov(const ServerMap& smap) {
@@ -412,6 +417,8 @@ TacTestServer::TacTestServer(SProto::Server& server, int radius) :
 bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, Sise::SExp *arg) {
     using namespace SProto;
     using namespace Sise;
+    using namespace std;
+    cerr << "handling " << cmd << " from " << cli->getUsername() << endl;
     ServerPlayer *player = 0;
     if( cli->hasUsername() ) {
         player = myMap.getPlayerByUsername( cli->getUsername() );
@@ -422,21 +429,29 @@ bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, S
                               (new String( cli->getUsername() ))
                         .make() ));
     } else if( cmd == "move-unit" ) {
+        using namespace std;
+        cerr << "o hai" << endl;
         Cons *args = asProperCons( arg );
         if( !player ) return false;
+        cerr << "allswell" << endl;
         int unitId = *asInt( args->nthcar(0) );
         int dx = *asInt( args->nthcar(1) );
         int dy = *asInt( args->nthcar(2) );
         myMap.cmdMoveUnit( player, unitId, dx, dy );
     } else if( cmd == "test-spawn" ) {
-        if( player ) return false;
+        if( player ) {
+            cli->delsend(( List()(new Symbol( "tactest" ))
+                                 (new Symbol( "nope" ))
+                            .make() ));
+            return true;
+        }
         player = new ServerPlayer( server, myMap, myMap.generatePlayerId(), cli->getUsername() );
         ServerUnit *unit = new ServerUnit( myMap.generateUnitId(), pcType );
         ServerTile *tile = myMap.getRandomTileFor( unit );
         if( !tile ) {
             delete player;
             delete unit;
-            return false;
+            return true;
         }
         myMap.adoptPlayer( player );
         myMap.adoptUnit( unit );
@@ -490,6 +505,8 @@ void ServerPlayer::sendFovDelta(void) {
 
     Cons *newlyDark = 0, *newlyBright = 0;
 
+    using namespace std;
+
     for(HexRegion::const_iterator i = transmittedActive.begin(); i != transmittedActive.end(); i++) {
         if( !currentFov.contains( i->first, i->second ) ) {
             newlyDark = new Cons( List()( new Int( i->first ) )
@@ -500,10 +517,13 @@ void ServerPlayer::sendFovDelta(void) {
     }
 
     for(HexRegion::const_iterator i = currentFov.begin(); i != currentFov.end(); i++) {
+        cerr << "now bright: " << i->first << " " << i->second << " ";
         if( !transmittedActive.contains( i->first, i->second ) ) {
             const ServerTile& tile = smap.getTile( i->first, i->second );
             const TileType *tt = &tile.getTileType();
             const TileType*& mem = memory.get( i->first, i->second );
+
+            cerr << "sending." << endl;
 
             for(int j=0;j<UNIT_LAYERS;j++) {
                 const ServerUnit * u = tile.getUnit(j);
@@ -513,6 +533,7 @@ void ServerPlayer::sendFovDelta(void) {
             }
 
             if( tt != mem ) {
+                cerr << tt->symbol << endl;
                 newlyBright = new Cons( List()( new Int( i->first ) )
                                               ( new Int( i->second ) )
                                               ( new Symbol( tt->symbol ) )

@@ -33,6 +33,8 @@ class TestTacTPScreen : public SfmlScreen,
 
         HexViewport vp;
 
+        SProto::Client& client;
+
     public:
         TestTacTPScreen(
             const int mapSize,
@@ -41,7 +43,8 @@ class TestTacTPScreen : public SfmlScreen,
             TacSpritesheet& sheet,
             ResourceManager<RandomVariantsCollection<sf::SoundBuffer> >& soundBuffers,
             ResourceManager<ClientTileType>& tileTypes,
-            ResourceManager<ClientUnitType>& unitTypes
+            ResourceManager<ClientUnitType>& unitTypes,
+            SProto::Client& client
         ) : mapSize (mapSize),
             font ( font ),
             grid ( grid ),
@@ -51,7 +54,8 @@ class TestTacTPScreen : public SfmlScreen,
             unitTypes ( unitTypes ),
             cmap ( mapSize, sheet, grid, &font, tileTypes, unitTypes ),
             unitId ( INVALID_ID ),
-            vp ( grid,  0, 0, 640, 480 )
+            vp ( grid,  0, 0, 640, 480 ),
+            client ( client )
         {
         }
 
@@ -67,6 +71,7 @@ class TestTacTPScreen : public SfmlScreen,
         void draw(sf::RenderWindow& win) {
             double cx, cy;
             if( unitId != INVALID_ID && cmap.getUnitBaseScreenPositionById( unitId, cx, cy ) ) {
+                using namespace std;
                 vp.center( cx, cy );
             }
 
@@ -106,6 +111,26 @@ class TestTacTPScreen : public SfmlScreen,
         }
 
         bool handleKey(const sf::Event::KeyEvent& key) {
+            using namespace Sise;
+            bool doMove = true;
+            int dx, dy;
+            switch( key.Code ) {
+                case sf::Key::Q: dx = -3; dy = 1; break;
+                case sf::Key::W: dx = 0; dy = 2; break;
+                case sf::Key::E: dx = 3; dy = 1; break;
+                case sf::Key::A: dx = -3; dy = -1; break;
+                case sf::Key::S: dx = 0; dy = -2; break;
+                case sf::Key::D: dx = 3; dy = -1; break;
+                default: doMove = false; break;
+            }
+            if( doMove && unitId != INVALID_ID ) {
+                client.delsend( List()( new Symbol( "tactest" ) )
+                                      ( new Symbol( "move-unit" ) )
+                                      ( new Int( unitId ) )
+                                      ( new Int( dx ) )
+                                      ( new Int( dy ) )
+                                .make() );
+            }
             return false;
         }
 
@@ -122,12 +147,15 @@ class TestTacTPScreen : public SfmlScreen,
             using namespace Sise;
             if( name == "tac" ) {
                 Cons *args = asProperCons( arg );
-                cmap.handleNetworkInfo( *asString( args->getcar() ),
+                using namespace std;
+                outputSExp( args, cerr );
+                cmap.handleNetworkInfo( *asSymbol( args->getcar() ),
                                         args->getcdr() );
             } else if( name == "tactest" ) {
                 Cons *args = asProperCons( arg );
-                const std::string& subcmd = *asString( args->nthcar(0) );
+                const std::string& subcmd = *asSymbol( args->nthcar(0) );
                 if( subcmd == "welcome" ) {
+                    using namespace std;
                     unitId = *asInt( args->nthcar(2) );
                 }
             }
@@ -149,6 +177,7 @@ class TestTacGuient : public SfmlApplication {
         {
             using namespace Sise;
 
+            client.debugSetInputSpy( true );
             client.debugSetOutputSpy( true );
             manager.adopt( &client );
             client.identify( username, password );
@@ -177,6 +206,7 @@ class TestTacGuient : public SfmlApplication {
 
         void setTTScreen(TestTacTPScreen* tttpsscreen_) {
             tttpsscreen = tttpsscreen_;
+            client.setCore( tttpsscreen );
             setScreen( tttpsscreen );
         }
 
@@ -252,7 +282,7 @@ int main(int argc, char *argv[]) {
     tileTypes.bind( "floor", new ClientTileType( "floor", sheet, "tile-floor", "floor", Type::FLOOR, Type::CLEAR, false, 100 ) );
     tileTypes.bind( "wall", new ClientTileType( "wall", sheet, "tile-wall", "wall", Type::WALL, Type::BLOCK, false, 0 ) );
 
-    TestTacTPScreen ttScreen ( mapSize, risingTextFont, grid, sheet, soundBuffers, tileTypes, unitTypes );
+    TestTacTPScreen ttScreen ( mapSize, risingTextFont, grid, sheet, soundBuffers, tileTypes, unitTypes, *client );
 
     app.setTTScreen( &ttScreen );
     app.run();

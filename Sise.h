@@ -326,6 +326,7 @@ namespace Sise {
             bool errorstate;
             bool gcShutdownMode;
 
+            bool doSpyInput;
 
         public:
             Socket(RawSocket);
@@ -346,6 +347,7 @@ namespace Sise {
             std::ostream& out(void);
             SExpStreamParser& in(void);
 
+            void debugSetInputSpy(bool);
             void debugSetOutputSpy(bool);
     };
 
