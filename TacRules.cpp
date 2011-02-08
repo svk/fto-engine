@@ -93,7 +93,10 @@ void ActivityPoints::spendMovementEnergy(int cost) {
             }
             if( movementEnergy >= cost ) {
                 movementEnergy -= cost;
-            } else throw std::logic_error( "could not spend movement energy" );
+            } else {
+                using namespace std;
+                cerr << "warning: overspending movement energy" << endl;
+            }
         }
     }
 }
@@ -106,7 +109,8 @@ void ActivityPoints::spendActionPoint(int cost) {
         actionPoints = 0;
         flexPoints -= cost;
     } else {
-        throw std::logic_error( "could not spend action points" );
+        using namespace std;
+        cerr << "warning: overspending action points" << endl;
     }
 }
 
