@@ -414,7 +414,7 @@ void CMLevelBlitterGL::drawHex(int x, int y, sf::RenderWindow& win) {
     const ClientTileType *tt = tile.getTileType();
     using namespace std;
     if( !tt ) return;
-    if( tile.getHighlight() == ClientTile::NONE && isLit ) {
+    if( isLit ) {
         putSprite( tt->spriteNormal );
     } else {
         putSprite( tt->spriteGrayscale );
@@ -427,11 +427,9 @@ void CMLevelBlitterGL::drawHex(int x, int y, sf::RenderWindow& win) {
     } else switch( tile.getHighlight() ) {
         case ClientTile::NONE: break;
         case ClientTile::OUTER_MOVE_ZONE:
-            cerr << "movezone outer " << x << " " << y << " " << endl;
             putSprite( spriteOuterMoveZone );
             break;
         case ClientTile::MOVE_ZONE:
-            cerr << "movezone " << x << " " << y << " " << endl;
             putSprite( spriteMoveZone );
             break;
         case ClientTile::ATTACK_ZONE:
@@ -485,11 +483,15 @@ void ClientMap::clearHighlights(void) {
     for(HexRegion::const_iterator i = moveHighlightZone.begin(); i != moveHighlightZone.end(); i++) {
         tiles.get( i->first, i->second ).setHighlight( ClientTile::NONE );
     }
+    for(HexRegion::const_iterator i = outerMoveHighlightZone.begin(); i != outerMoveHighlightZone.end(); i++) {
+        tiles.get( i->first, i->second ).setHighlight( ClientTile::NONE );
+    }
     for(HexRegion::const_iterator i = attackHighlightZone.begin(); i != attackHighlightZone.end(); i++) {
         tiles.get( i->first, i->second ).setHighlight( ClientTile::NONE );
     }
     moveHighlightZone.clear();
     attackHighlightZone.clear();
+    outerMoveHighlightZone.clear();
 }
 
 void ClientMap::addAttackHighlight(int x, int y) {
@@ -498,8 +500,9 @@ void ClientMap::addAttackHighlight(int x, int y) {
 }
 
 void ClientMap::addOuterMoveHighlight(int x, int y) {
+    using namespace std;
     tiles.get( x, y ).setHighlight( ClientTile::OUTER_MOVE_ZONE );
-    moveHighlightZone.add( x, y );
+    outerMoveHighlightZone.add( x, y );
 }
 
 void ClientMap::addMoveHighlight(int x, int y) {

@@ -368,7 +368,7 @@ class ClientMap : public HexOpacityMap,
         CMLevelBlitterGL levelBlitter;
         CMUnitBlitterGL groundUnitBlitter;
 
-        HexRegion moveHighlightZone, attackHighlightZone;
+        HexRegion moveHighlightZone, attackHighlightZone, outerMoveHighlightZone;
 
         HexRegion activeRegion;
 

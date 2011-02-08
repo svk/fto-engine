@@ -90,13 +90,12 @@ class TestTacTPScreen : public SfmlScreen,
                     OuterMove(struct ClientMap& cmap) : cmap(cmap) {}
                     void add(int x, int y) { cmap.addOuterMoveHighlight( x, y ); };
                 };
-                CoreMove coreMove( cmap ), outerMove( cmap );
+                CoreMove coreMove( cmap );
+                OuterMove outerMove( cmap );
                 int x, y;
                 cmap.clearHighlights();
                 if( unit->getPosition( x, y ) ) {
                     using namespace std;
-                    cerr << "finding " << acp.getPotentialMovementEnergy() << endl;
-                    cerr << "finding " << acp.getImmediateMovementEnergy() << endl;
                     findAllAccessible( unit->getUnitType(), cmap, x, y, acp.getPotentialMovementEnergy(), outerMove );
                     findAllAccessible( unit->getUnitType(), cmap, x, y, acp.getImmediateMovementEnergy(), coreMove );
                 }
@@ -302,7 +301,7 @@ int main(int argc, char *argv[]) {
     ResourceManager<ClientTileType> tileTypes;
     ResourceManager<ClientUnitType> unitTypes;
 
-    unitTypes.bind( "pc", new ClientUnitType( "pc", sheet, "unit-smiley", "Player", 500 ) );
+    unitTypes.bind( "pc", new ClientUnitType( "pc", sheet, "unit-smiley", "Player", 200 ) );
     unitTypes.bind( "troll", new ClientUnitType( "troll", sheet, "unit-troll", "Troll", 500 ) );
 
     tileTypes.bind( "border", new ClientTileType( "border", sheet, "tile-wall", "hard wall", Type::WALL, Type::BLOCK, true, 0 ) );

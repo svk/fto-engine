@@ -267,12 +267,9 @@ class SparseHexMap {
         const T& get(int x, int y) const {
             typename std::map<HexCoordinate,T>::const_iterator i = data.find( HexCoordinate(x,y) );
             using namespace std;
-            cerr << "c[]: " << x << " " << y << ": ";
             if( i == data.end() ) {
-                cerr << "not found, " << defaultValue << endl;
                 return defaultValue;
             }
-            cerr << "found, " << i->second << endl;
             return i->second;
         }
 };
