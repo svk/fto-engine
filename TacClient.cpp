@@ -444,8 +444,8 @@ CMUnitBlitterGL& ClientMap::getUnitBlitter(int layer) {
     throw std::logic_error("no such layer");
 }
 
-ClientUnitType::ClientUnitType(const std::string& symbol, TacSpritesheet& sheet, const std::string& alias, const std::string& name) :
-    UnitType ( symbol, name ),
+ClientUnitType::ClientUnitType(const std::string& symbol, TacSpritesheet& sheet, const std::string& alias, const std::string& name, int speed) :
+    UnitType ( symbol, name, speed ),
     spriteNormal ( sheet.makeSprite( SpriteId( alias, SpriteId::NORMAL ) ) )
 {
 }

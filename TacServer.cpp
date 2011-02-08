@@ -420,8 +420,8 @@ TacTestServer::TacTestServer(SProto::Server& server, int radius) :
     borderType( "border", "impassable wall", Type::WALL, Type::BLOCK, true, 0 ),
     wallType ( "wall", "wall", Type::WALL, Type::BLOCK, false, 0 ),
     floorType ( "floor", "floor", Type::FLOOR, Type::CLEAR, false, 100 ),
-    pcType ( "pc", "Player" ),
-    trollType ( "troll", "Troll" ),
+    pcType ( "pc", "Player", 500 ),
+    trollType ( "troll", "Troll", 500 ),
     myMap ( radius, &borderType )
 {
     trivialLevelGenerator( myMap, &wallType, &floorType, 0.4 );

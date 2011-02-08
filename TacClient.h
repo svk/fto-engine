@@ -136,7 +136,7 @@ class LineCurveAnimation : public CurveAnimation {
 struct ClientUnitType : public UnitType {
     sf::Sprite spriteNormal;
 
-    ClientUnitType(const std::string&, TacSpritesheet&, const std::string&, const std::string&);
+    ClientUnitType(const std::string&, TacSpritesheet&, const std::string&, const std::string&, int);
 };
 
 struct ClientTileType : public TileType {

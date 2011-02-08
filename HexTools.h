@@ -13,6 +13,8 @@
 
 #include <set>
 
+#include <map>
+
 namespace HexTools {
 
 int hexCircleSize(int);
@@ -217,6 +219,46 @@ class HexTorusMap {
         const T& get(int x, int y) const {
             toCore(x,y);
             return submap.get(x,y);
+        }
+};
+
+template<class T>
+class SparseHexMap {
+    private:
+        const T defaultValue;
+        std::map<HexCoordinate,T> data;
+    
+    public:
+        explicit SparseHexMap(const T& defaultValue) :
+            defaultValue( defaultValue ),
+            data ()
+        {
+        }
+
+        SparseHexMap(const SparseHexMap& h) :
+            defaultValue ( h.defaultValue ),
+            data ( h.data )
+        {
+        }
+
+        const SparseHexMap<T>& operator=(const SparseHexMap<T>& that) {
+            using namespace std;
+            if( this != &that ) {
+                defaultValue = that.defaultValue;
+                data = that.data;
+            }
+            return *this;
+        }
+
+        ~SparseHexMap(void) {
+        }
+
+        T& get(int x, int y) {
+            return data[HexCoordinate(x,y)];
+        }
+
+        const T& get(int x, int y) const {
+            return data[HexCoordinate(x,y)];
         }
 };
 

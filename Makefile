@@ -5,7 +5,7 @@ SFML_LIBS=-lsfml-system -lsfml-graphics -lsfml-audio
 CORE_LIBS=-lboost_filesystem -lboost_program_options -lssl
 LIBS=$(SFML_LIBS) $(CORE_LIBS) `freetype-config --libs`
 
-EXECUTABLES=test-hexfml test-coords test-typesetter test-sexp test-sisenet test-sftools spserver spclient spguient test-hexfml test-hexplorer test-fov test-tacclient test-tacserver
+EXECUTABLES=test-hexfml test-coords test-typesetter test-sexp test-sisenet test-sftools spserver spclient spguient test-hexfml test-hexplorer test-fov test-tacclient
 
 all: $(EXECUTABLES)
 
@@ -34,7 +34,7 @@ test-sexp: test-sexp.o Sise.o myabort.o
 test-sisenet: test-sisenet.o Sise.o myabort.o
 	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
 
-spserver: Sise.o spserver.o SProto.o myabort.o Nash.o NashServer.o HexTools.o HexFov.o HexTools.o myabort.o mtrand.o Tac.o TacServer.o
+spserver: Sise.o spserver.o SProto.o myabort.o Nash.o NashServer.o HexTools.o HexFov.o HexTools.o myabort.o mtrand.o Tac.o TacServer.o TacRules.o
 	$(CC) $(CPPFLAGS) $(CORE_LIBS) $^ -o $@
 
 spclient: spclient.o Sise.o SProto.o myabort.o
@@ -46,8 +46,5 @@ spguient: spguient.o Sise.o SProto.o typesetter.o sftools.o myabort.o Nash.o Nas
 test-fov: test-fov.o HexFov.o HexTools.o myabort.o
 	$(CC) $(CPPFLAGS) $^ -o $@
 
-test-tacclient: test-tacclient.o HexFov.o HexTools.o myabort.o TacClient.o sftools.o hexfml.o mtrand.o TacClientAction.o typesetter.o anisprite.o Tac.o Sise.o SProto.o
+test-tacclient: test-tacclient.o HexFov.o HexTools.o myabort.o TacClient.o sftools.o hexfml.o mtrand.o TacClientAction.o typesetter.o anisprite.o Tac.o Sise.o SProto.o TacRules.o
 	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
-
-test-tacserver: test-tacserver.o HexFov.o HexTools.o myabort.o mtrand.o Tac.o TacServer.o
-	$(CC) $(CPPFLAGS) $(CORE_LIBS) $^ -o $@
