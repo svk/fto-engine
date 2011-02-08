@@ -478,7 +478,6 @@ bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, S
                                  (new String( cli->getUsername() ))
                                  (new Int( unit->getId() ) )
                             .make() ));
-            // no recovery of memories yet
             return true;
         }
         player = new ServerPlayer( server, myMap, myMap.generatePlayerId(), cli->getUsername() );
