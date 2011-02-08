@@ -94,6 +94,9 @@ class TestTacTPScreen : public SfmlScreen,
                 int x, y;
                 cmap.clearHighlights();
                 if( unit->getPosition( x, y ) ) {
+                    using namespace std;
+                    cerr << "finding " << acp.getPotentialMovementEnergy() << endl;
+                    cerr << "finding " << acp.getImmediateMovementEnergy() << endl;
                     findAllAccessible( unit->getUnitType(), cmap, x, y, acp.getPotentialMovementEnergy(), outerMove );
                     findAllAccessible( unit->getUnitType(), cmap, x, y, acp.getImmediateMovementEnergy(), coreMove );
                 }

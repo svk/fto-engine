@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+#include <iostream>
+
 #include <cassert>
 #include <queue>
 
@@ -107,10 +109,13 @@ void findAllAccessible(const UnitType& unitType, const TileTypeMap& ttMap, int c
 
     region.add( cx, cy );
 
+        using namespace std;
+
     SparseHexMap<int> costs ( -1 );
-    costs.get( cx, cy ) = 0;
+
+    costs.set( cx, cy, 0 );
     std::queue<HexCoordinate> q;
-    q.push( HexCoordinate(0,0) );
+    q.push( HexCoordinate(cx,cy) );
     region.add( cx, cy );
 
     while( !q.empty() ) {
@@ -128,8 +133,9 @@ void findAllAccessible(const UnitType& unitType, const TileTypeMap& ttMap, int c
             if( tt && tt->mayTraverse( unitType, traversalCost ) ) {
                 if( (cost + traversalCost) > energy ) continue;
                 int oldCost = costs.get(x,y);
+                oldCost = costs.get(x,y);
                 if( oldCost < 0 || oldCost > (cost + traversalCost) ) {
-                    costs.get(x,y) = cost + traversalCost;
+                    costs.set(x,y, cost + traversalCost );
                 }
                 if( oldCost < 0 ) {
                     q.push( HexCoordinate(x,y) );

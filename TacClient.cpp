@@ -427,11 +427,11 @@ void CMLevelBlitterGL::drawHex(int x, int y, sf::RenderWindow& win) {
     } else switch( tile.getHighlight() ) {
         case ClientTile::NONE: break;
         case ClientTile::OUTER_MOVE_ZONE:
-            cerr << "movezone outer";
+            cerr << "movezone outer " << x << " " << y << " " << endl;
             putSprite( spriteOuterMoveZone );
             break;
         case ClientTile::MOVE_ZONE:
-            cerr << "movezone";
+            cerr << "movezone " << x << " " << y << " " << endl;
             putSprite( spriteMoveZone );
             break;
         case ClientTile::ATTACK_ZONE:

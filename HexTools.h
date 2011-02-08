@@ -11,6 +11,8 @@
 #include <stdexcept>
 #include <cmath>
 
+#include <iostream>
+
 #include <set>
 
 #include <map>
@@ -230,7 +232,7 @@ class HexTorusMap {
 template<class T>
 class SparseHexMap {
     private:
-        const T defaultValue;
+        T defaultValue;
         std::map<HexCoordinate,T> data;
     
     public:
@@ -258,12 +260,20 @@ class SparseHexMap {
         ~SparseHexMap(void) {
         }
 
-        T& get(int x, int y) {
-            return data[HexCoordinate(x,y)];
+        void set(int x, int y, const T& v) {
+            data[HexCoordinate(x,y)] = v;
         }
 
         const T& get(int x, int y) const {
-            return data[HexCoordinate(x,y)];
+            typename std::map<HexCoordinate,T>::const_iterator i = data.find( HexCoordinate(x,y) );
+            using namespace std;
+            cerr << "c[]: " << x << " " << y << ": ";
+            if( i == data.end() ) {
+                cerr << "not found, " << defaultValue << endl;
+                return defaultValue;
+            }
+            cerr << "found, " << i->second << endl;
+            return i->second;
         }
 };
 
