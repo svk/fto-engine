@@ -67,6 +67,8 @@ int ActivityPoints::getPotentialMovementEnergy(void) const {
 }
 
 bool ActivityPoints::maySpendMovementEnergy(int cost) const {
+    using namespace std;
+    cerr << "may spend " << cost << "? " << getPotentialMovementEnergy() << "[" << speed << "]" << endl;
     return getPotentialMovementEnergy() >= cost;
 }
 
@@ -157,6 +159,28 @@ void findAllAccessible(const UnitType& unitType, const TileTypeMap& ttMap, int c
         }
     }
 
+}
+
+Sise::SExp* ActivityPoints::toSexp(void) const {
+    using namespace Sise;
+    return List()( new Int( speed ) )
+                 ( new Int( movementPoints ) )
+                 ( new Int( actionPoints ) )
+                 ( new Int( flexPoints ) )
+                 ( new Int( movementEnergy ) )
+           .make();
+}
+
+ActivityPoints ActivityPoints::fromSexp(Sise::SExp* sexp) {
+    using namespace Sise;
+    Cons *args = asProperCons( sexp );
+    ActivityPoints rv;
+    rv.speed = *asInt( args->nthcar(0) );
+    rv.movementPoints = *asInt( args->nthcar(1) );
+    rv.actionPoints = *asInt( args->nthcar(2) );
+    rv.flexPoints = *asInt( args->nthcar(3) );
+    rv.movementEnergy = *asInt( args->nthcar(4) );
+    return rv;
 }
 
 

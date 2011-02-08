@@ -268,7 +268,24 @@ bool ServerMap::cmdMoveUnit(ServerPlayer* player,int unitId, int dx, int dy) {
     ServerUnit *unit = getUnitById(unitId);
     if( !player || !unit ) return false;
     if( player != unit->getController() ) return false;
-    return actionMoveUnit( unit, dx, dy );
+
+    // check energy
+    ServerTile *leavingTile = unit->getTile();
+    if( !leavingTile ) return false;
+    int x, y;
+    leavingTile->getXY( x, y );
+    ServerTile& enteringTile = tiles.get( x + dx, y + dy );
+    int cost;
+    if( !enteringTile.getTileType().mayTraverse( unit->getUnitType(), cost ) ) return false;
+    if( !unit->getAP().maySpendMovementEnergy( cost ) ) return false;
+
+    bool rv = actionMoveUnit( unit, dx, dy );
+
+    if( rv ) {
+        unit->getAP().spendMovementEnergy( cost );
+    }
+    
+    return rv;
 }
 
 void ServerPlayer::updateFov(const ServerMap& smap) {
@@ -395,6 +412,7 @@ void ServerPlayer::sendUnitDiscoveredAt(const ServerUnit& unit, const ServerTile
                        ( new Int( x ) )
                        ( new Int( y ) )
                        ( new Int( unit.getLayer() ) )
+                       ( unit.getAP().toSexp() )
                  .make() );
 }
 
@@ -420,7 +438,7 @@ TacTestServer::TacTestServer(SProto::Server& server, int radius) :
     borderType( "border", "impassable wall", Type::WALL, Type::BLOCK, true, 0 ),
     wallType ( "wall", "wall", Type::WALL, Type::BLOCK, false, 0 ),
     floorType ( "floor", "floor", Type::FLOOR, Type::CLEAR, false, 100 ),
-    pcType ( "pc", "Player", 500 ),
+    pcType ( "pc", "Player", 200 ),
     trollType ( "troll", "Troll", 500 ),
     myMap ( radius, &borderType )
 {
@@ -474,6 +492,7 @@ bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, S
         myMap.adoptPlayer( player );
         myMap.adoptUnit( unit );
         unit->setController( player );
+        unit->getAP() = ActivityPoints( unit->getUnitType(), 1, 1, 1 );
         int x, y;
         using namespace std;
         tile->getXY( x, y );

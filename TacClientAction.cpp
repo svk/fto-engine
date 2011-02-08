@@ -35,7 +35,9 @@ void RemoveUnitCAction::operator()(void) const {
 }
 
 void UnitDiscoverCAction::operator()(void) const {
-    cmap.adoptUnit( new ClientUnit( unitId, unitType, team, owner ) );
+    ClientUnit *unit = new ClientUnit( unitId, unitType, team, owner );
+    unit->getAP() = ap;
+    cmap.adoptUnit( unit );
     cmap.placeUnitAt( unitId, x, y, layer );
 }
 

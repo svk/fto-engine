@@ -9,6 +9,8 @@
 #include <set>
 #include "HexTools.h"
 
+#include "TacRules.h"
+
 #include "Manager.h"
 
 #include "HexFov.h"
@@ -102,10 +104,15 @@ class ServerUnit {
         const UnitType& unitType;
         ServerPlayer *controller;
 
+        ActivityPoints activity;
+
         ServerTile *tile;
 
     public:
         ServerUnit(int,const UnitType&);
+
+        const ActivityPoints& getAP(void) const { return activity; }
+        ActivityPoints& getAP(void) { return activity; }
 
         const ServerTile* getTile(void) const { return tile; }
         ServerTile* getTile(void) { return tile; }

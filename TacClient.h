@@ -178,6 +178,8 @@ class ClientUnit {
     public:
         ClientUnit(int, ClientUnitType&, int, int);
 
+        ActivityPoints& getAP(void) { return activity; }
+
         const ClientUnitType& getUnitType(void) const { return unitType; }
 
         void getCenterOffset(int&, int&, bool) const;

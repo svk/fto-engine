@@ -4,6 +4,7 @@
 #include "Tac.h"
 #include "HexTools.h"
 
+#include "Sise.h"
 
 namespace Tac {
 
@@ -37,6 +38,9 @@ class ActivityPoints {
 
         void spendMovementEnergy(int);
         void spendActionPoint(int);
+
+        Sise::SExp *toSexp(void) const;
+        static ActivityPoints fromSexp(Sise::SExp*);
 };
 
 void findAllAccessible(const UnitType&, const TileTypeMap&, int, int, int, HexTools::HexReceiver&);

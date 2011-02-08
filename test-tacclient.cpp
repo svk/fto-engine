@@ -79,7 +79,7 @@ class TestTacTPScreen : public SfmlScreen,
 
             if( unitId != INVALID_ID ) {
                 ClientUnit* unit = cmap.getUnitById( unitId );
-                ActivityPoints acp (unit->getUnitType(), 1, 1, 1); // xx
+                ActivityPoints& acp = unit->getAP();
                 struct CoreMove : public HexReceiver{
                     ClientMap& cmap;
                     CoreMove(struct ClientMap& cmap) : cmap(cmap) {}
