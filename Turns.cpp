@@ -4,13 +4,17 @@
 
 FischerTurnManager::FischerTurnManager(void) :
     clock (),
+    indices (),
+    increments (),
+    allocations (),
     participants (),
     index ( 0 ),
     running ( false )
 {
 }
 
-void FischerTurnManager::addParticipant(int id, double seconds) {
+void FischerTurnManager::addParticipant(int id, double seconds, double increment) {
+    increments[id] = increment;
     allocations[id] = seconds;
     indices[id] = participants.size();
     participants.push_back( id );
@@ -39,12 +43,13 @@ double FischerTurnManager::getCurrentRemainingTime(void) {
 }
 
 void FischerTurnManager::wrapIndex(void) {
-    if( index >= participants.size() ) {
+    if( index >= (int) participants.size() ) {
         index = 0;
     }
 }
 
 int FischerTurnManager::next(void) {
+    allocations[index] += increments[index];
     ++index;
     wrapIndex();
     return current();
@@ -66,9 +71,9 @@ void FischerTurnManager::stop(void) {
 
 void FischerTurnManager::flushTime(void) {
     if( running ) {
-        allocations[ participants[index] ] -= clock.GetElapsedTime();
+        allocations[ participants[index] ] -= clock.getElapsedTime();
     }
-    clock.Reset();
+    clock.reset();
 }
 
 void FischerTurnManager::removeParticipant(int id) {
@@ -79,6 +84,7 @@ void FischerTurnManager::removeParticipant(int id) {
         return;
     }
     participants.erase( i );
+    increments.erase( id );
     allocations.erase( id );
 
     indices.clear();
@@ -86,5 +92,20 @@ void FischerTurnManager::removeParticipant(int id) {
         indices[j->second] = j->first;
     }
     wrapIndex();
+}
+
+Timer::Timer(void) {
+    reset();
+}
+
+void Timer::reset(void) {
+    gettimeofday( &t0, 0 );
+}
+
+double Timer::getElapsedTime(void) {
+    struct timeval t1, dt;
+    gettimeofday( &t1, 0 );
+    timersub( &t1, &t0, &dt );
+    return dt.tv_sec + 0.000001 * dt.tv_usec;
 }
 

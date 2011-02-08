@@ -5,6 +5,8 @@
 
 #include <csignal>
 
+#include <sys/time.h>
+
 bool keepRunning = true;
 
 void signal_stop(int sig) {
@@ -29,7 +31,9 @@ int main(int argc, char *argv[]) {
     cerr << "Server running. Listening on " << SPROTO_STANDARD_PORT << "." << endl;
 
     while( server.isRunning() && keepRunning ) {
-        server.manage( 1000 );
+        Timer timer;
+        server.manage( 100 );
+        server.tick( timer.getElapsedTime() );
     }
 
     cerr << "Server terminating. Writing persistent data..";

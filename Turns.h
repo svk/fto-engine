@@ -4,12 +4,24 @@
 #include <vector>
 #include <map>
 
-#include <SFML/System.hpp>
+#include <sys/time.h>
+
+class Timer {
+    private:
+        struct timeval t0;
+
+    public:
+        Timer(void);
+
+        void reset(void);
+        double getElapsedTime(void);
+};
 
 class FischerTurnManager {
     private:
-        sf::Clock clock;
+        Timer clock;
         std::map<int,int> indices;
+        std::map<int,double> increments;
         std::map<int,double> allocations;
         std::vector<int> participants;
         int index;
@@ -20,7 +32,6 @@ class FischerTurnManager {
     public:
         FischerTurnManager(void);
 
-        void tick(double);
         int next(void);
         int current(void);
 
@@ -30,7 +41,7 @@ class FischerTurnManager {
         void stop(void);
 
         void removeParticipant(int);
-        void addParticipant(int, double);
+        void addParticipant(int, double, double);
         void addTime(int, double);
         double getCurrentRemainingTime(void);
         double getRemainingTime(int);

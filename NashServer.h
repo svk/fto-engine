@@ -4,6 +4,8 @@
 #include "Nash.h"
 #include "SProto.h"
 
+#include "Turns.h"
+
 namespace Nash {
 
 class NashGame {
@@ -19,7 +21,8 @@ class NashGame {
         int moveno;
 
         bool gameRunning;
-        bool whiteToMove;
+//        bool whiteToMove;
+        mutable FischerTurnManager turns;
         bool swapAllowed;
 
         void broadcast(Sise::SExp*);
@@ -45,6 +48,8 @@ class NashGame {
     public:
         NashGame(SProto::Server&, int, int, const std::string, const std::string);
 
+        void tick(double);
+
         bool handle(const std::string&, const std::string&, Sise::SExp*);
         bool done(void) const;
 };
@@ -65,6 +70,8 @@ class NashSubserver : public SProto::Persistable,
     public:
         NashSubserver(SProto::Server&);
         ~NashSubserver(void);
+
+        void tick(double);
 
         bool handle(SProto::RemoteClient*,const std::string&,Sise::SExp*);
 

@@ -20,11 +20,14 @@ NashGame::NashGame(SProto::Server& server, int id, int size, const std::string w
     blackPlayer (black),
     moveno ( 1 ),
     gameRunning ( true ),
-    whiteToMove ( false ),
+    turns (),
     swapAllowed ( false )
 {
     using namespace SProto;
     using namespace Sise;
+
+    turns.addParticipant( 0, 60.0, 30.0 );
+    turns.addParticipant( 1, 60.0, 30.0 );
 
     std::ostringstream oss;
     oss << "game-" << gameId;
@@ -43,12 +46,14 @@ NashGame::NashGame(SProto::Server& server, int id, int size, const std::string w
                         ( new Int( gameId ) )
                         ( new String( channelName ) )
                   .make() );
+
+    turns.start();
     requestMove();
 }
 
 std::string NashGame::playerToMove(void) const {
     if( !gameRunning ) return "";
-    if( whiteToMove ) return whitePlayer;
+    if( turns.current() == 0 ) return whitePlayer;
     return blackPlayer;
 }
 
@@ -87,17 +92,17 @@ void NashGame::move(const std::string& s, int x, int y) {
     using namespace std;
     NashTile::Colour c;
     bool didMove = false;
-    if( gameRunning && whiteToMove && s == whitePlayer && board.isLegalMove( x, y ) ) {
+    if( gameRunning && playerToMove() == s && s == whitePlayer && board.isLegalMove( x, y ) ) {
         c = NashTile::WHITE;
         didMove = true;
-    } else if( gameRunning && !whiteToMove && s == blackPlayer && board.isLegalMove(x,y) ) {
+    } else if( gameRunning && playerToMove() == s && s == blackPlayer && board.isLegalMove(x,y) ) {
         c = NashTile::BLACK;
         didMove = true;
     } else {
         respondIllegal( s );
     }
     if( didMove ) {
-        whiteToMove = !whiteToMove;
+        turns.next();
         broadcastMove( x, y, c );
         ++moveno;
         board.put( x, y, c );
@@ -112,6 +117,7 @@ void NashGame::move(const std::string& s, int x, int y) {
 }
 
 void NashGame::requestMove(void) {
+    bool whiteToMove = playerToMove() == whitePlayer;
     std::ostringstream oss;
     oss << "Move " << moveno << ". ";
     oss << (whiteToMove ? "White" : "Black");
@@ -258,6 +264,12 @@ Sise::SExp * NashSubserver::toSexp(void) const {
            .make();
 }
 
+void NashSubserver::tick(double dt) {
+    for(GameMap::iterator i = games.begin(); i != games.end(); i++) {
+        i->second->tick( dt );
+    }
+}
+
 bool NashSubserver::handle( SProto::RemoteClient* cli, const std::string& cmd, Sise::SExp* arg) {
     using namespace Sise;
     using namespace SProto;
@@ -334,6 +346,19 @@ NashSubserver::~NashSubserver(void) {
         delete i->second;
     }
     games.clear();
+}
+
+void NashGame::tick(double dt) {
+    if( gameRunning ) {
+        double t = turns.getCurrentRemainingTime();
+        if( t < 0 ) {
+            if( playerToMove() == whitePlayer ) {
+                declareWin( NashTile::BLACK );
+            } else {
+                declareWin( NashTile::WHITE );
+            }
+        }
+    }
 }
 
 }

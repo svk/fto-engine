@@ -709,4 +709,10 @@ RemoteClient* Server::getConnectedUser( const std::string& username ) {
 
 }
 
+void Server::tick(double dt) {
+    for(SubserverMap::iterator i = subservers.begin(); i != subservers.end(); i++) {
+        i->second->tick( dt );
+    }
+}
+
 };

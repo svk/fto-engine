@@ -71,6 +71,7 @@ namespace SProto {
             SubServer(const std::string&, Server&);
             virtual ~SubServer(void) {};
 
+            virtual void tick(double) {};
             virtual bool handle( RemoteClient*, const std::string&, Sise::SExp* ) = 0;
 
             virtual void saveSubserver(void) const {};
@@ -251,6 +252,8 @@ namespace SProto {
         public:
             Server(void);
             ~Server(void);
+
+            void tick(double);
 
             SubServer* getSubServer(const std::string&);
             void setSubServer(const std::string&, SubServer*);
