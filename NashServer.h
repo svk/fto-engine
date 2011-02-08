@@ -24,6 +24,7 @@ class NashGame {
 //        bool whiteToMove;
         mutable FischerTurnManager turns;
         bool swapAllowed;
+        bool swapped;
 
         void broadcast(Sise::SExp*);
         void sendTo(const std::string&, Sise::SExp*);

@@ -1,5 +1,6 @@
 #include "Turns.h"
 
+#include <iostream>
 #include <algorithm>
 
 FischerTurnManager::FischerTurnManager(void) :

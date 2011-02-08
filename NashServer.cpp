@@ -21,7 +21,8 @@ NashGame::NashGame(SProto::Server& server, int id, int size, const std::string w
     moveno ( 1 ),
     gameRunning ( true ),
     turns (),
-    swapAllowed ( false )
+    swapAllowed ( false ),
+    swapped ( false )
 {
     using namespace SProto;
     using namespace Sise;
@@ -53,7 +54,11 @@ NashGame::NashGame(SProto::Server& server, int id, int size, const std::string w
 
 std::string NashGame::playerToMove(void) const {
     if( !gameRunning ) return "";
-    if( turns.current() == 0 ) return whitePlayer;
+    if( turns.current() == 0 ) {
+        if( swapped ) return blackPlayer;
+        return whitePlayer;
+    }
+    if( swapped ) return whitePlayer;
     return blackPlayer;
 }
 
@@ -74,6 +79,8 @@ void NashGame::swap(const std::string& s) {
         broadcastMessage( oss.str() );
 
         broadcastInfo();
+        swapped = true;
+        turns.next();
         requestMove();
     } else {
         respondIllegal( s );
@@ -123,6 +130,7 @@ void NashGame::requestMove(void) {
     oss << (whiteToMove ? "White" : "Black");
     oss << " (" << (whiteToMove ? whitePlayer : blackPlayer) << ")";
     oss << " to play.";
+    oss << " They have " << turns.getCurrentRemainingTime() << " seconds to make their move.";
     if( swapAllowed ) {
         oss << " By the pie rule, " << playerToMove() << " may now choose to play " << (whiteToMove ? "black" : "white");
         oss << " instead of " << (whiteToMove ? "white" : "black") << ".";
