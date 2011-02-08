@@ -171,6 +171,8 @@ class ClientUnit {
         int x, y, layer;
         bool hasPosition;
 
+        ActivityPoints activity;
+
         CurveAnimation *curveAnim;
 
     public:

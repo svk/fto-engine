@@ -9,6 +9,15 @@
 
 namespace Tac {
 
+ActivityPoints::ActivityPoints(void) :
+    speed(0),
+    movementPoints(0),
+    actionPoints(0),
+    flexPoints(0),
+    movementEnergy(0)
+{
+}
+
 ActivityPoints::ActivityPoints(const UnitType& unitType, int mp, int ap, int fp) :
     speed( unitType.speed ),
     movementPoints ( mp ),

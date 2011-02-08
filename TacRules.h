@@ -23,6 +23,7 @@ class ActivityPoints {
         int movementEnergy;
 
     public:
+        ActivityPoints(void);
         ActivityPoints(const UnitType&, int, int, int); // usual is 1, 1, 1
         ActivityPoints(const ActivityPoints&);
 
