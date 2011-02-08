@@ -25,6 +25,11 @@ void cartesianiseHexCoordinate(int,int,int,int&,int&);
 
 typedef std::pair<int,int> HexCoordinate;
 
+class HexReceiver {
+    public:
+        virtual void add(int,int) = 0;
+};
+
 class HexRegion {
     public:
         typedef std::set< HexCoordinate > List;

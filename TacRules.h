@@ -9,7 +9,7 @@ namespace Tac {
 
 class TileTypeMap {
     public:
-        virtual const TileType& getTileTypeAt(int,int) const = 0;
+        virtual const TileType* getTileTypeAt(int,int) const = 0;
 };
 
 class ActivityPoints {
@@ -38,7 +38,7 @@ class ActivityPoints {
         void spendActionPoint(int);
 };
 
-void findAllAccessible(const UnitType&, const TileTypeMap&, int, int, int, HexTools::HexRegion&);
+void findAllAccessible(const UnitType&, const TileTypeMap&, int, int, int, HexTools::HexReceiver&);
 
 
 };

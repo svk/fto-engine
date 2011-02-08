@@ -99,7 +99,7 @@ void ActivityPoints::spendActionPoint(int cost) {
     }
 }
 
-void findAllAccessible(const UnitType& unitType, const TileTypeMap& ttMap, int cx, int cy, int energy, HexTools::HexRegion& region) {
+void findAllAccessible(const UnitType& unitType, const TileTypeMap& ttMap, int cx, int cy, int energy, HexTools::HexReceiver& region) {
     using namespace HexTools;
 
     static const int dx[] = { 3, 0, -3, -3, 0, 3 },
@@ -123,9 +123,9 @@ void findAllAccessible(const UnitType& unitType, const TileTypeMap& ttMap, int c
 
         for(int i=0;i<6;i++) {
             const int x = coord.first + dx[i], y = coord.second + dy[i];
-            const TileType& tt = ttMap.getTileTypeAt( x, y );
+            const TileType* tt = ttMap.getTileTypeAt( x, y );
             int traversalCost;
-            if( tt.mayTraverse( unitType, traversalCost ) ) {
+            if( tt && tt->mayTraverse( unitType, traversalCost ) ) {
                 if( (cost + traversalCost) > energy ) continue;
                 int oldCost = costs.get(x,y);
                 if( oldCost < 0 || oldCost > (cost + traversalCost) ) {

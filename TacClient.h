@@ -5,6 +5,8 @@
 
 #include "HexFov.h"
 
+#include "TacRules.h"
+
 #include "sftools.h"
 #include "HexTools.h"
 #include "hexfml.h"
@@ -217,7 +219,8 @@ class ClientTile {
         enum Highlight {
             NONE = 0,
             MOVE_ZONE,
-            ATTACK_ZONE
+            ATTACK_ZONE,
+            OUTER_MOVE_ZONE
         };
 
     private:
@@ -328,7 +331,8 @@ class CMLevelBlitterGL : public HexBlitter {
         sf::Sprite spriteFogZone,
                    spriteMoveZone,
                    spriteAttackZone,
-                   spriteThinGrid;
+                   spriteThinGrid,
+                   spriteOuterMoveZone;
 
     public:
         CMLevelBlitterGL( ClientMap& cmap,
@@ -338,7 +342,8 @@ class CMLevelBlitterGL : public HexBlitter {
             spriteFogZone ( tilesheet.makeSprite( SpriteId("zone-fog", SpriteId::NORMAL ) ) ),
             spriteMoveZone ( tilesheet.makeSprite( SpriteId("zone-move", SpriteId::NORMAL ) ) ),
             spriteAttackZone ( tilesheet.makeSprite( SpriteId("zone-attack", SpriteId::NORMAL ) ) ),
-            spriteThinGrid ( tilesheet.makeSprite( SpriteId("grid-thin", SpriteId::NORMAL ) ) )
+            spriteThinGrid ( tilesheet.makeSprite( SpriteId("grid-thin", SpriteId::NORMAL ) ) ),
+            spriteOuterMoveZone ( tilesheet.makeSprite( SpriteId("zone-move-outer", SpriteId::NORMAL ) ) )
         {
         }
 
@@ -347,7 +352,8 @@ class CMLevelBlitterGL : public HexBlitter {
 };
 
 
-class ClientMap : public HexOpacityMap {
+class ClientMap : public HexOpacityMap,
+                  public TileTypeMap {
     private:
         FreetypeFace* risingTextFont;
 
@@ -409,6 +415,8 @@ class ClientMap : public HexOpacityMap {
 
         void queueAction(ClientAction*); // adopts
         void processActions(void);
+        
+        const TileType* getTileTypeAt(int x, int y) const { return tiles.get(x,y).getTileType(); }
 
         ClientTile& getTile(int x, int y) { return tiles.get(x,y); }
         ClientUnit* getUnitById(int);
@@ -418,6 +426,7 @@ class ClientMap : public HexOpacityMap {
 
         void clearHighlights(void);
         void addMoveHighlight(int, int);
+        void addOuterMoveHighlight(int, int);
         void addAttackHighlight(int, int);
 
         void addRisingText(int,int,const std::string&, const sf::Color&, int);

@@ -419,11 +419,19 @@ void CMLevelBlitterGL::drawHex(int x, int y, sf::RenderWindow& win) {
     } else {
         putSprite( tt->spriteGrayscale );
     }
+    
+    using namespace std;
+
     if( !isLit ) {
         putSprite( spriteFogZone );
     } else switch( tile.getHighlight() ) {
         case ClientTile::NONE: break;
+        case ClientTile::OUTER_MOVE_ZONE:
+            cerr << "movezone outer";
+            putSprite( spriteOuterMoveZone );
+            break;
         case ClientTile::MOVE_ZONE:
+            cerr << "movezone";
             putSprite( spriteMoveZone );
             break;
         case ClientTile::ATTACK_ZONE:
@@ -487,6 +495,11 @@ void ClientMap::clearHighlights(void) {
 void ClientMap::addAttackHighlight(int x, int y) {
     tiles.get( x, y ).setHighlight( ClientTile::ATTACK_ZONE );
     attackHighlightZone.add( x, y );
+}
+
+void ClientMap::addOuterMoveHighlight(int x, int y) {
+    tiles.get( x, y ).setHighlight( ClientTile::OUTER_MOVE_ZONE );
+    moveHighlightZone.add( x, y );
 }
 
 void ClientMap::addMoveHighlight(int x, int y) {

@@ -12,6 +12,8 @@
     (solid-colour 0 0 0 128))
 (zone-move (normal)
     (solid-colour 255 0 0 128))
+(zone-move-outer (normal)
+    (solid-colour 128 0 0 128))
 (zone-attack (normal)
     (solid-colour 0 255 0 128))
 

@@ -12,6 +12,8 @@
 #include "sftools.h"
 #include "SProto.h"
 
+#include "TacRules.h"
+
 using namespace Tac;
 
 class TestTacTPScreen;
@@ -73,6 +75,28 @@ class TestTacTPScreen : public SfmlScreen,
             if( unitId != INVALID_ID && cmap.getUnitBaseScreenPositionById( unitId, cx, cy ) ) {
                 using namespace std;
                 vp.center( cx, cy );
+            }
+
+            if( unitId != INVALID_ID ) {
+                ClientUnit* unit = cmap.getUnitById( unitId );
+                ActivityPoints acp (unit->getUnitType(), 1, 1, 1); // xx
+                struct CoreMove : public HexReceiver{
+                    ClientMap& cmap;
+                    CoreMove(struct ClientMap& cmap) : cmap(cmap) {}
+                    void add(int x, int y){ cmap.addMoveHighlight( x, y ); };
+                };
+                struct OuterMove : public HexReceiver {
+                    ClientMap& cmap;
+                    OuterMove(struct ClientMap& cmap) : cmap(cmap) {}
+                    void add(int x, int y) { cmap.addOuterMoveHighlight( x, y ); };
+                };
+                CoreMove coreMove( cmap ), outerMove( cmap );
+                int x, y;
+                cmap.clearHighlights();
+                if( unit->getPosition( x, y ) ) {
+                    findAllAccessible( unit->getUnitType(), cmap, x, y, acp.getPotentialMovementEnergy(), outerMove );
+                    findAllAccessible( unit->getUnitType(), cmap, x, y, acp.getImmediateMovementEnergy(), coreMove );
+                }
             }
 
             win.Clear( sf::Color(0,0,0) );
