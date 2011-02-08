@@ -33,9 +33,14 @@ class TestTacTPScreen : public SfmlScreen,
         ClientMap cmap;
         int unitId;
 
+        int width, height;
         HexViewport vp;
 
         SProto::Client& client;
+
+        bool inputtingText;
+        ChatBox chatbox;
+        ChatInputLine chatinput;
 
     public:
         TestTacTPScreen(
@@ -56,9 +61,36 @@ class TestTacTPScreen : public SfmlScreen,
             unitTypes ( unitTypes ),
             cmap ( mapSize, sheet, grid, &font, tileTypes, unitTypes ),
             unitId ( INVALID_ID ),
-            vp ( grid,  0, 0, 640, 480 ),
-            client ( client )
+            width ( 640 ),
+            height ( 480 ),
+            vp ( grid,  0, 0, width, height ),
+            client ( client ),
+            inputtingText ( false ),
+            chatbox ( 0, 0, width, height, font, sf::Color(0,50,0) ),
+            chatinput ( width, font, sf::Color(255,255,255), FormattedCharacter(font,sf::Color(255,255,0),'_') )
         {
+            resize( width, height );
+        }
+
+        void showServerMessage( const std::string& message ) {
+            using namespace Sise;
+            using namespace std;
+            using namespace SProto;
+            chatbox.add(ChatLine( "", sf::Color(255,255,255),
+                                  message,sf::Color(100,100,200)));
+        }
+
+        void showMessage( Sise::Cons *msg ) {
+            using namespace Sise;
+            using namespace std;
+            using namespace SProto;
+            outputSExp( msg, cerr );
+            if( getChatMessageOrigin(msg) == "" ) {
+                showServerMessage( getChatMessageBody(msg) );
+            } else {
+                chatbox.add(ChatLine( getChatMessageOrigin(msg),sf::Color(128,128,128),
+                                  getChatMessageBody(msg),sf::Color(255,255,255)));
+            }
         }
 
         void tick(double dt) {
@@ -66,8 +98,35 @@ class TestTacTPScreen : public SfmlScreen,
             cmap.processActions();
         }
 
-        void resize(int width, int height) {
-            vp.setRectangle( 0, 0, width, height );
+        void resize(int width_, int height_) {
+            const int totalBottomHeight = 200;
+            const int ipWidth = 200;
+            int cbHeight = totalBottomHeight;
+            width = width_;
+            height = height_;
+            if( inputtingText ) {
+                chatinput.setPosition( 0, height - cbHeight );
+                cbHeight -= chatinput.getHeight();
+            }
+            chatbox.resize( width - ipWidth, cbHeight );
+            chatinput.setWidth( width - ipWidth );
+            chatbox.setPosition( 0, height - cbHeight );
+/*
+            ipPanel = sf::Shape::Rectangle( width - ipWidth,
+                                            0,
+                                            width,
+                                            height,
+                                            sf::Color( 200, 128, 128 ) );
+*/
+            vp.setRectangle( 0,
+                                   0,
+                                   width - ipWidth,
+                                   height - totalBottomHeight );
+        }
+
+        void toggleInputtingText(void) {
+            inputtingText = !inputtingText;
+            resize( width, height );
         }
 
         void draw(sf::RenderWindow& win) {
@@ -101,7 +160,12 @@ class TestTacTPScreen : public SfmlScreen,
                 }
             }
 
-            win.Clear( sf::Color(0,0,0) );
+            win.Clear( sf::Color(0,50,0) );
+
+            chatbox.draw( win );
+            if( inputtingText ) {
+                chatinput.draw( win );
+            }
 
             glViewport( 0, 0, win.GetWidth(), win.GetHeight() );
 
@@ -119,7 +183,9 @@ class TestTacTPScreen : public SfmlScreen,
 
             glColor3f(1.0,1.0,1.0);
 
+            vp.setBackgroundColour( sf::Color(0,0,0) );
             vp.drawGL( cmap.getLevelBlitter(), win, win.GetWidth(), win.GetHeight() );
+            vp.setNoBackgroundColour();
             vp.drawGL( cmap.getUnitBlitter(0), win, win.GetWidth(), win.GetHeight() );
 
 
@@ -140,7 +206,16 @@ class TestTacTPScreen : public SfmlScreen,
             using namespace Sise;
             bool doMove = true;
             int dx, dy;
+            if( inputtingText ) {
+                if( key.Code == sf::Key::Escape ) {
+                    chatinput.clear();
+                    toggleInputtingText();
+                    return true;
+                }
+                return false;
+            }
             switch( key.Code ) {
+                case sf::Key::Return: toggleInputtingText(); return true;
                 case sf::Key::Q: dx = -3; dy = 1; break;
                 case sf::Key::W: dx = 0; dy = 2; break;
                 case sf::Key::E: dx = 3; dy = 1; break;
@@ -160,18 +235,54 @@ class TestTacTPScreen : public SfmlScreen,
             return false;
         }
 
+        bool handleText(const sf::Event::TextEvent& text) {
+            if( !inputtingText ) return false;
+            chatinput.textEntered( text.Unicode );
+            if( chatinput.isDone() ) {
+                using namespace Sise;
+
+                std::string data = chatinput.getString();
+                chatinput.clear();
+                toggleInputtingText();
+
+                if( data.length() > 0 && data[0] == '/' ) {
+                    ;
+                } else {
+                    client.delsend( List()( new Symbol( "chat" ) )
+                                          ( new Symbol( "channel-message" ) )
+                                          ( new Symbol( "user" ) )
+                                          ( new String( "all" ) )
+                                          ( new String( data ) ).make() );
+                }
+            }
+            return true;
+        }
+
         bool handleEvent(const sf::Event& ev) {
             switch( ev.Type ) {
                 case sf::Event::KeyPressed:
                     return handleKey( ev.Key );
+                case sf::Event::TextEntered:
+                    return handleText( ev.Text );
                 default: break;
             }
             return false;
         }
 
+        void handleChat( Sise::Cons *chat ) {
+            std::string type = *asSymbol( chat->nthcar(0) );
+            if( type == "channel" ) {
+                showMessage( asCons( chat->nthtail( 3 ) ) );
+            } else if( type == "private" || type == "broadcast" ) {
+                showMessage( asCons( chat->nthtail( 1 ) ) );
+            }
+        }
+
         void handle( const std::string& name, Sise::SExp* arg ) {
             using namespace Sise;
-            if( name == "tac" ) {
+            if( name == "chat" ) {
+                handleChat( asProperCons( arg ) );
+            } else if( name == "tac" ) {
                 Cons *args = asProperCons( arg );
                 using namespace std;
                 outputSExp( args, cerr );

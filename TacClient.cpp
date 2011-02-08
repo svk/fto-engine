@@ -418,28 +418,29 @@ void CMLevelBlitterGL::drawHex(int x, int y, sf::RenderWindow& win) {
     bool isLit = tile.getActive();
     const ClientTileType *tt = tile.getTileType();
     using namespace std;
-    if( !tt ) return;
-    if( isLit ) {
-        putSprite( tt->spriteNormal );
-    } else {
-        putSprite( tt->spriteGrayscale );
-    }
-    
-    using namespace std;
+    if( tt ) {
+        if( isLit ) {
+            putSprite( tt->spriteNormal );
+        } else {
+            putSprite( tt->spriteGrayscale );
+        }
+        
+        using namespace std;
 
-    if( !isLit ) {
-        putSprite( spriteFogZone );
-    } else switch( tile.getHighlight() ) {
-        case ClientTile::NONE: break;
-        case ClientTile::OUTER_MOVE_ZONE:
-            putSprite( spriteOuterMoveZone );
-            break;
-        case ClientTile::MOVE_ZONE:
-            putSprite( spriteMoveZone );
-            break;
-        case ClientTile::ATTACK_ZONE:
-            putSprite( spriteAttackZone );
-            break;
+        if( !isLit ) {
+            putSprite( spriteFogZone );
+        } else switch( tile.getHighlight() ) {
+            case ClientTile::NONE: break;
+            case ClientTile::OUTER_MOVE_ZONE:
+                putSprite( spriteOuterMoveZone );
+                break;
+            case ClientTile::MOVE_ZONE:
+                putSprite( spriteMoveZone );
+                break;
+            case ClientTile::ATTACK_ZONE:
+                putSprite( spriteAttackZone );
+                break;
+        }
     }
     putSprite( spriteThinGrid );
 }
