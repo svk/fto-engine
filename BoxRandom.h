@@ -47,7 +47,7 @@ template
 <class I, class O, class N = mpq_class>
 class NondeterministicTransform {
     public:
-        virtual Outcomes<O,N> transform(const I&) = 0;
+        virtual Outcomes<O,N> transform(I) = 0;
 
         Outcomes<O,N> operator()(const Outcomes<I,N>& orig) {
             const int sz = orig.getNumberOfOutcomes();
@@ -69,7 +69,7 @@ template
 <class I, class O, class N = mpq_class>
 class DeterministicTransform {
     public:
-        virtual O transform(const I&) = 0;
+        virtual O transform(I) = 0;
 
         Outcomes<O,N> operator()(const Outcomes<I,N>& orig) {
             const int sz = orig.getNumberOfOutcomes();

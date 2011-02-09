@@ -3,7 +3,7 @@
 #include <iostream>
 
 struct MaybeAdd10IfOddTransform : public NondeterministicTransform<int,int> {
-    Outcomes<int> transform(const int& x) {
+    Outcomes<int> transform(int x) {
         Outcomes<int> rv;
         if( (x%2) == 0 ) {
             rv.add( 1, x );
@@ -16,13 +16,13 @@ struct MaybeAdd10IfOddTransform : public NondeterministicTransform<int,int> {
 };
 
 struct TripleTransform : public DeterministicTransform<int,int> {
-    int transform(const int& x) {
+    int transform(int x) {
         return 3 * x;
     }
 };
 
 struct HalveTransform : public DeterministicTransform<int,int> {
-    int transform(const int& x) {
+    int transform(int x) {
         return x/2;
     }
 };
