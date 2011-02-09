@@ -5,8 +5,10 @@
 
 #include <vector>
 
+#include <gmpxx.h>
+
 template
-<class O, class N = int>
+<class O, class N = mpq_class>
 class Outcomes {
     private:
         N sum;
@@ -42,7 +44,7 @@ class Outcomes {
 };
 
 template
-<class I, class O, class N>
+<class I, class O, class N = mpq_class>
 class NondeterministicTransform {
     public:
         virtual Outcomes<O,N> transform(const I&) = 0;
@@ -64,7 +66,7 @@ class NondeterministicTransform {
 };
 
 template
-<class I, class O, class N>
+<class I, class O, class N = mpq_class>
 class DeterministicTransform {
     public:
         virtual O transform(const I&) = 0;

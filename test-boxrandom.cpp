@@ -2,11 +2,9 @@
 
 #include <iostream>
 
-#include <gmpxx.h>
-
-struct MaybeAdd10IfOddTransform : public NondeterministicTransform<int,int,mpq_class> {
-    Outcomes<int,mpq_class> transform(const int& x) {
-        Outcomes<int,mpq_class> rv;
+struct MaybeAdd10IfOddTransform : public NondeterministicTransform<int,int> {
+    Outcomes<int> transform(const int& x) {
+        Outcomes<int> rv;
         if( (x%2) == 0 ) {
             rv.add( 1, x );
         } else {
@@ -17,13 +15,13 @@ struct MaybeAdd10IfOddTransform : public NondeterministicTransform<int,int,mpq_c
     }
 };
 
-struct TripleTransform : public DeterministicTransform<int,int,mpq_class> {
+struct TripleTransform : public DeterministicTransform<int,int> {
     int transform(const int& x) {
         return 3 * x;
     }
 };
 
-struct HalveTransform : public DeterministicTransform<int,int,mpq_class> {
+struct HalveTransform : public DeterministicTransform<int,int> {
     int transform(const int& x) {
         return x/2;
     }
@@ -31,7 +29,7 @@ struct HalveTransform : public DeterministicTransform<int,int,mpq_class> {
 
 int main(int argc, char *argv[]) {
     using namespace std;
-    Outcomes<int,mpq_class> outcomes;
+    Outcomes<int> outcomes;
     for(int i=1;i<=6;i++) {
         outcomes.add( 1, i );
     }
