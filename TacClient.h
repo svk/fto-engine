@@ -184,6 +184,7 @@ class ClientUnit {
 
         void getCenterOffset(int&, int&, bool) const;
 
+        int getOwner(void) const { return owner; }
         int getId(void) const;
 
         void setLiving(bool);
@@ -202,15 +203,21 @@ class ClientUnit {
 
         void startMovementAnimation(int,int);
         void startMeleeAnimation(int,int);
+
+        void beginTurn(void);
 };
 
 class ClientUnitManager {
+    public:
+        typedef std::map<int,ClientUnit*> UnitMap;
+
     private:
-        std::map<int,ClientUnit*> units;
+        UnitMap units;
 
     public:
         ~ClientUnitManager(void);
 
+        const UnitMap& getUnits(void) const { return units; }
         void adopt(ClientUnit*);
 
         ClientUnit* operator[](int) const; // may return 0!
@@ -443,6 +450,8 @@ class ClientMap : public HexOpacityMap,
         void drawEffects(sf::RenderWindow&, double, double);
 
         bool handleNetworkInfo(const std::string&, Sise::SExp*);
+
+        void playerTurnBegins(int);
 };
 
 typedef RandomVariantsCollection<sf::SoundBuffer> RandomizedSoundEffect;

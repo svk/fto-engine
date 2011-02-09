@@ -3,6 +3,8 @@
 #include <iostream>
 #include <algorithm>
 
+#include <sstream>
+
 FischerTurnManager::FischerTurnManager(void) :
     clock (),
     indices (),
@@ -15,6 +17,7 @@ FischerTurnManager::FischerTurnManager(void) :
 }
 
 void FischerTurnManager::addParticipant(int id, double seconds, double increment) {
+    using namespace std;
     increments[id] = increment;
     allocations[id] = seconds;
     indices[id] = participants.size();
@@ -40,7 +43,7 @@ double FischerTurnManager::getRemainingTime(int id) {
 
 double FischerTurnManager::getCurrentRemainingTime(void) {
     flushTime();
-    return allocations[index];
+    return allocations[participants[index]];
 }
 
 void FischerTurnManager::wrapIndex(void) {
@@ -50,13 +53,20 @@ void FischerTurnManager::wrapIndex(void) {
 }
 
 int FischerTurnManager::next(void) {
-    allocations[index] += increments[index];
+    using namespace std;
+    if( !participants.size() ) {
+        return -1;
+    }
+    allocations[participants[index]] += increments[participants[index]];
     ++index;
     wrapIndex();
     return current();
 }
 
 int FischerTurnManager::current(void) {
+    if( !participants.size() ) {
+        return -1;
+    }
     return participants[index];
 }
 
@@ -108,5 +118,30 @@ double Timer::getElapsedTime(void) {
     gettimeofday( &t1, 0 );
     timersub( &t1, &t0, &dt );
     return dt.tv_sec + 0.000001 * dt.tv_usec;
+}
+
+std::string formatTime(double seconds) {
+    int t = (int)(0.5 + seconds * 1000);
+    const int k[] = { 1000, 60, 60, 24 };
+    const int kn = 4;
+    const std::string sx[] = { "ms", "s", "m", "d" };
+    int r[kn];
+    std::ostringstream oss;
+    using namespace std;
+    cerr << "fmtTime=" << seconds << endl;
+    for(int i=0;i<kn;i++) {
+        r[i] = t % k[i];
+        t -= r[i] * k[i];
+        t /= k[i];
+    }
+    for(int i=kn-1;i>=0;i--) if( r[i] ) {
+        if( i != (kn-1) ) oss << " ";
+        oss << r[i] << sx[i];
+    }
+    return oss.str();
+}
+
+int FischerTurnManager::getNumberOfParticipants(void) {
+    return participants.size();
 }
 

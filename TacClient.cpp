@@ -693,6 +693,23 @@ void loadSoundsFromFile(const std::string& filename, ResourceManager<RandomizedS
     }
 }
 
+void ClientMap::playerTurnBegins(int playerId) {
+    const ClientUnitManager::UnitMap& u = units.getUnits();
+    using namespace std;
+    cerr << "OOOOOOH YEAHHHH?" << endl;
+    for(ClientUnitManager::UnitMap::const_iterator i = u.begin(); i != u.end(); i++) {
+        if( i->second->getOwner() == playerId ) {
+            i->second->beginTurn();
+        }
+    }
+}
+
+void ClientUnit::beginTurn(void) {
+    using namespace std;
+    cerr << "OOOOOOH YEAHHHH" << endl;
+    activity = ActivityPoints( unitType, 1, 1, 1 );
+}
+
 bool ClientMap::handleNetworkInfo(const std::string& cmd, Sise::SExp* sexp) {
     using namespace Sise;
     // create CActions and send them to queueFromNetwork
@@ -731,6 +748,12 @@ bool ClientMap::handleNetworkInfo(const std::string& cmd, Sise::SExp* sexp) {
                       *asInt(xyn->nthcar(1)) );
             args = asCons( args->getcdr() );
         }
+        queueAction( act );
+    } else if( cmd == "player-turn-begins" ) {
+        BeginPlayerTurnCAction *act = new BeginPlayerTurnCAction(
+            *this,
+            *asInt( args->nthcar(0) )
+        );
         queueAction( act );
     } else if( cmd == "unit-disappears" ) {
         RemoveUnitCAction *act = new RemoveUnitCAction(

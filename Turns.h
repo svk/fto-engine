@@ -4,6 +4,8 @@
 #include <vector>
 #include <map>
 
+#include <string>
+
 #include <sys/time.h>
 
 class Timer {
@@ -45,6 +47,10 @@ class FischerTurnManager {
         void addTime(int, double);
         double getCurrentRemainingTime(void);
         double getRemainingTime(int);
+
+        int getNumberOfParticipants(void);
 };
+
+std::string formatTime(double);
 
 #endif

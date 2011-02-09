@@ -217,6 +217,12 @@ void ServerPlayer::gatherIndividualFov(const ServerMap& smap) {
     }
 }
 
+ServerPlayer* ServerMap::getPlayerById(int id) {
+    std::map<int,ServerPlayer*>::iterator i = players.find( id );
+    if( players.end() == i ) return 0;
+    return i->second;
+}
+
 ServerUnit* ServerMap::getUnitById(int id) {
     std::map<int,ServerUnit*>::iterator i = units.find( id );
     if( units.end() == i ) return 0;
@@ -374,6 +380,18 @@ void ServerMap::evtUnitMoved(ServerUnit& unit, ServerTile& sourceTile, ServerTil
     }
 }
 
+void ServerPlayer::sendPlayerTurnBegins(const ServerPlayer& player) {
+    using namespace std;
+    using namespace SProto;
+    using namespace Sise;
+    RemoteClient *rc = server.getConnectedUser( username );
+    if( !rc ) return;
+    rc->delsend( List()( new Symbol( "tac" ) )
+                       ( new Symbol( "player-turn-begins" ) )
+                       ( new Int( player.getId() ) )
+                 .make() );
+}
+
 void ServerPlayer::sendUnitDisappears(const ServerUnit& unit) {
     using namespace std;
     using namespace SProto;
@@ -407,8 +425,8 @@ void ServerPlayer::sendUnitDiscoveredAt(const ServerUnit& unit, const ServerTile
                        ( new Symbol( "unit-discovered" ) )
                        ( new Int( unit.getId() ) )
                        ( new Symbol( unit.getUnitType().symbol ) )
-                       ( new Int( controller ? controller->getId() : 0 ) )
                        ( new Int( unitTeam ) ) // hack: no teams yet xx
+                       ( new Int( controller ? controller->getId() : 0 ) )
                        ( new Int( x ) )
                        ( new Int( y ) )
                        ( new Int( unit.getLayer() ) )
@@ -445,6 +463,68 @@ TacTestServer::TacTestServer(SProto::Server& server, int radius) :
     trivialLevelGenerator( myMap, &wallType, &floorType, 0.4 );
 }
 
+void TacTestServer::delbroadcast(Sise::SExp* sexp) {
+    using namespace SProto;
+    using namespace Sise;
+    using namespace std;
+    for(std::set<std::string>::iterator i = clients.begin(); i != clients.end(); i++) {
+        RemoteClient *cli = server.getConnectedUser( *i );
+        if( !cli ) continue;
+        cli->send( sexp );
+    }
+    delete sexp;
+}
+
+void TacTestServer::tick(double dt) {
+    if( turns.getNumberOfParticipants() == 0) return;
+    using namespace std;
+    cerr << "remaining time: " << turns.getCurrentRemainingTime() << endl;
+    if( turns.getCurrentRemainingTime() <= 0 ) {
+        turns.next();
+        announceTurn();
+    }
+}
+
+bool TacTestServer::hasTurn(ServerPlayer* player) {
+    return player->getId() == turns.current();
+}
+
+void TacTestServer::announceTurn(void) {
+    using namespace SProto;
+    using namespace Sise;
+    using namespace std;
+    int playerId = turns.current();
+    cerr << "will announce: " << endl;
+    while( !myMap.getPlayerById( playerId ) ) {
+        if( playerId == -1 ) return;
+        turns.removeParticipant( playerId );
+        playerId = turns.current();
+    }
+    ostringstream oss;
+    oss << "*** ";
+    oss << "To move: " << myMap.getPlayerById( playerId )->getUsername();
+    oss << " in " << formatTime( turns.getCurrentRemainingTime() );
+    myMap.actionPlayerTurnBegins( *myMap.getPlayerById( playerId ) );
+    using namespace std;
+    cerr << "Announcing: " << oss.str() << endl;
+    cerr << "Announcing: " << oss.str() << endl;
+    delbroadcast( new Cons( new Symbol( "chat" ),
+                  new Cons( new Symbol( "channel" ),
+                  new Cons( new Symbol( "tactest" ), 
+                  new Cons( new String( "tactest" ),
+                            prepareChatMessage( "", oss.str() ))))));
+
+}
+
+void ServerMap::actionPlayerTurnBegins(ServerPlayer& turnPlayer) {
+    turnPlayer.beginTurn();
+
+    for(std::map<int,ServerPlayer*>::iterator i = players.begin(); i != players.end(); i++) {
+        ServerPlayer *player = i->second;
+        player->sendPlayerTurnBegins( turnPlayer );
+    }
+}
+
 bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, Sise::SExp *arg) {
     using namespace SProto;
     using namespace Sise;
@@ -463,11 +543,14 @@ bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, S
         using namespace std;
         Cons *args = asProperCons( arg );
         if( !player ) return false;
+        if( !hasTurn(player) ) return false;
         int unitId = *asInt( args->nthcar(0) );
         int dx = *asInt( args->nthcar(1) );
         int dy = *asInt( args->nthcar(2) );
         myMap.cmdMoveUnit( player, unitId, dx, dy );
     } else if( cmd == "test-spawn" ) {
+        cli->enterChannel( "tactest", "tactest" );
+        clients.insert( cli->getUsername() );
         if( player ) {
             ServerUnit *unit = player->getAnyControlledUnit();
             player->sendMemories();
@@ -478,6 +561,7 @@ bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, S
                                  (new String( cli->getUsername() ))
                                  (new Int( unit->getId() ) )
                             .make() ));
+//            turns.addParticipant( player->getId(), 10.0, 10.0 );
             return true;
         }
         player = new ServerPlayer( server, myMap, myMap.generatePlayerId(), cli->getUsername() );
@@ -488,8 +572,15 @@ bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, S
             delete unit;
             return true;
         }
+        turns.addParticipant( player->getId(), 10.0, 10.0 );
+        using namespace std;
+        cerr << turns.getNumberOfParticipants() << " are now playing" << endl;
         myMap.adoptPlayer( player );
         myMap.adoptUnit( unit );
+        if( turns.getNumberOfParticipants() == 1 ) {
+            turns.start();
+            announceTurn();
+        }
         unit->setController( player );
         unit->getAP() = ActivityPoints( unit->getUnitType(), 1, 1, 1 );
         int x, y;
@@ -628,6 +719,16 @@ void ServerPlayer::sendFovDelta(void) {
                      new Cons( new Symbol( "fov-new-dark" ),
                                newlyDark )));
         newlyDark = 0;
+    }
+}
+
+void ServerUnit::beginTurn(void) {
+    activity = ActivityPoints(unitType, 1, 1, 1);
+}
+
+void ServerPlayer::beginTurn(void) {
+    for(std::vector<ServerUnit*>::iterator i = controlledUnits.begin(); i != controlledUnits.end(); i++) {
+        (*i)->beginTurn();
     }
 }
 

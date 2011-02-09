@@ -30,12 +30,18 @@ void RevealTerrainCAction::operator()(void) const {
     cerr << "revelations size: " << revelations.size() << endl;
 }
 
+void BeginPlayerTurnCAction::operator()(void) const {
+    cmap.playerTurnBegins( playerId );
+}
+
 void RemoveUnitCAction::operator()(void) const {
     cmap.removeUnit( unitId );
 }
 
 void UnitDiscoverCAction::operator()(void) const {
+    using namespace std;
     ClientUnit *unit = new ClientUnit( unitId, unitType, team, owner );
+    cerr << "creating unit w owner " << owner << endl;
     unit->getAP() = ap;
     cmap.adoptUnit( unit );
     cmap.placeUnitAt( unitId, x, y, layer );

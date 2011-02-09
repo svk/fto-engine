@@ -17,6 +17,7 @@
 
 #include "SProto.h"
 
+#include "Turns.h"
 
 /* Thoughts.
    
@@ -96,6 +97,9 @@ class ServerPlayer {
         void sendUnitDiscovered(const ServerUnit&);
         void sendUnitDiscoveredAt(const ServerUnit&, const ServerTile&);
         void sendUnitMoved(const ServerUnit&, const ServerTile&, const ServerTile&);
+        void sendPlayerTurnBegins(const ServerPlayer&);
+
+        void beginTurn(void);
 };
 
 class ServerUnit {
@@ -128,6 +132,8 @@ class ServerUnit {
 
         void enterTile(ServerTile*, int);
         int leaveTile(void);
+
+        void beginTurn(void);
 
         void gatherFov( const ServerMap&, HexTools::HexFovRegion& ) const;
 };
@@ -184,6 +190,7 @@ class ServerMap : public HexTools::HexOpacityMap {
         int generatePlayerId(void) { return playerIdGen.generate(); }
         int generateUnitId(void) { return unitIdGen.generate(); }
 
+        ServerPlayer* getPlayerById(int);
         ServerUnit* getUnitById(int);
 
         void adoptPlayer(ServerPlayer*);
@@ -211,6 +218,7 @@ class ServerMap : public HexTools::HexOpacityMap {
         bool actionMoveUnit(ServerUnit*,int,int);
         bool actionPlaceUnit(ServerUnit*,int,int);
         bool actionRemoveUnit(ServerUnit*);
+        void actionPlayerTurnBegins(ServerPlayer&);
 
 };
 
@@ -224,12 +232,20 @@ class TacTestServer : public SProto::SubServer {
         UnitType pcType, trollType;
         ServerMap myMap;
 
-        
+        FischerTurnManager turns;
+
+        std::set<std::string> clients;
+
     public:
         TacTestServer(SProto::Server&, int);
 
         bool handle( SProto::RemoteClient*, const std::string&, Sise::SExp* );
-        
+        void tick(double dt);
+
+        bool hasTurn(ServerPlayer*);
+        void announceTurn(void);
+
+        void delbroadcast(Sise::SExp*);
 };
 
 };

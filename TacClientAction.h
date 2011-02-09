@@ -122,6 +122,23 @@ struct SetActiveRegionCAction : public ClientAction {
     bool isCosmetic(void) const { return true; }
 };
 
+struct BeginPlayerTurnCAction : public ClientAction {
+    ClientMap& cmap;
+    int playerId;
+
+    BeginPlayerTurnCAction(ClientMap& cmap, int playerId) :
+        cmap ( cmap ),
+        playerId ( playerId )
+    {
+    }
+
+    ClientAction* duplicate(void) const { return new BeginPlayerTurnCAction( cmap, playerId ); }
+
+    void operator()(void) const;
+
+    bool isCosmetic(void) const { return false; }
+};
+
 struct RemoveUnitCAction : public ClientAction {
     ClientMap& cmap;
     int unitId;
