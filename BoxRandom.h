@@ -42,31 +42,41 @@ class Outcomes {
 };
 
 template
-<class I,class O,class N>
-Outcomes<O,N> transformDeterministic(const Outcomes<I,N>& orig, O (*f)(const I&)) {
-    const int sz = orig.getNumberOfOutcomes();
-    Outcomes<O,N> rv;
-    for(int i=0;i<sz;i++) {
-        rv.add( orig.getWeight(i), f(orig.getOutcome(i)) );
-    }
-    return rv;
-}
+<class I, class O, class N>
+class NondeterministicTransform {
+    public:
+        virtual Outcomes<O,N> transform(const I&) = 0;
+
+        Outcomes<O,N> operator()(const Outcomes<I,N>& orig) {
+            const int sz = orig.getNumberOfOutcomes();
+            Outcomes<O,N> rv;
+            for(int i=0;i<sz;i++) {
+                const N& mwt = orig.getWeight(i);
+                const Outcomes<O,N> mrv = transform( orig.getOutcome(i) );
+                const int msz = mrv.getNumberOfOutcomes();
+                const N& totw = mrv.getTotalWeight();
+                for(int j=0;j<msz;j++) {
+                    rv.add( mwt * mrv.getWeight(j) / totw, mrv.getOutcome(j) );
+                }
+            }
+            return rv;
+        }
+};
 
 template
-<class I,class O,class N>
-Outcomes<O,N> transformNondeterministic(const Outcomes<I,N>& orig, Outcomes<O,N> (*f)(const I&)) {
-    const int sz = orig.getNumberOfOutcomes();
-    Outcomes<O,N> rv;
-    for(int i=0;i<sz;i++) {
-        const N& mwt = orig.getWeight(i);
-        const Outcomes<O,N> mrv = f( orig.getOutcome(i) );
-        const int msz = mrv.getNumberOfOutcomes();
-        const N& totw = mrv.getTotalWeight();
-        for(int j=0;j<msz;j++) {
-            rv.add( mwt * mrv.getWeight(j) / totw, mrv.getOutcome(j) );
+<class I, class O, class N>
+class DeterministicTransform {
+    public:
+        virtual O transform(const I&) = 0;
+
+        Outcomes<O,N> operator()(const Outcomes<I,N>& orig) {
+            const int sz = orig.getNumberOfOutcomes();
+            Outcomes<O,N> rv;
+            for(int i=0;i<sz;i++) {
+                rv.add( orig.getWeight(i), transform(orig.getOutcome(i)) );
+            }
+            return rv;
         }
-    }
-    return rv;
-}
+};
 
 #endif
