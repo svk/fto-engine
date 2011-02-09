@@ -2,7 +2,7 @@ CC=g++
 CPPFLAGS=-g -I/usr/include/freetype2 -Wall -O0
 
 SFML_LIBS=-lsfml-system -lsfml-graphics -lsfml-audio
-CORE_LIBS=-lboost_filesystem -lboost_program_options -lssl
+CORE_LIBS=-lboost_filesystem -lboost_program_options -lssl -lgmpxx -lgmp
 LIBS=$(SFML_LIBS) $(CORE_LIBS) `freetype-config --libs`
 
 EXECUTABLES=test-hexfml test-coords test-typesetter test-sexp test-sisenet test-sftools spserver spclient spguient test-hexfml test-hexplorer test-fov test-tacclient
@@ -50,3 +50,4 @@ test-tacclient: test-tacclient.o HexFov.o HexTools.o myabort.o TacClient.o sftoo
 	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
 
 test-boxrandom: test-boxrandom.o
+	$(CC) $(CPPFLAGS) $(CORE_LIBS) $^ -o $@

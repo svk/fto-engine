@@ -2,7 +2,9 @@
 
 #include <iostream>
 
-void maybeAdd10IfOdd(const int& x, const int& w, Outcomes<int,int>& o) {
+#include <gmpxx.h>
+
+void maybeAdd10IfOdd(const int& x, const mpz_class& w, Outcomes<int,mpz_class>& o) {
     if( (x%2) == 0 ) {
         o.add( 2 * w, x );
     } else {
@@ -21,15 +23,15 @@ int halve(const int& x) {
 
 int main(int argc, char *argv[]) {
     using namespace std;
-    Outcomes<int,int> outcomes;
+    Outcomes<int,mpz_class> outcomes;
     for(int i=1;i<=6;i++) {
         outcomes.add( 1, i );
     }
-    outcomes = transformDeterministic<int,int,int>( outcomes, halve );
-    outcomes = transformDeterministic<int,int,int>( outcomes, triple );
-    outcomes = transformNondeterministic<int,int,int>( outcomes, maybeAdd10IfOdd );
+    outcomes = transformDeterministic<int,int,mpz_class>( outcomes, halve );
+    outcomes = transformDeterministic<int,int,mpz_class>( outcomes, triple );
+    outcomes = transformNondeterministic<int,int,mpz_class>( outcomes, maybeAdd10IfOdd );
     for(int i=0;i<outcomes.getNumberOfOutcomes();i++) {
-        double p = outcomes.getWeight(i) / (double) outcomes.getTotalWeight();
+        mpq_class p (outcomes.getWeight(i), outcomes.getTotalWeight());
         cout << p << ": " << outcomes.getOutcome(i) << endl;
     }
     return 0;
