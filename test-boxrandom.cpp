@@ -27,11 +27,25 @@ struct HalveTransform : public DeterministicTransform<int,int> {
     }
 };
 
+struct AddBernoulliTrial : public NondeterministicTransform<int,int> {
+    mpq_class successP;
+
+    AddBernoulliTrial(mpq_class successP) : successP( successP ) {}
+
+    Outcomes<int> transform(int x) {
+        Outcomes<int> rv;
+        rv.add( successP, x + 1 );
+        rv.add( mpq_class(1) - successP, x );
+        return rv;
+    }
+};
+
 int main(int argc, char *argv[]) {
     using namespace std;
     Outcomes<int> outcomes;
-    for(int i=1;i<=6;i++) {
-        outcomes.add( 1, i );
+    outcomes.add( 1, 0 );
+    for(int i=0;i<20;i++) {
+        outcomes = AddBernoulliTrial(mpq_class(1,2))( outcomes );
     }
     outcomes = HalveTransform()( outcomes );
     outcomes = TripleTransform()( outcomes );
