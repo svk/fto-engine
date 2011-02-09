@@ -122,19 +122,18 @@ double Timer::getElapsedTime(void) {
 
 std::string formatTime(double seconds) {
     int t = (int)(0.5 + seconds * 1000);
-    const int k[] = { 1000, 60, 60, 24 };
-    const int kn = 4;
-    const std::string sx[] = { "ms", "s", "m", "d" };
+    const int k[] = { 1000 * 60 * 60 * 24, 1000 * 60 * 60, 1000 * 60, 1000, 1 };
+    const int kn = 5;
+    const std::string sx[] = { "d", "h", "m", "s", "ms" };
     int r[kn];
     std::ostringstream oss;
     using namespace std;
     cerr << "fmtTime=" << seconds << endl;
     for(int i=0;i<kn;i++) {
-        r[i] = t % k[i];
+        r[i] = t / k[i];
         t -= r[i] * k[i];
-        t /= k[i];
     }
-    for(int i=kn-1;i>=0;i--) if( r[i] ) {
+    for(int i=0;i<kn;i++) if( r[i] ) {
         if( i != (kn-1) ) oss << " ";
         oss << r[i] << sx[i];
     }
