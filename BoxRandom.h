@@ -54,11 +54,17 @@ Outcomes<O,N> transformDeterministic(const Outcomes<I,N>& orig, O (*f)(const I&)
 
 template
 <class I,class O,class N>
-Outcomes<O,N> transformNondeterministic(const Outcomes<I,N>& orig, void (*f)(const I&, const N&, Outcomes<O,N>&)) {
+Outcomes<O,N> transformNondeterministic(const Outcomes<I,N>& orig, Outcomes<O,N> (*f)(const I&)) {
     const int sz = orig.getNumberOfOutcomes();
     Outcomes<O,N> rv;
     for(int i=0;i<sz;i++) {
-        f( orig.getOutcome(i), orig.getWeight(i), rv );
+        const N& mwt = orig.getWeight(i);
+        const Outcomes<O,N> mrv = f( orig.getOutcome(i) );
+        const int msz = mrv.getNumberOfOutcomes();
+        const N& totw = mrv.getTotalWeight();
+        for(int j=0;j<msz;j++) {
+            rv.add( mwt * mrv.getWeight(j) / totw, mrv.getOutcome(j) );
+        }
     }
     return rv;
 }

@@ -4,13 +4,15 @@
 
 #include <gmpxx.h>
 
-void maybeAdd10IfOdd(const int& x, const mpz_class& w, Outcomes<int,mpz_class>& o) {
+Outcomes<int,mpq_class> maybeAdd10IfOdd(const int& x) {
+    Outcomes<int,mpq_class> rv;
     if( (x%2) == 0 ) {
-        o.add( 2 * w, x );
+        rv.add( 1, x );
     } else {
-        o.add( w, x );
-        o.add( w, 10 + x );
+        rv.add( 1, x );
+        rv.add( 1, 10 + x );
     }
+    return rv;
 }
 
 int triple(const int& x) {
@@ -23,15 +25,15 @@ int halve(const int& x) {
 
 int main(int argc, char *argv[]) {
     using namespace std;
-    Outcomes<int,mpz_class> outcomes;
+    Outcomes<int,mpq_class> outcomes;
     for(int i=1;i<=6;i++) {
         outcomes.add( 1, i );
     }
-    outcomes = transformDeterministic<int,int,mpz_class>( outcomes, halve );
-    outcomes = transformDeterministic<int,int,mpz_class>( outcomes, triple );
-    outcomes = transformNondeterministic<int,int,mpz_class>( outcomes, maybeAdd10IfOdd );
+    outcomes = transformDeterministic<int,int,mpq_class>( outcomes, halve );
+    outcomes = transformDeterministic<int,int,mpq_class>( outcomes, triple );
+    outcomes = transformNondeterministic<int,int,mpq_class>( outcomes, maybeAdd10IfOdd );
     for(int i=0;i<outcomes.getNumberOfOutcomes();i++) {
-        mpq_class p (outcomes.getWeight(i), outcomes.getTotalWeight());
+        mpq_class p = outcomes.getWeight(i) / outcomes.getTotalWeight();
         cout << p << ": " << outcomes.getOutcome(i) << endl;
     }
     return 0;
