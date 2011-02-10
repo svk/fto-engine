@@ -49,5 +49,5 @@ test-fov: test-fov.o HexFov.o HexTools.o myabort.o
 test-tacclient: test-tacclient.o HexFov.o HexTools.o myabort.o TacClient.o sftools.o hexfml.o mtrand.o TacClientAction.o typesetter.o anisprite.o Tac.o Sise.o SProto.o TacRules.o
 	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
 
-test-boxrandom: test-boxrandom.o
+test-boxrandom: test-boxrandom.o BoxRandom.o
 	$(CC) $(CPPFLAGS) $(CORE_LIBS) $^ -o $@

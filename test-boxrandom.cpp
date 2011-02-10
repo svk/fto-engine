@@ -50,9 +50,13 @@ int main(int argc, char *argv[]) {
     outcomes = HalveTransform()( outcomes );
     outcomes = TripleTransform()( outcomes );
     outcomes = MaybeAdd10IfOddTransform()( outcomes );
+    mpq_class exval = 0;
     for(int i=0;i<outcomes.getNumberOfOutcomes();i++) {
         mpq_class p = outcomes.getWeight(i) / outcomes.getTotalWeight();
+        exval += outcomes.getOutcome(i) * outcomes.getWeight(i);
         cout << p << ": " << outcomes.getOutcome(i) << endl;
     }
+    exval /= outcomes.getTotalWeight();
+    cout << "Expected value: " << exval << endl;
     return 0;
 }

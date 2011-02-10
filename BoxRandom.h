@@ -7,6 +7,16 @@
 
 #include <gmpxx.h>
 
+struct GmpRandom {
+        static GmpRandom global;
+
+        gmp_randstate_t randstate;
+
+        GmpRandom(void);
+        GmpRandom(unsigned long int);
+        ~GmpRandom(void);
+};
+
 template
 <class O, class N = mpq_class>
 class Outcomes {
@@ -31,10 +41,6 @@ class Outcomes {
             }
             weights.push_back( w );
             outcomes.push_back( o );
-        }
-
-        const O& choose(void) {
-            return outcomes[0]; // chosen by fair dice roll etc etc ha ha
         }
 
         int getNumberOfOutcomes(void) const { return outcomes.size(); }
