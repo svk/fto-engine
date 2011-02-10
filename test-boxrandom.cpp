@@ -57,6 +57,35 @@ int main(int argc, char *argv[]) {
         cout << p << ": " << outcomes.getOutcome(i) << endl;
     }
     exval /= outcomes.getTotalWeight();
+
+    cout << endl;
+
     cout << "Expected value: " << exval << endl;
+    cout << "                " << exval.get_d() << endl;
+
+    gmp_randclass prng (gmp_randinit_mt);
+
+    const int trials1 = 100000;
+    double s = 0;
+    for(int i=0;i<trials1;i++) {
+        s += chooseRandomOutcome( outcomes, prng );
+    }
+    s /= trials1;
+    cout << "Average value:  " << s << endl;
+
+    cout << endl;
+
+    Outcomes<bool> outcomes2;
+    outcomes2.add( mpq_class(49,100), true );
+    outcomes2.add( mpq_class(51,100), false );
+    const int trials2 = 100000;
+    int successes = 0;
+    for(int i=0;i<trials2;i++) {
+        if( chooseRandomOutcome( outcomes2, prng ) ) {
+            ++successes;
+        }
+    }
+    cout << "E(successes): 49%" << endl;
+    cout << "Successes: " << successes << "/" << trials2 << endl;
     return 0;
 }

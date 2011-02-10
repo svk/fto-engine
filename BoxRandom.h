@@ -7,6 +7,8 @@
 
 #include <gmpxx.h>
 
+#include <iostream>
+
 struct GmpRandom {
         static GmpRandom global;
 
@@ -46,7 +48,7 @@ class Outcomes {
         int getNumberOfOutcomes(void) const { return outcomes.size(); }
         const N& getTotalWeight(void) const { return sum; }
         const N& getWeight(int j) const { return weights[j]; }
-        const O& getOutcome(int j) const { return outcomes[j]; }
+        O getOutcome(int j) const { return outcomes[j]; }
 };
 
 template
@@ -86,5 +88,26 @@ class DeterministicTransform {
             return rv;
         }
 };
+
+template
+<class O>
+O chooseRandomOutcome(const Outcomes<O,mpq_class>& outcomes, gmp_randclass& prng) {
+    // this is NOT optimized for a huge amount of usage
+    // but it IS supposed to be accurate
+    const int sz = outcomes.getNumberOfOutcomes();
+    mpz_class hugeval (1);
+    for(int i=0;i<sz;i++) {
+        hugeval *= outcomes.getWeight(i).get_den();
+    }
+    using namespace std;
+    mpq_class r ( prng.get_z_range( hugeval * outcomes.getTotalWeight() ), hugeval );
+    for(int i=0;i<sz;i++) {
+        r -= outcomes.getWeight(i);
+        if( r < 0 ) {
+            return outcomes.getOutcome(i);
+        }
+    }
+    throw std::logic_error( "chooseRandomOutcome is borked" );
+}
 
 #endif
