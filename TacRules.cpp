@@ -9,7 +9,36 @@
 
 namespace Tac {
 
-mpq_class OpposedBooleanRoller::hitChance(int x) {
+const static double OBRParameterToHitP = 0.75;
+const static double OBRParameterToHitC = 0.06;
+
+const static double OBRParameterDamageP = 0.5;
+const static double OBRParameterDamageC = 0.02;
+
+AttackRoller::AttackRoller(void) :
+    OpposedBooleanRoller( OBRParameterToHitP, OBRParameterToHitC )
+{
+}
+
+DamageSuccessRoller::DamageSuccessRoller(void) :
+    OpposedBooleanRoller( OBRParameterDamageP, OBRParameterDamageC )
+{
+}
+
+
+Outcomes<AttackResult> BernoulliDamageDie::transform(AttackResult x) {
+    Outcomes<AttackResult> rv;
+    if( x.status == AttackResult::MISS ) {
+        rv.add( 1, x );
+    } else {
+        rv.add( mpq_class(1) - successP, x );
+        x.damage += firepower;
+        rv.add( successP, x );
+    }
+    return rv;
+}
+
+mpq_class OpposedBooleanRoller::chance(int x) {
     const int resolution = 100000;
     double rv = p;
 
@@ -203,6 +232,42 @@ ActivityPoints ActivityPoints::fromSexp(Sise::SExp* sexp) {
     return rv;
 }
 
+bool AttackResult::operator==(const AttackResult& that) const {
+    if( status != that.status ) return false;
+    if( status == MISS && that.status == MISS ) return true;
+    if( status == HIT ) {
+        return damage == that.damage;
+    }
+    throw std::logic_error( "invalid state" );
+}
+
+Outcomes<AttackResult> makeAttack(int att, int def) {
+    const mpq_class successP = AttackRoller().chance(att,def);
+    Outcomes<AttackResult> rv;
+    AttackResult hit, miss;
+    hit.status = AttackResult::HIT;
+    hit.damage = 0;
+    miss.status = AttackResult::MISS;
+    rv.add( successP, hit );
+    rv.add( mpq_class(1) - successP, miss );
+    return rv;
+}
+
+Outcomes<AttackResult> DamageDealer::transform(AttackResult x) {
+    Outcomes<AttackResult> rv;
+    rv.add( 1, x );
+    if( x.status == AttackResult::HIT ) {
+        for(int i=0;i<diceno;i++) {
+            rv = BernoulliDamageDie(successP, firepower)( rv );
+        }
+    }
+    return rv;
+}
+
+int getDamageOfAttack(AttackResult res) {
+    if( res.status == AttackResult::MISS ) return 0;
+    return res.damage;
+}
 
 
 };
