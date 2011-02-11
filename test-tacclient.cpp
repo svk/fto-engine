@@ -59,7 +59,7 @@ class TestTacTPScreen : public SfmlScreen,
             soundBuffers ( soundBuffers ),
             tileTypes ( tileTypes ),
             unitTypes ( unitTypes ),
-            cmap ( mapSize, sheet, grid, &font, tileTypes, unitTypes ),
+            cmap ( mapSize, sheet, grid, &font, tileTypes, unitTypes, soundBuffers ),
             unitId ( INVALID_ID ),
             width ( 640 ),
             height ( 480 ),
@@ -131,13 +131,16 @@ class TestTacTPScreen : public SfmlScreen,
 
         void draw(sf::RenderWindow& win) {
             double cx, cy;
-            if( unitId != INVALID_ID && cmap.getUnitBaseScreenPositionById( unitId, cx, cy ) ) {
+            ClientUnit* unit = 0;
+            if( unitId != INVALID_ID ) {
+                unit = cmap.getUnitById( unitId );
+            }
+            if( unit && cmap.getUnitBaseScreenPositionById( unitId, cx, cy ) ) {
                 using namespace std;
                 vp.center( cx, cy );
             }
 
-            if( unitId != INVALID_ID ) {
-                ClientUnit* unit = cmap.getUnitById( unitId );
+            if( unit ) {
                 ActivityPoints& acp = unit->getAP();
                 struct CoreMove : public HexReceiver{
                     ClientMap& cmap;
@@ -224,13 +227,27 @@ class TestTacTPScreen : public SfmlScreen,
                 case sf::Key::D: dx = 3; dy = -1; break;
                 default: doMove = false; break;
             }
-            if( doMove && unitId != INVALID_ID ) {
-                client.delsend( List()( new Symbol( "tactest" ) )
-                                      ( new Symbol( "move-unit" ) )
-                                      ( new Int( unitId ) )
-                                      ( new Int( dx ) )
-                                      ( new Int( dy ) )
-                                .make() );
+            ClientUnit *me = cmap.getUnitById( unitId );
+            if( doMove && unitId != INVALID_ID && me ) {
+                int x, y;
+                me->getPosition( x, y );
+                x += dx;
+                y += dy;
+                int targetId = cmap.getTile( x, y ).getUnitIdAt( me->getLayer() );
+                if( targetId != INVALID_ID ) {
+                    client.delsend( List()( new Symbol( "tactest" ) )
+                                          ( new Symbol( "melee-attack" ) )
+                                          ( new Int( unitId ) )
+                                          ( new Int( targetId ) )
+                                    .make() );
+                } else {
+                    client.delsend( List()( new Symbol( "tactest" ) )
+                                          ( new Symbol( "move-unit" ) )
+                                          ( new Int( unitId ) )
+                                          ( new Int( dx ) )
+                                          ( new Int( dy ) )
+                                    .make() );
+                }
             }
             return false;
         }
@@ -399,7 +416,7 @@ int main(int argc, char *argv[]) {
     FreetypeLibrary lib;
     FreetypeFace risingTextFont ("./data/CrimsonText-Bold.otf", 20);
 
-    const int mapSize = 40;
+    const int mapSize = 10;
 
     ScreenGrid grid ( "./data/hexproto3.png" );
 

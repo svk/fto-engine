@@ -58,6 +58,14 @@ int ClientUnit::getId(void) const {
     return id;
 }
 
+void ClientUnitManager::remove(int id) {
+    ClientUnit *unit = (*this)[id];
+    if( unit ) {
+        units.erase( id );
+        delete unit;
+    }
+}
+
 void ClientUnitManager::adopt(ClientUnit* unit) {
     ClientUnit *prev = (*this)[unit->getId()];
     // actually, there being a previous unit by this ID
@@ -213,7 +221,7 @@ void ClientTile::setUnit(int id, int layer) {
     unitId[ layer ] = id;
 }
 
-ClientMap::ClientMap(int radius, TacSpritesheet& sheet, ScreenGrid& grid, FreetypeFace* risingTextFont, ResourceManager<ClientTileType>& tileTypes, ResourceManager<ClientUnitType>& unitTypes ) :
+ClientMap::ClientMap(int radius, TacSpritesheet& sheet, ScreenGrid& grid, FreetypeFace* risingTextFont, ResourceManager<ClientTileType>& tileTypes, ResourceManager<ClientUnitType>& unitTypes, ResourceManager<RandomVariantsCollection<sf::SoundBuffer> >& soundBuffers ) :
     risingTextFont ( risingTextFont ),
     radius ( radius ),
     tiles ( radius ),
@@ -225,7 +233,8 @@ ClientMap::ClientMap(int radius, TacSpritesheet& sheet, ScreenGrid& grid, Freety
     grid ( grid ),
     animRisingText (),
     tileTypes ( tileTypes ),
-    unitTypes ( unitTypes )
+    unitTypes ( unitTypes ),
+    soundBuffers ( soundBuffers )
 {
     for(int r=0;r<=radius;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
         int x, y;
@@ -334,6 +343,7 @@ void ClientMap::removeUnit(int id) {
     if( unit && unit->getPosition(x,y) ) {
         unit->leaveTile( tiles.get(x,y) );
     }
+    units.remove( id );
 }
 
 void ClientMap::adoptUnit(ClientUnit* unit) {
@@ -779,6 +789,26 @@ bool ClientMap::handleNetworkInfo(const std::string& cmd, Sise::SExp* sexp) {
             *asInt( args->nthcar(0) )
         );
         queueAction( act );
+    } else if( cmd == "melee-attack" ) {
+        int attackerId = *asInt( args->nthcar(0) ),
+            defenderId = *asInt( args->nthcar(1) );
+        AttackResult result = AttackResult::fromSexp( args->nthcar(2) );
+        ClientUnit *attackerUnit = getUnitById( attackerId );
+        ClientUnit *defenderUnit = getUnitById( defenderId );
+        int attx, atty;
+        int defx, defy;
+        if( !defenderUnit || !defenderUnit->getPosition( defx, defy )
+            || !attackerUnit || !attackerUnit->getPosition( attx, atty ) ) {
+            return true;
+        }
+
+        // show the animation, play impact sound, add rising text, apply attack
+        if( attx != atty || defx != defy ) {
+            queueAction( new BumpAnimationCAction( *this, attackerId, defx - attx, defy - atty ) );
+        }
+
+        queueAction( new ApplyAttackResultCosmeticCAction( *this, attackerId, defenderId, result ) );
+        queueAction( new ApplyAttackResultSubstantialCAction( *this, attackerId, defenderId, result ) );
     } else if( cmd == "unit-discovered" ) {
         UnitDiscoverCAction *act = new UnitDiscoverCAction(
             *this,

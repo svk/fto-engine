@@ -232,6 +232,8 @@ class ClientUnitManager {
         const UnitMap& getUnits(void) const { return units; }
         void adopt(ClientUnit*);
 
+        void remove(int);
+
         ClientUnit* operator[](int) const; // may return 0!
 };
 
@@ -407,9 +409,12 @@ class ClientMap : public HexOpacityMap,
 
         ResourceManager<ClientTileType>& tileTypes;
         ResourceManager<ClientUnitType>& unitTypes;
+        ResourceManager<RandomVariantsCollection<sf::SoundBuffer> >& soundBuffers;
 
     public:
-        ClientMap(int, TacSpritesheet&, ScreenGrid&, FreetypeFace*, ResourceManager<ClientTileType>&, ResourceManager<ClientUnitType>&);
+        ClientMap(int, TacSpritesheet&, ScreenGrid&, FreetypeFace*, ResourceManager<ClientTileType>&, ResourceManager<ClientUnitType>&, ResourceManager<RandomVariantsCollection<sf::SoundBuffer> >& soundBuffers);
+
+        sf::SoundBuffer* getSound(const std::string& name) { return &soundBuffers[name].choose(); }
 
         ScreenGrid& getGrid(void) const { return grid; }
 

@@ -1,5 +1,7 @@
 #include "TacClient.h"
 
+#include "TacRules.h"
+
 namespace Tac {
 
 struct PlaySoundCAction : public ClientAction {
@@ -13,6 +15,41 @@ struct PlaySoundCAction : public ClientAction {
     bool isCosmetic(void) const { return true; }
 
 };
+
+struct ApplyAttackResultSubstantialCAction : public ClientAction {
+    ClientMap& cmap;
+    int attackerId, defenderId;
+    AttackResult result;
+
+    ApplyAttackResultSubstantialCAction(ClientMap& cmap, int attackerId, int defenderId, AttackResult result) :
+        cmap( cmap ), attackerId( attackerId ), defenderId( defenderId ), result ( result )
+    {
+    }
+
+    ClientAction* duplicate(void) const { return new ApplyAttackResultSubstantialCAction( cmap, attackerId, defenderId, result ); }
+
+    void operator()(void) const;
+
+    bool isCosmetic(void) const { return false; }
+};
+
+struct ApplyAttackResultCosmeticCAction : public ClientAction {
+    ClientMap& cmap;
+    int attackerId, defenderId;
+    AttackResult result;
+
+    ApplyAttackResultCosmeticCAction(ClientMap& cmap, int attackerId, int defenderId, AttackResult result) :
+        cmap( cmap ), attackerId( attackerId ), defenderId( defenderId ), result ( result )
+    {
+    }
+
+    ClientAction* duplicate(void) const { return new ApplyAttackResultCosmeticCAction( cmap, attackerId, defenderId, result ); }
+
+    void operator()(void) const;
+
+    bool isCosmetic(void) const { return true; }
+};
+
 
 struct NormalMovementCAction : public ClientAction {
     ClientMap& cmap;

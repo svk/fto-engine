@@ -1,5 +1,7 @@
 #include "TacClientAction.h"
 
+#include <sstream>
+
 namespace Tac {
 
 void DarkenCAction::operator()(void) const {
@@ -11,6 +13,34 @@ void DarkenCAction::operator()(void) const {
 void BrightenCAction::operator()(void) const {
     for(std::list<BrightenTile>::const_iterator i = brightenTiles.begin(); i != brightenTiles.end(); i++) {
         cmap.brightenTile( i->x, i->y, i->tt );
+    }
+}
+
+void ApplyAttackResultSubstantialCAction::operator()(void) const {
+    ClientUnit *aunit = cmap.getUnitById( attackerId );
+    using namespace std;
+    cerr << "pot move en pre: " << aunit->getAP().getPotentialMovementEnergy() << endl;
+    aunit->getAP().spendActionPoint( 1 );
+    cerr << "pot move en post: " << aunit->getAP().getPotentialMovementEnergy() << endl;
+    ClientUnit *dunit = cmap.getUnitById( defenderId );
+    if( !dunit ) return;
+    if( result.status == AttackResult::HIT ) {
+        dunit->setHp( dunit->getHp() - result.damage );
+    }
+}
+
+void ApplyAttackResultCosmeticCAction::operator()(void) const {
+    ClientUnit *dunit = cmap.getUnitById( defenderId );
+    int defx, defy;
+    if( !dunit ) return;
+    if( !dunit->getPosition( defx, defy ) ) return;
+    if( result.status == AttackResult::MISS ) {
+        cmap.addRisingText( defx, defy, "*miss*", sf::Color(80, 80, 80), 500 );
+    } else {
+        std::ostringstream oss;
+        oss << "*-" << result.damage << "hp!*";
+        cmap.playSound( cmap.getSound( "clink" ) );
+        cmap.addRisingText( defx, defy, oss.str(), sf::Color(80, 80, 80), 500 );
     }
 }
 

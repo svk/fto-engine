@@ -19,6 +19,8 @@
 
 #include "Turns.h"
 
+#include <gmpxx.h>
+
 /* Thoughts.
    
    Server needs: - to keep track of the REAL map,
@@ -88,6 +90,7 @@ class ServerPlayer {
         void gatherIndividualFov(const ServerMap&);
         void updateFov(const ServerMap&);
 
+        bool isObserving(const ServerUnit&) const;
         bool isObserving(const ServerTile&) const;
         bool isReceivingFovFrom(const ServerUnit&) const;
 
@@ -98,6 +101,7 @@ class ServerPlayer {
         void sendUnitDiscoveredAt(const ServerUnit&, const ServerTile&);
         void sendUnitMoved(const ServerUnit&, const ServerTile&, const ServerTile&);
         void sendPlayerTurnBegins(const ServerPlayer&);
+        void sendMeleeAttack(const ServerUnit&, const ServerUnit&, AttackResult);
 
         void beginTurn(void);
 };
@@ -117,8 +121,12 @@ class ServerUnit {
     public:
         ServerUnit(int,const UnitType&);
 
+        void applyAttack(AttackResult);
+
         int getHP(void) const { return hp; }
         int getMaxHP(void) const { return maxHp; }
+
+        bool isDead(void) const;
 
         const ActivityPoints& getAP(void) const { return activity; }
         ActivityPoints& getAP(void) { return activity; }
@@ -182,9 +190,12 @@ class ServerMap : public HexTools::HexOpacityMap {
         std::map<int, ServerPlayer*> players;
         std::map<int, ServerUnit*> units;
 
+        gmp_randclass gmpPrng;
+
         void evtUnitAppears(ServerUnit&, ServerTile&);
         void evtUnitDisappears(ServerUnit&, ServerTile&);
         void evtUnitMoved(ServerUnit&, ServerTile&, ServerTile&);
+        void evtMeleeAttack(ServerUnit&, ServerUnit&, AttackResult);
 
     public:
         ServerMap(int,TileType*);
@@ -216,6 +227,7 @@ class ServerMap : public HexTools::HexOpacityMap {
         // of any kind. may send information to the player (d'oh), even on failure.
         // [such as reason for failure]
         bool cmdMoveUnit(ServerPlayer*,int,int,int);
+        bool cmdMeleeAttack(ServerPlayer*,int,int);
 
         // actions, like cmds, but originate from the server and so authority
         // does not need to be checked
@@ -224,6 +236,7 @@ class ServerMap : public HexTools::HexOpacityMap {
         bool actionPlaceUnit(ServerUnit*,int,int);
         bool actionRemoveUnit(ServerUnit*);
         void actionPlayerTurnBegins(ServerPlayer&);
+        bool actionMeleeAttack(ServerUnit&,ServerUnit&);
 
 };
 

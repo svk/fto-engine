@@ -4,6 +4,9 @@
 
 #include <iostream>
 
+#include "BoxRandom.h"
+#include "TacRules.h"
+
 namespace Tac {
 
 int IdGenerator::generate(void) {
@@ -51,7 +54,8 @@ ServerMap::ServerMap(int mapSize, TileType *defaultTt) :
     playerIdGen (),
     tiles ( mapSize ),
     players (),
-    units ()
+    units (),
+    gmpPrng( gmp_randinit_mt )
 {
     using namespace std;
     for(int r=1;r<=mapSize;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
@@ -116,7 +120,9 @@ void ServerUnit::enterTile(ServerTile* newTile, int layer ) {
 
 int ServerUnit::leaveTile(void) {
     if( tile ) {
-        return tile->clearUnit( this );
+        int rv = tile->clearUnit( this );
+        tile = 0;
+        return rv;
     }
     return -1;
 }
@@ -235,6 +241,7 @@ bool ServerMap::actionRemoveUnit(ServerUnit *unit) {
     ServerTile* tile = unit->getTile();
     unit->leaveTile();
 
+
     evtUnitDisappears( *unit, *tile );
 
     return true;
@@ -272,6 +279,47 @@ bool ServerMap::actionMoveUnit(ServerUnit *unit, int dx, int dy) {
     return true;
 }
 
+bool ServerMap::actionMeleeAttack(ServerUnit& attacker, ServerUnit& defender) {
+    const int diceno = 8, firepower = 4;
+    Outcomes<AttackResult> results = makeAttack( 0, 0 );
+    results = DamageDealer(0,0,diceno,firepower)( results );
+    AttackResult result = chooseRandomOutcome( results, gmpPrng );
+
+    evtMeleeAttack( attacker, defender, result );
+    
+    return true;
+}
+
+bool ServerMap::cmdMeleeAttack(ServerPlayer* player,int unitId, int targetId ) {
+    ServerUnit *unit = getUnitById( unitId );
+    ServerUnit *target = getUnitById( targetId );
+    if( !unit || !target ) return false;
+    if( player != unit->getController() ) return false;
+
+    ServerTile *unitTile = unit->getTile();
+    ServerTile *targetTile = target->getTile();
+    if( !unitTile || !targetTile ) return false;
+    int x0, y0, x1, y1;
+    unitTile->getXY( x0, y0 );
+    targetTile->getXY( x1, y1 );
+    int dx = x1 - x0, dy = y1 - y0;
+    if( !( (abs(dx) == 3 && abs(dy) == 1) || (dx == 0 && abs(dy) == 2) ) ) {
+        return false;
+    }
+
+    int cost = 1;
+
+    if( !unit->getAP().maySpendActionPoints( cost ) ) return false;
+
+    bool rv = actionMeleeAttack( *unit, *target );
+
+    if( rv ) {
+        unit->getAP().spendActionPoint( cost );
+    }
+    
+    return rv;
+}
+
 bool ServerMap::cmdMoveUnit(ServerPlayer* player,int unitId, int dx, int dy) {
     ServerUnit *unit = getUnitById(unitId);
     if( !player || !unit ) return false;
@@ -301,11 +349,32 @@ void ServerPlayer::updateFov(const ServerMap& smap) {
     // and share with allies!
 }
 
+bool ServerPlayer::isObserving(const ServerUnit& unit) const {
+    const ServerTile *tile = unit.getTile();
+    if( !tile ) return false;
+    return isObserving( *tile );
+}
+
 bool ServerPlayer::isObserving(const ServerTile& tile) const {
     // or check allies here?
     int x, y;
     tile.getXY( x, y );
     return individualFov.contains( x, y );
+}
+
+void ServerMap::evtMeleeAttack(ServerUnit& attacker, ServerUnit& defender, AttackResult result) {
+    for(std::map<int,ServerPlayer*>::iterator i = players.begin(); i != players.end(); i++) {
+        ServerPlayer *player = i->second;
+        if( player->isObserving( attacker ) || player->isObserving( defender ) ) {
+            player->sendMeleeAttack( attacker, defender, result );
+        }
+    }
+
+    defender.applyAttack( result );
+
+    if( defender.isDead() ) {
+        actionRemoveUnit( &defender );
+    }
 }
 
 void ServerMap::evtUnitAppears(ServerUnit& unit, ServerTile& tile) {
@@ -543,6 +612,14 @@ bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, S
                               (new Symbol( "world" ))
                               (new String( cli->getUsername() ))
                         .make() ));
+    } else if( cmd == "melee-attack" ) {
+        using namespace std;
+        Cons *args = asProperCons( arg );
+        if( !player ) return false;
+        if( !hasTurn(player) ) return false;
+        int unitId = *asInt( args->nthcar(0) );
+        int targetUnitId = *asInt( args->nthcar(1) );
+        myMap.cmdMeleeAttack( player, unitId, targetUnitId );
     } else if( cmd == "move-unit" ) {
         using namespace std;
         Cons *args = asProperCons( arg );
@@ -739,6 +816,38 @@ void ServerPlayer::beginTurn(void) {
     for(std::vector<ServerUnit*>::iterator i = controlledUnits.begin(); i != controlledUnits.end(); i++) {
         (*i)->beginTurn();
     }
+}
+
+void ServerUnit::applyAttack(AttackResult result) {
+    if( result.status == AttackResult::HIT ) {
+        hp -= result.damage;
+    }
+}
+
+bool ServerUnit::isDead(void) const {
+    return hp <= 0;
+}
+
+
+void ServerPlayer::sendMeleeAttack(const ServerUnit& attacker, const ServerUnit& defender, AttackResult result) {
+    if( !isObserving( attacker ) ) {
+        sendUnitDiscovered( attacker );
+    }
+    if( !isObserving( defender ) ) {
+        sendUnitDiscovered( defender );
+    }
+    using namespace Sise;
+    using namespace SProto;
+    using namespace HexTools;
+    RemoteClient *rc = server.getConnectedUser( username );
+    if( !rc ) return;
+    rc->delsend( List()( new Symbol( "tac" ) )
+                       ( new Symbol( "melee-attack" ) )
+                       ( new Int( attacker.getId() ) )
+                       ( new Int( defender.getId() ) )
+                       ( result.toSexp() )
+                 .make() );
+
 }
 
 };
