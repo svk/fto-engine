@@ -1,5 +1,11 @@
 CC=g++
-CPPFLAGS=-g -I/usr/include/freetype2 -Wall -O0
+CPPFLAGS=-I/usr/include/freetype2 -Wall
+
+ifeq ($(BUILD),release)
+	CPPFLAGS+=-O3
+else
+	CPPFLAGS+=-g -O0
+endif
 
 SFML_LIBS=-lsfml-system -lsfml-graphics -lsfml-audio
 CORE_LIBS=-lboost_filesystem -lboost_program_options -lssl -lgmpxx -lgmp
