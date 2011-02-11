@@ -528,6 +528,13 @@ void ClientMap::clearHighlights(void) {
     outerMoveHighlightZone.clear();
 }
 
+void ClientMap::clearHighlight(int x, int y) {
+    attackHighlightZone.remove( x, y );
+    outerMoveHighlightZone.remove( x, y );
+    moveHighlightZone.remove( x, y );
+    tiles.get( x, y ).setHighlight( ClientTile::NONE );
+}
+
 void ClientMap::addAttackHighlight(int x, int y) {
     tiles.get( x, y ).setHighlight( ClientTile::ATTACK_ZONE );
     attackHighlightZone.add( x, y );
@@ -724,17 +731,22 @@ void loadSoundsFromFile(const std::string& filename, ResourceManager<RandomizedS
 void ClientMap::playerTurnBegins(int playerId) {
     const ClientUnitManager::UnitMap& u = units.getUnits();
     using namespace std;
-    cerr << "OOOOOOH YEAHHHH?" << endl;
     for(ClientUnitManager::UnitMap::const_iterator i = u.begin(); i != u.end(); i++) {
         if( i->second->getOwner() == playerId ) {
             i->second->beginTurn();
+        } else {
+            i->second->stopTurn();
         }
     }
 }
 
+void ClientUnit::stopTurn(void) {
+    using namespace std;
+    activity = ActivityPoints( unitType, 0, 0, 0 );
+}
+
 void ClientUnit::beginTurn(void) {
     using namespace std;
-    cerr << "OOOOOOH YEAHHHH" << endl;
     activity = ActivityPoints( unitType, 1, 1, 1 );
 }
 

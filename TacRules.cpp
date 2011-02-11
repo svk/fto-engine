@@ -295,5 +295,4 @@ int getDamageOfAttack(AttackResult res) {
     return res.damage;
 }
 
-
 };

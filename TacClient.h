@@ -217,6 +217,7 @@ class ClientUnit {
         void startMeleeAnimation(int,int);
 
         void beginTurn(void);
+        void stopTurn(void);
 };
 
 class ClientUnitManager {
@@ -453,6 +454,7 @@ class ClientMap : public HexOpacityMap,
         void setTileType(int, int, const ClientTileType*);
 
         void clearHighlights(void);
+        void clearHighlight(int,int);
         void addMoveHighlight(int, int);
         void addOuterMoveHighlight(int, int);
         void addAttackHighlight(int, int);

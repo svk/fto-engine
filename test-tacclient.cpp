@@ -144,13 +144,15 @@ class TestTacTPScreen : public SfmlScreen,
                 ActivityPoints& acp = unit->getAP();
                 struct CoreMove : public HexReceiver{
                     ClientMap& cmap;
-                    CoreMove(struct ClientMap& cmap) : cmap(cmap) {}
-                    void add(int x, int y){ cmap.addMoveHighlight( x, y ); };
+                    int count;
+                    CoreMove(struct ClientMap& cmap) : cmap(cmap), count(0) {}
+                    void add(int x, int y){ ++count; cmap.addMoveHighlight( x, y ); };
                 };
                 struct OuterMove : public HexReceiver {
                     ClientMap& cmap;
-                    OuterMove(struct ClientMap& cmap) : cmap(cmap) {}
-                    void add(int x, int y) { cmap.addOuterMoveHighlight( x, y ); };
+                    int count;
+                    OuterMove(struct ClientMap& cmap) : cmap(cmap), count(0) {}
+                    void add(int x, int y) { ++count; cmap.addOuterMoveHighlight( x, y ); };
                 };
                 CoreMove coreMove( cmap );
                 OuterMove outerMove( cmap );
@@ -160,6 +162,10 @@ class TestTacTPScreen : public SfmlScreen,
                     using namespace std;
                     findAllAccessible( unit->getUnitType(), cmap, x, y, acp.getPotentialMovementEnergy(), outerMove );
                     findAllAccessible( unit->getUnitType(), cmap, x, y, acp.getImmediateMovementEnergy(), coreMove );
+                    cmap.clearHighlight( x, y );
+                    if( outerMove.count > 1 || unit->getAP().maySpendActionPoints(1) ) {
+                        cmap.addMoveHighlight( x, y );
+                    }
                 }
             }
 
