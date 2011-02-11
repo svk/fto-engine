@@ -68,6 +68,8 @@ ServerUnit::ServerUnit(int id, const UnitType& unitType) :
     id ( id ),
     unitType ( unitType ),
     controller ( 0 ),
+    hp ( unitType.maxHp ),
+    maxHp ( unitType.maxHp ),
     tile ( 0 )
 {
 }
@@ -431,6 +433,8 @@ void ServerPlayer::sendUnitDiscoveredAt(const ServerUnit& unit, const ServerTile
                        ( new Int( y ) )
                        ( new Int( unit.getLayer() ) )
                        ( unit.getAP().toSexp() )
+                       ( new Int( unit.getHP() ) )
+                       ( new Int( unit.getMaxHP() ) )
                  .make() );
 }
 
@@ -456,8 +460,8 @@ TacTestServer::TacTestServer(SProto::Server& server, int radius) :
     borderType( "border", "impassable wall", Type::WALL, Type::BLOCK, true, 0 ),
     wallType ( "wall", "wall", Type::WALL, Type::BLOCK, false, 0 ),
     floorType ( "floor", "floor", Type::FLOOR, Type::CLEAR, false, 100 ),
-    pcType ( "pc", "Player", 200 ),
-    trollType ( "troll", "Troll", 500 ),
+    pcType ( "pc", "Player", 200, 84 ),
+    trollType ( "troll", "Troll", 500, 43 ),
     myMap ( radius, &borderType )
 {
     trivialLevelGenerator( myMap, &wallType, &floorType, 0.4 );

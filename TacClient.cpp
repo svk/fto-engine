@@ -474,8 +474,8 @@ CMUnitBlitterGL& ClientMap::getUnitBlitter(int layer) {
     throw std::logic_error("no such layer");
 }
 
-ClientUnitType::ClientUnitType(const std::string& symbol, TacSpritesheet& sheet, const std::string& alias, const std::string& name, int speed) :
-    UnitType ( symbol, name, speed ),
+ClientUnitType::ClientUnitType(const std::string& symbol, TacSpritesheet& sheet, const std::string& alias, const std::string& name, int speed, int maxHp) :
+    UnitType ( symbol, name, speed, maxHp ),
     spriteNormal ( sheet.makeSprite( SpriteId( alias, SpriteId::NORMAL ) ) )
 {
 }
@@ -789,7 +789,9 @@ bool ClientMap::handleNetworkInfo(const std::string& cmd, Sise::SExp* sexp) {
             *asInt( args->nthcar(4) ),
             *asInt( args->nthcar(5) ),
             *asInt( args->nthcar(6) ),
-            ActivityPoints::fromSexp( args->nthcar(7) )
+            ActivityPoints::fromSexp( args->nthcar(7) ),
+            *asInt( args->nthcar(8) ),
+            *asInt( args->nthcar(9) )
         );
         queueAction( act );
     } else if( cmd == "unit-moved" ) {

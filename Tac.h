@@ -43,10 +43,11 @@ struct UnitType {
     std::string symbol;
     std::string name;
 
+    int maxHp;
     int speed;
     int nativeLayer;
 
-    UnitType(const std::string&, const std::string&, int);
+    UnitType(const std::string&, const std::string&, int, int);
     virtual ~UnitType(void) {}
 };
 

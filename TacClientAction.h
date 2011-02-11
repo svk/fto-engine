@@ -259,13 +259,14 @@ struct UnitDiscoverCAction : public ClientAction {
     int team, owner;
     int x, y, layer;
     ActivityPoints ap;
+    int hp, maxHp;
 
-    UnitDiscoverCAction(ClientMap& cmap, int unitId, ClientUnitType& unitType, int team, int owner, int x, int y, int layer, ActivityPoints ap) :
-        cmap( cmap ), unitId( unitId ), unitType ( unitType ), team (team), owner( owner ), x ( x ), y ( y ), layer ( layer ), ap ( ap )
+    UnitDiscoverCAction(ClientMap& cmap, int unitId, ClientUnitType& unitType, int team, int owner, int x, int y, int layer, ActivityPoints ap, int hp, int maxHp) :
+        cmap( cmap ), unitId( unitId ), unitType ( unitType ), team (team), owner( owner ), x ( x ), y ( y ), layer ( layer ), ap ( ap ), hp ( hp ), maxHp ( maxHp )
     {
     }
 
-    ClientAction* duplicate(void) const { return new UnitDiscoverCAction( cmap, unitId, unitType, team, owner, x, y, layer, ap ); }
+    ClientAction* duplicate(void) const { return new UnitDiscoverCAction( cmap, unitId, unitType, team, owner, x, y, layer, ap, hp, maxHp ); }
 
     void operator()(void) const;
 

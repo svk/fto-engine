@@ -2,9 +2,10 @@
 
 namespace Tac {
 
-UnitType::UnitType(const std::string& symbol, const std::string& name, int speed) :
+UnitType::UnitType(const std::string& symbol, const std::string& name, int speed, int maxHp) :
     symbol ( symbol ),
     name ( name ),
+    maxHp ( maxHp ),
     speed ( speed ),
     nativeLayer ( 0 ) // xx
 {

@@ -110,10 +110,15 @@ class ServerUnit {
 
         ActivityPoints activity;
 
+        int hp, maxHp;
+
         ServerTile *tile;
 
     public:
         ServerUnit(int,const UnitType&);
+
+        int getHP(void) const { return hp; }
+        int getMaxHP(void) const { return maxHp; }
 
         const ActivityPoints& getAP(void) const { return activity; }
         ActivityPoints& getAP(void) { return activity; }
