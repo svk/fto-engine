@@ -9,6 +9,26 @@
 
 namespace Tac {
 
+mpq_class OpposedBooleanRoller::hitChance(int x) {
+    const int resolution = 100000;
+    double rv = p;
+
+    if( x < 0 ) {
+        rv /= pow( 2, c * abs(x) );
+    } else if( x > 0 ) {
+        rv = 1 + (p-1) / pow( 2, (p/(1-p)) * c * x );
+    }
+
+    int irv = (int)(0.5+(rv * resolution));
+    if( irv >= resolution ) {
+        return mpq_class( resolution-1, resolution );
+    }
+    if( irv <= 0 ) {
+        return mpq_class( 1, resolution );
+    }
+    return mpq_class( irv, resolution );
+}
+
 ActivityPoints::ActivityPoints(void) :
     speed(0),
     movementPoints(0),

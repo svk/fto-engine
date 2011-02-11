@@ -6,6 +6,8 @@
 
 #include "Sise.h"
 
+#include <gmpxx.h>
+
 namespace Tac {
 
 class TileTypeMap {
@@ -41,6 +43,24 @@ class ActivityPoints {
 
         Sise::SExp *toSexp(void) const;
         static ActivityPoints fromSexp(Sise::SExp*);
+};
+
+class OpposedBooleanRoller {
+    // basic case meant for: attack vs defense -> hit?
+    // suitable parameters p=0.75, c=0.06
+    private:
+        const double p, c;
+
+        mpq_class hitChance(int);
+    public:
+        OpposedBooleanRoller(const double p, const double c) :
+            p ( p ), c ( c )
+        {
+        }
+
+        mpq_class hitChance(int att,int def) {
+            return hitChance( att - def );
+        }
 };
 
 void findAllAccessible(const UnitType&, const TileTypeMap&, int, int, int, HexTools::HexReceiver&);
