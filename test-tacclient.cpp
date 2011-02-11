@@ -401,7 +401,7 @@ int main(int argc, char *argv[]) {
 
     const int mapSize = 40;
 
-    ScreenGrid grid ( "./data/hexproto2.png" );
+    ScreenGrid grid ( "./data/hexproto3.png" );
 
     TacSpritesheet sheet ( 1024, 1024 );
     loadSpritesFromFile( "./config/sprites.lisp", sheet, grid );

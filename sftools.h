@@ -208,6 +208,9 @@ typedef SimpleKeyedSpritesheet<std::string> StringKeyedSpritesheet;
 
 sf::SoundBuffer* loadSoundBufferFromFile(const std::string&);
 sf::Image* loadImageFromFile(const std::string&);
+
+void drawSprite( const sf::Sprite& sprite );
+void drawSpriteCentered( const sf::Sprite&, double, double);
 void drawBoundSprite( const sf::Sprite& sprite );
 void drawBoundSpriteCentered( const sf::Sprite&, double, double);
 

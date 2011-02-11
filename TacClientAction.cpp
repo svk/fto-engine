@@ -40,10 +40,9 @@ void RemoveUnitCAction::operator()(void) const {
 
 void UnitDiscoverCAction::operator()(void) const {
     using namespace std;
-    ClientUnit *unit = new ClientUnit( unitId, unitType, team, owner );
+    ClientUnit *unit = cmap.createUnit( unitId, unitType, team, owner, 42, 42 );
     cerr << "creating unit w owner " << owner << endl;
     unit->getAP() = ap;
-    cmap.adoptUnit( unit );
     cmap.placeUnitAt( unitId, x, y, layer );
 }
 

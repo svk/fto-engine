@@ -249,6 +249,8 @@ class LabelSprite {
         LabelSprite(FreetypeFace&, const FormattedLine&);
         ~LabelSprite(void);
 
+        sf::Sprite& getSprite(void) { return *sprite; }
+
         void restrictToWidth(int);
         void noRestrictToWidth(void);
 

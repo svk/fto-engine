@@ -12,6 +12,8 @@
 
 #include "TacClientAction.h"
 
+#include "TacClientVisuals.h"
+
 namespace Tac {
 
 const double MovementAnimationDuration = 0.15;
@@ -19,7 +21,7 @@ const double MeleeAnimationDuration = 0.3;
 
 std::map< std::string, int > SpriteId::spritenoAliases;
 
-ClientUnit::ClientUnit(int id, ClientUnitType& unitType, int team, int owner) :
+ClientUnit::ClientUnit(FreetypeFace& hpFont, int id, ClientUnitType& unitType, int team, int owner, int hp, int maxHp) :
     id ( id ),
     unitType ( unitType ),
     team ( team ),
@@ -29,7 +31,10 @@ ClientUnit::ClientUnit(int id, ClientUnitType& unitType, int team, int owner) :
     y ( 0 ),
     layer ( 0 ),
     hasPosition ( false ),
-    curveAnim ( 0 )
+    hp ( hp ),
+    maxHp ( maxHp ),
+    curveAnim ( 0 ),
+    hpIndicator ( hpFont, hp, maxHp )
 {
 }
 
@@ -215,7 +220,7 @@ ClientMap::ClientMap(int radius, TacSpritesheet& sheet, ScreenGrid& grid, Freety
     units (),
     animatedUnit ( 0 ),
     levelBlitter (*this, sheet),
-    groundUnitBlitter (*this, sheet, 0),
+    groundUnitBlitter (*this, sheet, 0 ),
     activeRegion (),
     grid ( grid ),
     animRisingText (),
@@ -409,8 +414,21 @@ void CMUnitBlitterGL::drawHex(int x, int y, sf::RenderWindow& win) {
     if( !unit ) return; // !?
     const ClientUnitType& unitType = unit->getUnitType();
     unit->getCenterOffset( xadjust, yadjust, false );
+
+    glPushMatrix();
+
     glTranslatef( xadjust, yadjust, 0 );
-    drawBoundSpriteCentered( unitType.spriteNormal, cmap.getGrid().getHexWidth(), cmap.getGrid().getHexHeight() );
+
+    glColor3f(1,1,1);
+
+    drawSpriteCentered( unitType.spriteNormal, cmap.getGrid().getHexWidth(), cmap.getGrid().getHexHeight() );
+
+    unit->getHpIndicator().drawGL( cmap.getGrid().getHexWidth(), cmap.getGrid().getHexHeight() );
+
+    glPopMatrix();
+
+
+
 }
 
 void CMLevelBlitterGL::drawHex(int x, int y, sf::RenderWindow& win) {
@@ -795,5 +813,15 @@ bool ClientMap::handleNetworkInfo(const std::string& cmd, Sise::SExp* sexp) {
     return true;
 }
 
+ClientUnit *ClientMap::createUnit(int a, ClientUnitType& b, int c, int d, int e, int f) {
+    ClientUnit *rv = new ClientUnit(*risingTextFont, a,b,c,d,e,f);
+    adoptUnit( rv );
+    return rv;
+}
+
+void ClientUnit::setHp(int hp_) {
+    hp = hp_;
+    hpIndicator.setState( hp, maxHp );
+}
 
 };

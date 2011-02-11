@@ -1,6 +1,8 @@
 #ifndef H_TAC_CLIENT
 #define H_TAC_CLIENT
 
+#include "TacClientVisuals.h"
+
 #include "typesetter.h"
 
 #include "HexFov.h"
@@ -171,12 +173,22 @@ class ClientUnit {
         int x, y, layer;
         bool hasPosition;
 
+        int hp, maxHp;
+
         ActivityPoints activity;
 
         CurveAnimation *curveAnim;
 
+        HpIndicator hpIndicator;
+
     public:
-        ClientUnit(int, ClientUnitType&, int, int);
+        ClientUnit(FreetypeFace&, int, ClientUnitType&, int, int, int, int);
+
+        int getHp(void) const { return hp; }
+        int getMaxHp(void) const { return maxHp; }
+        void setHp(int);
+
+        HpIndicator& getHpIndicator(void) { return hpIndicator; }
 
         ActivityPoints& getAP(void) { return activity; }
 
@@ -324,7 +336,7 @@ class CMUnitBlitterGL : public HexBlitter {
     public:
         CMUnitBlitterGL( ClientMap& cmap,
                          TacSpritesheet& unitsheet,
-                         int layer ) :
+                         int layer) :
             cmap ( cmap ),
             unitsheet ( unitsheet ),
             layer ( layer )
@@ -452,6 +464,8 @@ class ClientMap : public HexOpacityMap,
         bool handleNetworkInfo(const std::string&, Sise::SExp*);
 
         void playerTurnBegins(int);
+
+        ClientUnit *createUnit(int, ClientUnitType&, int, int, int, int);
 };
 
 typedef RandomVariantsCollection<sf::SoundBuffer> RandomizedSoundEffect;

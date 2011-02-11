@@ -18,4 +18,4 @@
     (solid-colour 255 0 0 128))
 
 (grid-thin (normal)
-    (file "./data/hexthingrid2.png"))
+    (file "./data/thickgrid64.png"))
