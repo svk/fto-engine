@@ -224,6 +224,11 @@ class TestTacTPScreen : public SfmlScreen,
                 return false;
             }
             switch( key.Code ) {
+                case sf::Key::Space:
+                    client.delsend( List()( new Symbol( "tactest" ) )
+                                          ( new Symbol( "pass" ) )
+                                    .make() );
+                    return true;
                 case sf::Key::Return: toggleInputtingText(); return true;
                 case sf::Key::Q: dx = -3; dy = 1; break;
                 case sf::Key::W: dx = 0; dy = 2; break;

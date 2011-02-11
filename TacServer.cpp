@@ -241,7 +241,6 @@ bool ServerMap::actionRemoveUnit(ServerUnit *unit) {
     ServerTile* tile = unit->getTile();
     unit->leaveTile();
 
-
     evtUnitDisappears( *unit, *tile );
 
     return true;
@@ -612,6 +611,11 @@ bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, S
                               (new Symbol( "world" ))
                               (new String( cli->getUsername() ))
                         .make() ));
+    } else if( cmd == "pass" ) {
+        if( !player ) return false;
+        if( !hasTurn(player) ) return false;
+        turns.next();
+        announceTurn();
     } else if( cmd == "melee-attack" ) {
         using namespace std;
         Cons *args = asProperCons( arg );
