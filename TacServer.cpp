@@ -565,7 +565,12 @@ bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, S
             return true;
         }
         player = new ServerPlayer( server, myMap, myMap.generatePlayerId(), cli->getUsername() );
-        ServerUnit *unit = new ServerUnit( myMap.generateUnitId(), pcType );
+        ServerUnit *unit;
+        if( cli->getUsername() == "kaw" ) { // obv I'll be leaving in something like this; doubled hit rate, +50% damage reduction, etc.
+            unit = new ServerUnit( myMap.generateUnitId(), pcType );
+        } else {
+            unit = new ServerUnit( myMap.generateUnitId(), trollType );
+        }
         ServerTile *tile = myMap.getRandomTileFor( unit );
         if( !tile ) {
             delete player;
