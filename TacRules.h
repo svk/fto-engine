@@ -90,6 +90,9 @@ struct AttackResult {
     int damage; // different types..?
 
     bool operator==(const AttackResult&) const;
+
+    Sise::SExp *toSexp(void) const;
+    static AttackResult fromSexp(Sise::SExp*);
 };
 
 Outcomes<AttackResult> makeAttack(int,int);

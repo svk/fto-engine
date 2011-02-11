@@ -210,6 +210,32 @@ void findAllAccessible(const UnitType& unitType, const TileTypeMap& ttMap, int c
 
 }
 
+Sise::SExp* AttackResult::toSexp(void) const {
+    using namespace Sise;
+    if( status == MISS ) {
+        return List()( new Symbol( "miss" ) ).make();
+    } else if( status == HIT ) {
+        return List()( new Symbol( "hit" ) )
+                     ( new Int( damage ) )
+               .make();
+    }
+    throw std::logic_error( "status neither hit nor miss" );
+}
+
+AttackResult AttackResult::fromSexp(Sise::SExp* sexp) {
+    using namespace Sise;
+    Cons *args = asProperCons( sexp );
+    std::string type = *asSymbol( args->nthcar(0) );
+    AttackResult rv;
+    if( type == "miss" ) {
+        rv.status = MISS;
+    } else if( type == "hit" ) {
+        rv.status = HIT;
+        rv.damage = *asInt( args->nthcar(1) );
+    } else throw std::logic_error( "status in sexp neither hit nor miss" );
+    return rv;
+}
+
 Sise::SExp* ActivityPoints::toSexp(void) const {
     using namespace Sise;
     return List()( new Int( speed ) )
