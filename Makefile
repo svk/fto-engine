@@ -38,7 +38,7 @@ test-sexp: test-sexp.o Sise.o myabort.o
 	$(CC) $(CPPFLAGS) $(CORE_LIBS) $^ -o $@
 
 test-sisenet: test-sisenet.o Sise.o myabort.o
-	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
+	$(CC) $(CPPFLAGS) $(CORE_LIBS) $^ -o $@
 
 spserver: Sise.o spserver.o SProto.o myabort.o Nash.o NashServer.o HexTools.o HexFov.o HexTools.o myabort.o mtrand.o Tac.o TacServer.o TacRules.o Turns.o
 	$(CC) $(CPPFLAGS) $(CORE_LIBS) $^ -o $@
