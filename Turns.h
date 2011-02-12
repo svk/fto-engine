@@ -34,6 +34,7 @@ class FischerTurnManager {
     public:
         FischerTurnManager(void);
 
+        int skip(void);
         int next(void);
         int current(void);
 

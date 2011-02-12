@@ -53,6 +53,16 @@ void FischerTurnManager::wrapIndex(void) {
     }
 }
 
+int FischerTurnManager::skip(void) {
+    using namespace std;
+    if( !participants.size() ) {
+        return -1;
+    }
+    ++index;
+    wrapIndex();
+    return current();
+}
+
 int FischerTurnManager::next(void) {
     using namespace std;
     if( !participants.size() ) {
