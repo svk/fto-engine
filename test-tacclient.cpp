@@ -80,8 +80,8 @@ class TestTacTPScreen : public SfmlScreen,
             sidePanel.add( &currentTimeLeft );
             resize( width, height );
 
-            currentPlayer.set( "always me", sf::Color(255,0,0) );
-            currentTimeLeft.set( "eternity", sf::Color(50,200,50) );
+            currentPlayer.set( "", sf::Color(255,0,0) );
+            currentTimeLeft.set( "", sf::Color(50,200,50) );
         }
 
         void showServerMessage( const std::string& message ) {
