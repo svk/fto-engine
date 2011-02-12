@@ -4,6 +4,20 @@
 
 namespace Tac {
 
+struct IntroducePlayerCAction : public ClientAction {
+    ClientMap& cmap;
+    int playerId;
+    std::string username, displayName;
+
+    IntroducePlayerCAction(ClientMap& cmap, int playerId, const std::string& username, const std::string& displayName ):
+        cmap ( cmap ), playerId( playerId ), username ( username ), displayName( displayName ) {}
+    ClientAction* duplicate(void) const { return new IntroducePlayerCAction( cmap, playerId, username, displayName ); }
+    void operator()(void) const;
+    bool isCosmetic(void) const { return false; }
+
+};
+
+
 struct PlaySoundCAction : public ClientAction {
     ClientMap& cmap;
     sf::SoundBuffer& buffer;
@@ -162,14 +176,16 @@ struct SetActiveRegionCAction : public ClientAction {
 struct BeginPlayerTurnCAction : public ClientAction {
     ClientMap& cmap;
     int playerId;
+    int milliseconds;
 
-    BeginPlayerTurnCAction(ClientMap& cmap, int playerId) :
+    BeginPlayerTurnCAction(ClientMap& cmap, int playerId, int milliseconds) :
         cmap ( cmap ),
-        playerId ( playerId )
+        playerId ( playerId ),
+        milliseconds ( milliseconds )
     {
     }
 
-    ClientAction* duplicate(void) const { return new BeginPlayerTurnCAction( cmap, playerId ); }
+    ClientAction* duplicate(void) const { return new BeginPlayerTurnCAction( cmap, playerId, milliseconds ); }
 
     void operator()(void) const;
 

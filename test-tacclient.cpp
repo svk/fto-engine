@@ -42,6 +42,10 @@ class TestTacTPScreen : public SfmlScreen,
         ChatBox chatbox;
         ChatInputLine chatinput;
 
+        Panel sidePanel;
+        PanelCenteredText currentPlayer;
+        PanelCenteredText currentTimeLeft;
+
     public:
         TestTacTPScreen(
             const int mapSize,
@@ -67,9 +71,17 @@ class TestTacTPScreen : public SfmlScreen,
             client ( client ),
             inputtingText ( false ),
             chatbox ( 0, 0, width, height, font, sf::Color(0,50,0) ),
-            chatinput ( width, font, sf::Color(255,255,255), FormattedCharacter(font,sf::Color(255,255,0),'_') )
+            chatinput ( width, font, sf::Color(255,255,255), FormattedCharacter(font,sf::Color(255,255,0),'_') ),
+            sidePanel (),
+            currentPlayer ( font ),
+            currentTimeLeft ( font )
         {
+            sidePanel.add( &currentPlayer );
+            sidePanel.add( &currentTimeLeft );
             resize( width, height );
+
+            currentPlayer.set( "always me", sf::Color(255,0,0) );
+            currentTimeLeft.set( "eternity", sf::Color(50,200,50) );
         }
 
         void showServerMessage( const std::string& message ) {
@@ -96,6 +108,9 @@ class TestTacTPScreen : public SfmlScreen,
         void tick(double dt) {
             cmap.animate( dt );
             cmap.processActions();
+
+            currentPlayer.setText( cmap.getCurrentPlayerName() );
+            currentTimeLeft.setText( formatTime( cmap.getCurrentPlayerTime() ) );
         }
 
         void resize(int width_, int height_) {
@@ -111,6 +126,8 @@ class TestTacTPScreen : public SfmlScreen,
             chatbox.resize( width - ipWidth, cbHeight );
             chatinput.setWidth( width - ipWidth );
             chatbox.setPosition( 0, height - cbHeight );
+
+            sidePanel.setPosition( width - ipWidth, 0 );
 /*
             ipPanel = sf::Shape::Rectangle( width - ipWidth,
                                             0,
@@ -209,6 +226,9 @@ class TestTacTPScreen : public SfmlScreen,
             win.SetView( win.GetDefaultView() );
 
             vp.endClip();
+
+            sidePanel.draw( win, 200 );
+
         }
 
         bool handleKey(const sf::Event::KeyEvent& key) {

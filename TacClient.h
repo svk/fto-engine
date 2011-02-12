@@ -26,6 +26,8 @@
 
 #include "Tac.h"
 
+#include "Turns.h"
+
 #include "Sise.h"
 
 namespace Tac {
@@ -412,8 +414,17 @@ class ClientMap : public HexOpacityMap,
         ResourceManager<ClientUnitType>& unitTypes;
         ResourceManager<RandomVariantsCollection<sf::SoundBuffer> >& soundBuffers;
 
+        std::map<int, std::string> playerNames;
+
+        int currentPlayerId;
+        double currentInitialRemainingTime;
+        Timer elapsedTime;
+
     public:
         ClientMap(int, TacSpritesheet&, ScreenGrid&, FreetypeFace*, ResourceManager<ClientTileType>&, ResourceManager<ClientUnitType>&, ResourceManager<RandomVariantsCollection<sf::SoundBuffer> >& soundBuffers);
+
+        std::string getCurrentPlayerName(void) const { return getPlayerName( currentPlayerId ); }
+        double getCurrentPlayerTime(void) { return currentInitialRemainingTime - elapsedTime.getElapsedTime(); }
 
         sf::SoundBuffer* getSound(const std::string& name) { return &soundBuffers[name].choose(); }
 
@@ -422,6 +433,9 @@ class ClientMap : public HexOpacityMap,
         void setAnimatedUnit( ClientUnit* unit ) { animatedUnit = unit; }
 
         bool isOpaque(int,int) const;
+
+        void setPlayerName(int id, const std::string& name) { playerNames[id] = name; }
+        std::string getPlayerName(int) const;
 
         CMLevelBlitterGL& getLevelBlitter(void) { return levelBlitter; }
         CMUnitBlitterGL& getUnitBlitter(int);
@@ -470,7 +484,7 @@ class ClientMap : public HexOpacityMap,
 
         bool handleNetworkInfo(const std::string&, Sise::SExp*);
 
-        void playerTurnBegins(int);
+        void playerTurnBegins(int, int);
 
         ClientUnit *createUnit(int, ClientUnitType&, int, int, int, int);
 };

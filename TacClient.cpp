@@ -728,7 +728,7 @@ void loadSoundsFromFile(const std::string& filename, ResourceManager<RandomizedS
     }
 }
 
-void ClientMap::playerTurnBegins(int playerId) {
+void ClientMap::playerTurnBegins(int playerId, int milliseconds) {
     const ClientUnitManager::UnitMap& u = units.getUnits();
     using namespace std;
     for(ClientUnitManager::UnitMap::const_iterator i = u.begin(); i != u.end(); i++) {
@@ -738,6 +738,9 @@ void ClientMap::playerTurnBegins(int playerId) {
             i->second->stopTurn();
         }
     }
+    currentPlayerId = playerId;
+    currentInitialRemainingTime = (double)(milliseconds/1000.0);
+    elapsedTime.reset();
 }
 
 void ClientUnit::stopTurn(void) {
@@ -789,10 +792,19 @@ bool ClientMap::handleNetworkInfo(const std::string& cmd, Sise::SExp* sexp) {
             args = asCons( args->getcdr() );
         }
         queueAction( act );
+    } else if( cmd == "introduce-player" ) {
+        IntroducePlayerCAction *act = new IntroducePlayerCAction(
+            *this,
+            *asInt( args->nthcar(0) ),
+            *asString( args->nthcar(1) ),
+            *asString( args->nthcar(2) )
+        );
+        queueAction( act );
     } else if( cmd == "player-turn-begins" ) {
         BeginPlayerTurnCAction *act = new BeginPlayerTurnCAction(
             *this,
-            *asInt( args->nthcar(0) )
+            *asInt( args->nthcar(0) ),
+            *asInt( args->nthcar(1) )
         );
         queueAction( act );
     } else if( cmd == "unit-disappears" ) {
@@ -866,6 +878,12 @@ ClientUnit *ClientMap::createUnit(int a, ClientUnitType& b, int c, int d, int e,
 void ClientUnit::setHp(int hp_) {
     hp = hp_;
     hpIndicator.setState( hp, maxHp );
+}
+
+std::string ClientMap::getPlayerName(int id) const {
+    std::map<int,std::string>::const_iterator i = playerNames.find( id );
+    if( i == playerNames.end() ) return "<unknown>";
+    return i->second;
 }
 
 };

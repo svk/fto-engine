@@ -61,7 +61,7 @@ void RevealTerrainCAction::operator()(void) const {
 }
 
 void BeginPlayerTurnCAction::operator()(void) const {
-    cmap.playerTurnBegins( playerId );
+    cmap.playerTurnBegins( playerId, milliseconds );
 }
 
 void RemoveUnitCAction::operator()(void) const {
@@ -96,6 +96,10 @@ void BumpAnimationCAction::operator()(void) const {
         unit->startMeleeAnimation( x, y );
         cmap.setAnimatedUnit( unit );
     }
+}
+
+void IntroducePlayerCAction::operator()(void) const {
+    cmap.setPlayerName( playerId, displayName );
 }
 
 void MovementAnimationCAction::operator()(void) const {

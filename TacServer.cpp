@@ -450,7 +450,7 @@ void ServerMap::evtUnitMoved(ServerUnit& unit, ServerTile& sourceTile, ServerTil
     }
 }
 
-void ServerPlayer::sendPlayerTurnBegins(const ServerPlayer& player) {
+void ServerPlayer::sendPlayerTurnBegins(const ServerPlayer& player, double timeLeft) {
     using namespace std;
     using namespace SProto;
     using namespace Sise;
@@ -459,6 +459,7 @@ void ServerPlayer::sendPlayerTurnBegins(const ServerPlayer& player) {
     rc->delsend( List()( new Symbol( "tac" ) )
                        ( new Symbol( "player-turn-begins" ) )
                        ( new Int( player.getId() ) )
+                       ( new Int( (int)(0.5 + 1000 * timeLeft) ) )
                  .make() );
 }
 
@@ -576,7 +577,7 @@ void TacTestServer::announceTurn(void) {
     oss << "*** ";
     oss << "To move: " << myMap.getPlayerById( playerId )->getUsername();
     oss << " in " << formatTime( turns.getCurrentRemainingTime() );
-    myMap.actionPlayerTurnBegins( *myMap.getPlayerById( playerId ) );
+    myMap.actionPlayerTurnBegins( *myMap.getPlayerById( playerId ), turns.getCurrentRemainingTime() );
     using namespace std;
     cerr << "Announcing: " << oss.str() << endl;
     cerr << "Announcing: " << oss.str() << endl;
@@ -588,12 +589,12 @@ void TacTestServer::announceTurn(void) {
 
 }
 
-void ServerMap::actionPlayerTurnBegins(ServerPlayer& turnPlayer) {
+void ServerMap::actionPlayerTurnBegins(ServerPlayer& turnPlayer, double timeLeft) {
     turnPlayer.beginTurn();
 
     for(std::map<int,ServerPlayer*>::iterator i = players.begin(); i != players.end(); i++) {
         ServerPlayer *player = i->second;
-        player->sendPlayerTurnBegins( turnPlayer );
+        player->sendPlayerTurnBegins( turnPlayer, timeLeft );
     }
 }
 
@@ -638,6 +639,7 @@ bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, S
         clients.insert( cli->getUsername() );
         if( player ) {
             ServerUnit *unit = player->getAnyControlledUnit();
+            myMap.actionNewPlayer(*player);
             player->sendMemories();
             player->assumeAmnesia();
             player->sendFovDelta();
@@ -667,6 +669,7 @@ bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, S
         cerr << turns.getNumberOfParticipants() << " are now playing" << endl;
         myMap.adoptPlayer( player );
         myMap.adoptUnit( unit );
+        myMap.actionNewPlayer(*player);
         if( turns.getNumberOfParticipants() == 1 ) {
             turns.start();
             announceTurn();
@@ -832,6 +835,26 @@ bool ServerUnit::isDead(void) const {
     return hp <= 0;
 }
 
+void ServerMap::actionNewPlayer(ServerPlayer& player) {
+    for(std::map<int,ServerPlayer*>::iterator i = players.begin(); i != players.end(); i++) {
+        player.sendPlayer( *i->second );
+        i->second->sendPlayer( player );
+    }
+}
+
+void ServerPlayer::sendPlayer(const ServerPlayer& player) {
+    using namespace Sise;
+    using namespace SProto;
+    using namespace HexTools;
+    RemoteClient *rc = server.getConnectedUser( username );
+    if( !rc ) return;
+    rc->delsend( List()( new Symbol( "tac" ) )
+                       ( new Symbol( "introduce-player" ) )
+                       ( new Int( player.getId() ) )
+                       ( new String( player.getUsername() ) )
+                       ( new String( player.getUsername() ) )
+                 .make() );
+}
 
 void ServerPlayer::sendMeleeAttack(const ServerUnit& attacker, const ServerUnit& defender, AttackResult result) {
     if( !isObserving( attacker ) ) {

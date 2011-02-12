@@ -142,4 +142,75 @@ void drawHpIndicatorGL(int hp,int maxHp) {
 
 }
 
+PanelCenteredText::PanelCenteredText(FreetypeFace& font) :
+    font ( font ),
+    sprite ( 0 )
+{
+    set( "", sf::Color(0,0,0) );
+}
+
+PanelCenteredText::PanelCenteredText(FreetypeFace& font, const std::string& text_, const sf::Color& colour_) : 
+    font ( font ),
+    sprite ( 0 )
+{
+    set( text_, colour_ );
+}
+
+PanelCenteredText::~PanelCenteredText(void) {
+    if( sprite ) {
+        delete sprite;
+    }
+}
+
+void PanelCenteredText::setColour(const sf::Color& colour_) {
+    set( text, colour_ );
+}
+
+void PanelCenteredText::setText(const std::string& text_) {
+    set( text_, colour );
+}
+
+void PanelCenteredText::set(const std::string& text_, const sf::Color& colour_) {
+    if( sprite ) {
+        delete sprite;
+        sprite = 0;
+    }
+    text = text_;
+    colour = colour_;
+    sprite = new LabelSprite( text, colour, font );
+}
+
+int PanelCenteredText::getHeight(void) {
+    return sprite->getHeight();
+}
+
+void PanelCenteredText::draw(sf::RenderWindow& window, int width) {
+    sprite->restrictToWidth( width );
+    int pad = (width - sprite->getWidth())/2;
+    if( pad < 0 ) pad = 0;
+    sprite->setPosition( pad, 0 );
+    sprite->draw( window );
+}
+
+Panel::Panel(void) :
+    x ( x ),
+    y ( y )
+{
+}
+
+void Panel::setPosition(int x_, int y_) {
+    x = x_;
+    y = y_;
+}
+
+void Panel::draw(sf::RenderWindow& window, int width) {
+    sf::View myView( sf::FloatRect( -x, -y, - x + window.GetWidth(), - y + window.GetHeight() ) );
+    window.SetView( myView );
+    for(std::vector<PanelElement*>::iterator i = elements.begin(); i != elements.end(); i++) {
+        (*i)->draw( window, width );
+        myView.Move( 0, - (*i)->getHeight() );
+    }
+    window.SetView( window.GetDefaultView() );
+}
+
 }
