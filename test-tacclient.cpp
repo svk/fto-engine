@@ -154,19 +154,25 @@ class TestTacTPScreen : public SfmlScreen,
             resize( width, height );
         }
 
+        void centerOnUnit(int unitId) {
+            ClientUnit* unit = 0;
+            if( unitId != INVALID_ID ) {
+                unit = cmap.getUnitById( unitId );
+            }
+            double cx, cy;
+            using namespace std;
+            cerr << "would center on " << unitId << endl;
+            if( unit && cmap.getUnitBaseScreenPositionById( unitId, cx, cy ) ) {
+                cerr << "yea, centering" << endl;
+                vp.center( cx, cy );
+            }
+        }
+
         void draw(sf::RenderWindow& win) {
             ClientUnit* unit = 0;
             if( unitId != INVALID_ID ) {
                 unit = cmap.getUnitById( unitId );
             }
-
-#if 0
-            double cx, cy;
-            if( unit && cmap.getUnitBaseScreenPositionById( unitId, cx, cy ) ) {
-                using namespace std;
-                vp.center( cx, cy );
-            }
-#endif
 
             if( unit ) {
                 ActivityPoints& acp = unit->getAP();
@@ -390,12 +396,14 @@ class TestTacTPScreen : public SfmlScreen,
                 outputSExp( args, cerr );
                 cmap.handleNetworkInfo( *asSymbol( args->getcar() ),
                                         args->getcdr() );
+                cmap.processActions();
             } else if( name == "tactest" ) {
                 Cons *args = asProperCons( arg );
                 const std::string& subcmd = *asSymbol( args->nthcar(0) );
                 if( subcmd == "welcome" ) {
                     using namespace std;
                     unitId = *asInt( args->nthcar(2) );
+                    centerOnUnit( unitId );
                 }
             }
         }
