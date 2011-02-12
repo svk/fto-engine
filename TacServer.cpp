@@ -57,6 +57,10 @@ ServerMap::ServerMap(int mapSize, TileType *defaultTt) :
     units (),
     gmpPrng( gmp_randinit_mt )
 {
+    reinitialize( defaultTt );
+}
+
+void ServerMap::reinitialize(TileType *defaultTt) {
     using namespace std;
     for(int r=1;r<=mapSize;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
         int x, y;
@@ -527,16 +531,19 @@ void ServerPlayer::sendUnitMoved(const ServerUnit& unit, const ServerTile& fromT
                  .make() );
 }
 
-TacTestServer::TacTestServer(SProto::Server& server, int radius) :
+TacTestServer::TacTestServer(SProto::Server& server, int radius, const std::string& unitsfn, const std::string& tilesfn) :
     SProto::SubServer( "tactest", server ),
     borderType( "border", "impassable wall", Type::WALL, Type::BLOCK, true, 0 ),
     wallType ( "wall", "wall", Type::WALL, Type::BLOCK, false, 0 ),
     floorType ( "floor", "floor", Type::FLOOR, Type::CLEAR, false, 100 ),
     pcType ( "pc", "Player", 200, 84 ),
     trollType ( "troll", "Troll", 500, 43 ),
-    myMap ( radius, &borderType )
+    myMap ( radius, 0 )
 {
-    trivialLevelGenerator( myMap, &wallType, &floorType, 0.4 );
+    fillManagerFromFile( unitsfn, unitTypes );
+    fillManagerFromFile( tilesfn, tileTypes );
+    myMap.reinitialize( &tileTypes[ "border" ] );
+    trivialLevelGenerator( myMap, &tileTypes[ "std-wall" ], &tileTypes[ "std-floor" ], 0.4 );
 }
 
 void TacTestServer::delbroadcast(Sise::SExp* sexp) {
@@ -660,9 +667,9 @@ bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, S
         player = new ServerPlayer( server, myMap, myMap.generatePlayerId(), cli->getUsername() );
         ServerUnit *unit;
         if( cli->getUsername() == "kaw" ) { // obv I'll be leaving in something like this; doubled hit rate, +50% damage reduction, etc.
-            unit = new ServerUnit( myMap.generateUnitId(), pcType );
+            unit = new ServerUnit( myMap.generateUnitId(), unitTypes["pc"] );
         } else {
-            unit = new ServerUnit( myMap.generateUnitId(), trollType );
+            unit = new ServerUnit( myMap.generateUnitId(), unitTypes["troll"] );
         }
         ServerTile *tile = myMap.getRandomTileFor( unit );
         if( !tile ) {

@@ -142,20 +142,25 @@ class LineCurveAnimation : public CurveAnimation {
 struct ClientUnitType : public UnitType {
     sf::Sprite spriteNormal;
 
-    ClientUnitType(const std::string&, TacSpritesheet&, const std::string&, const std::string&, int, int);
+    static TacSpritesheet* sheet;
+
+    ClientUnitType(const std::string&, const std::string&, const std::string&, int, int);
+    ClientUnitType(Sise::SExp*);
 };
 
 struct ClientTileType : public TileType {
     sf::Sprite spriteNormal, spriteGrayscale;
 
+    static TacSpritesheet* sheet;
+
     ClientTileType(const std::string&, // symbol
-                   TacSpritesheet&,
                    const std::string&, // sprite alias
                    const std::string&, // name
                    Type::Mobility,
                    Type::Opacity,
                    bool,
                    int);
+    ClientTileType(Sise::SExp*);
 };
 
 class ClientTile;

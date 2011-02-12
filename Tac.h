@@ -8,6 +8,8 @@
 
 #include "Manager.h"
 
+#include "Sise.h"
+
 namespace Tac {
 
 // this contains what both the server and the client need to know about
@@ -48,7 +50,10 @@ struct UnitType {
     int nativeLayer;
 
     UnitType(const std::string&, const std::string&, int, int);
+    UnitType(Sise::SExp*);
     virtual ~UnitType(void) {}
+
+    Sise::SExp *toSexp(void) const;
 };
 
 struct TileType {
@@ -69,8 +74,14 @@ struct TileType {
              Type::Opacity,
              bool,
              int);
+    TileType(Sise::SExp*);
     virtual ~TileType(void) {}
+
+    Sise::SExp *toSexp(void) const;
 };
+
+void loadTileTypesFromFile(const std::string&, ResourceManager<TileType>& );
+void loadUnitTypesFromFile(const std::string&, ResourceManager<UnitType>& );
 
 };
 

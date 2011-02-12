@@ -514,12 +514,10 @@ int main(int argc, char *argv[]) {
     ResourceManager<ClientTileType> tileTypes;
     ResourceManager<ClientUnitType> unitTypes;
 
-    unitTypes.bind( "pc", new ClientUnitType( "pc", sheet, "unit-smiley", "Player", 200, 84 ) );
-    unitTypes.bind( "troll", new ClientUnitType( "troll", sheet, "unit-troll", "Troll", 500, 43 ) );
+    ClientTileType::sheet = ClientUnitType::sheet = &sheet;
 
-    tileTypes.bind( "border", new ClientTileType( "border", sheet, "tile-wall", "hard wall", Type::WALL, Type::BLOCK, true, 0 ) );
-    tileTypes.bind( "floor", new ClientTileType( "floor", sheet, "tile-floor", "floor", Type::FLOOR, Type::CLEAR, false, 100 ) );
-    tileTypes.bind( "wall", new ClientTileType( "wall", sheet, "tile-wall", "wall", Type::WALL, Type::BLOCK, false, 0 ) );
+    fillManagerFromFile( "./config/tile-types.lisp", tileTypes );
+    fillManagerFromFile( "./config/unit-types.lisp", unitTypes );
 
     TestTacTPScreen ttScreen ( app.getWindow(), mapSize, risingTextFont, grid, sheet, soundBuffers, tileTypes, unitTypes, *client );
 

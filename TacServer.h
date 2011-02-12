@@ -202,6 +202,8 @@ class ServerMap : public HexTools::HexOpacityMap {
         ServerMap(int,TileType*);
         ~ServerMap(void);
 
+        void reinitialize(TileType*);
+
         ServerPlayer* getPlayerByUsername(const std::string&);
 
         int generatePlayerId(void) { return playerIdGen.generate(); }
@@ -256,8 +258,11 @@ class TacTestServer : public SProto::SubServer {
 
         std::set<std::string> clients;
 
+        ResourceManager<TileType> tileTypes;
+        ResourceManager<UnitType> unitTypes;
+
     public:
-        TacTestServer(SProto::Server&, int);
+        TacTestServer(SProto::Server&, int, const std::string&, const std::string& );
 
         bool handle( SProto::RemoteClient*, const std::string&, Sise::SExp* );
         void tick(double dt);

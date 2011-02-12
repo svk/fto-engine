@@ -19,6 +19,9 @@ namespace Tac {
 const double MovementAnimationDuration = 0.15;
 const double MeleeAnimationDuration = 0.3;
 
+TacSpritesheet *ClientTileType::sheet = 0;
+TacSpritesheet *ClientUnitType::sheet = 0;
+
 std::map< std::string, int > SpriteId::spritenoAliases;
 
 ClientUnit::ClientUnit(FreetypeFace& hpFont, int id, ClientUnitType& unitType, int team, int owner, int hp, int maxHp) :
@@ -484,16 +487,29 @@ CMUnitBlitterGL& ClientMap::getUnitBlitter(int layer) {
     throw std::logic_error("no such layer");
 }
 
-ClientUnitType::ClientUnitType(const std::string& symbol, TacSpritesheet& sheet, const std::string& alias, const std::string& name, int speed, int maxHp) :
-    UnitType ( symbol, name, speed, maxHp ),
-    spriteNormal ( sheet.makeSprite( SpriteId( alias, SpriteId::NORMAL ) ) )
+ClientTileType::ClientTileType(Sise::SExp *sexp) :
+    TileType( sexp ),
+    spriteNormal ( sheet->makeSprite( SpriteId( *asSymbol( asProperCons(asProperCons(sexp)->getcdr())->alistGet( "sprite-name" ) ), SpriteId::NORMAL ) ) ),
+    spriteGrayscale ( sheet->makeSprite( SpriteId( *asSymbol( asProperCons(asProperCons(sexp)->getcdr())->alistGet( "sprite-name" ) ), SpriteId::GRAYSCALE ) ) )
 {
 }
 
-ClientTileType::ClientTileType(const std::string& symbol, TacSpritesheet& sheet, const std::string& alias, const std::string& name, Type::Mobility mobility, Type::Opacity opacity, bool border, int baseCost ) :
+ClientUnitType::ClientUnitType(Sise::SExp *sexp) :
+    UnitType( sexp ),
+    spriteNormal ( sheet->makeSprite( SpriteId( *asSymbol( asProperCons(asProperCons(sexp)->getcdr())->alistGet( "sprite-name" ) ), SpriteId::NORMAL ) ) )
+{
+}
+
+ClientUnitType::ClientUnitType(const std::string& symbol, const std::string& alias, const std::string& name, int speed, int maxHp) :
+    UnitType ( symbol, name, speed, maxHp ),
+    spriteNormal ( sheet->makeSprite( SpriteId( alias, SpriteId::NORMAL ) ) )
+{
+}
+
+ClientTileType::ClientTileType(const std::string& symbol, const std::string& alias, const std::string& name, Type::Mobility mobility, Type::Opacity opacity, bool border, int baseCost ) :
     TileType( symbol, name, mobility, opacity, border, baseCost ),
-    spriteNormal ( sheet.makeSprite( SpriteId( alias, SpriteId::NORMAL ) ) ),
-    spriteGrayscale ( sheet.makeSprite( SpriteId( alias, SpriteId::GRAYSCALE ) ) )
+    spriteNormal ( sheet->makeSprite( SpriteId( alias, SpriteId::NORMAL ) ) ),
+    spriteGrayscale ( sheet->makeSprite( SpriteId( alias, SpriteId::GRAYSCALE ) ) )
 {
 }
 

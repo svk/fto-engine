@@ -1,17 +1,19 @@
 (border
     (sprite-name . tile-wall)
     (name . "hard wall")
-    (mobility-type . wall)
-    (opacity-type . block)
-    (is-border . #t))
-(floor
+    (mobility . wall)
+    (opacity . block)
+    (border? . yes))
+(std-floor
     (sprite-name . tile-floor)
     (name . "floor")
-    (mobility-type . floor)
-    (opacity-type . clear)
-    (base-cost . 100))
-(wall
+    (mobility . floor)
+    (opacity . clear)
+    (base-cost . 100)
+    (border? . no))
+(std-wall
     (sprite-name . tile-wall)
     (name . "wall")
-    (mobility-type . wall)
-    (opacity-type . block))
+    (mobility . wall)
+    (opacity . block)
+    (border? . no))
