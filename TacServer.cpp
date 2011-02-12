@@ -607,10 +607,16 @@ void TacTestServer::announceTurn(void) {
     using namespace Sise;
     using namespace std;
     int playerId = turns.current();
-    while( !myMap.getPlayerById( playerId ) ) {
+    while( !myMap.getPlayerById( playerId )
+           || !server.getConnectedUser( myMap.getPlayerById( playerId )->getUsername() )
+           || myMap.getPlayerById( playerId )->getNumberOfUnits() == 0 ) {
         if( playerId == -1 ) return;
-        turns.removeParticipant( playerId );
-        playerId = turns.current();
+        if( !myMap.getPlayerById( playerId ) ) {
+            turns.removeParticipant( playerId );
+            playerId = turns.current();
+        } else {
+            playerId = turns.next();
+        }
     }
     ostringstream oss;
     oss << "*** ";
