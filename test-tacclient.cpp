@@ -22,6 +22,8 @@ class TestTacTPScreen;
 class TestTacTPScreen : public SfmlScreen,
                         public SProto::ClientCore {
     private:
+        sf::RenderWindow& window;
+
         const int mapSize;
         FreetypeFace& font;
         ScreenGrid& grid;
@@ -46,8 +48,12 @@ class TestTacTPScreen : public SfmlScreen,
         PanelCenteredText currentPlayer;
         PanelCenteredText currentTimeLeft;
 
+        ViewportMouseScroller *vpMouseScroller;
+
+
     public:
         TestTacTPScreen(
+            sf::RenderWindow& window,
             const int mapSize,
             FreetypeFace& font,
             ScreenGrid& grid,
@@ -56,7 +62,8 @@ class TestTacTPScreen : public SfmlScreen,
             ResourceManager<ClientTileType>& tileTypes,
             ResourceManager<ClientUnitType>& unitTypes,
             SProto::Client& client
-        ) : mapSize (mapSize),
+        ) : window ( window ),
+            mapSize (mapSize),
             font ( font ),
             grid ( grid ),
             sheet ( sheet ),
@@ -74,7 +81,8 @@ class TestTacTPScreen : public SfmlScreen,
             chatinput ( width, font, sf::Color(255,255,255), FormattedCharacter(font,sf::Color(255,255,0),'_') ),
             sidePanel (),
             currentPlayer ( font ),
-            currentTimeLeft ( font )
+            currentTimeLeft ( font ),
+            vpMouseScroller ( 0 )
         {
             sidePanel.add( &currentPlayer );
             sidePanel.add( &currentTimeLeft );
@@ -147,15 +155,18 @@ class TestTacTPScreen : public SfmlScreen,
         }
 
         void draw(sf::RenderWindow& win) {
-            double cx, cy;
             ClientUnit* unit = 0;
             if( unitId != INVALID_ID ) {
                 unit = cmap.getUnitById( unitId );
             }
+
+#if 0
+            double cx, cy;
             if( unit && cmap.getUnitBaseScreenPositionById( unitId, cx, cy ) ) {
                 using namespace std;
                 vp.center( cx, cy );
             }
+#endif
 
             if( unit ) {
                 ActivityPoints& acp = unit->getAP();
@@ -306,8 +317,51 @@ class TestTacTPScreen : public SfmlScreen,
             return true;
         }
 
+        bool handleMouseMoved(const sf::Event::MouseMoveEvent& ev) {
+            if( vpMouseScroller ) {
+                vpMouseScroller->scroll();
+                return true;
+            }
+            return false;
+        }
+
+        bool handleMouseReleaseRight(const sf::Event::MouseButtonEvent& ev) {
+            if( vpMouseScroller ) {
+                delete vpMouseScroller;
+                vpMouseScroller = 0;
+                window.ShowMouseCursor( true );
+                return true;
+            }
+            return false;
+        }
+
+        bool handleMousePressRight(const sf::Event::MouseButtonEvent& ev) {
+            if( !vpMouseScroller ) {
+                window.ShowMouseCursor( false );
+                vpMouseScroller = new ViewportMouseScroller( vp, window.GetInput() );
+                return true;
+            }
+            return false;
+        }
+
         bool handleEvent(const sf::Event& ev) {
             switch( ev.Type ) {
+                case sf::Event::MouseMoved:
+                    return handleMouseMoved( ev.MouseMove );
+                case sf::Event::MouseButtonPressed:
+                    switch( ev.MouseButton.Button ) {
+                        case sf::Mouse::Right:
+                            return handleMousePressRight( ev.MouseButton );
+                        default: break;
+                    }
+                    break;
+                case sf::Event::MouseButtonReleased:
+                    switch( ev.MouseButton.Button ) {
+                        case sf::Mouse::Right:
+                            return handleMouseReleaseRight( ev.MouseButton );
+                        default: break;
+                    }
+                    break;
                 case sf::Event::KeyPressed:
                     return handleKey( ev.Key );
                 case sf::Event::TextEntered:
@@ -467,7 +521,7 @@ int main(int argc, char *argv[]) {
     tileTypes.bind( "floor", new ClientTileType( "floor", sheet, "tile-floor", "floor", Type::FLOOR, Type::CLEAR, false, 100 ) );
     tileTypes.bind( "wall", new ClientTileType( "wall", sheet, "tile-wall", "wall", Type::WALL, Type::BLOCK, false, 0 ) );
 
-    TestTacTPScreen ttScreen ( mapSize, risingTextFont, grid, sheet, soundBuffers, tileTypes, unitTypes, *client );
+    TestTacTPScreen ttScreen ( app.getWindow(), mapSize, risingTextFont, grid, sheet, soundBuffers, tileTypes, unitTypes, *client );
 
     app.setTTScreen( &ttScreen );
     app.run();
