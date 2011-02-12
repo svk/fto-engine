@@ -88,6 +88,9 @@ class HpIndicator {
         void drawGL(int,int);
 };
 
+void drawUnitSocketGL(int,int,sf::Color,int);
+void drawUnitSocketGL(int,int,int,int,int,int);
+
 };
 
 #endif

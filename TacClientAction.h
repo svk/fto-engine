@@ -8,10 +8,11 @@ struct IntroducePlayerCAction : public ClientAction {
     ClientMap& cmap;
     int playerId;
     std::string username, displayName;
+    sf::Color colour;
 
-    IntroducePlayerCAction(ClientMap& cmap, int playerId, const std::string& username, const std::string& displayName ):
-        cmap ( cmap ), playerId( playerId ), username ( username ), displayName( displayName ) {}
-    ClientAction* duplicate(void) const { return new IntroducePlayerCAction( cmap, playerId, username, displayName ); }
+    IntroducePlayerCAction(ClientMap& cmap, int playerId, const std::string& username, const std::string& displayName, sf::Color colour ):
+        cmap ( cmap ), playerId( playerId ), username ( username ), displayName( displayName ), colour ( colour ) {}
+    ClientAction* duplicate(void) const { return new IntroducePlayerCAction( cmap, playerId, username, displayName, colour ); }
     void operator()(void) const;
     bool isCosmetic(void) const { return false; }
 

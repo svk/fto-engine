@@ -61,6 +61,32 @@ class IdGenerator {
 class ServerUnit;
 class ServerTile;
 
+struct ServerColour {
+    int r, g, b;
+    ServerColour(int r, int g, int b) : r(r), g(g), b(b) {}
+
+    Sise::SExp *toSexp(void) const;
+};
+
+class ServerColourPool { // terrible
+    private:
+        int index;
+        std::vector<ServerColour> colours;
+
+    public:
+        ServerColourPool(void) : index(0), colours() {}
+
+        void add(int r, int g, int b) {
+            colours.push_back( ServerColour(r,g,b) );
+        }
+
+        ServerColour next(void) {
+            ServerColour rv = colours[index];
+            index = (index+1) % colours.size();
+            return rv;
+        }
+};
+
 class ServerPlayer {
     private:
         int id;
@@ -73,8 +99,12 @@ class ServerPlayer {
         SProto::Server& server; // use getConnectedUser to, well, get a connected user
         ServerMap& smap;
 
+        ServerColour playerColour;
+
     public:
-        ServerPlayer(SProto::Server&, ServerMap&, int, const std::string&);
+        ServerPlayer(SProto::Server&, ServerMap&, int, const std::string&, ServerColour);
+
+        ServerColour getColour(void) const { return playerColour; }
 
         void assumeAmnesia(void) { transmittedActive.clear();}
 
@@ -262,6 +292,9 @@ class TacTestServer : public SProto::SubServer {
 
         ResourceManager<TileType> tileTypes;
         ResourceManager<UnitType> unitTypes;
+
+        std::set<std::string> defeatedPlayers;
+        ServerColourPool colourPool;
 
     public:
         TacTestServer(SProto::Server&, int, const std::string&, const std::string& );

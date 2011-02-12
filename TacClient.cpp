@@ -9,6 +9,7 @@
 #include <fstream>
 
 #include "Sise.h"
+#include "SProto.h"
 
 #include "TacClientAction.h"
 
@@ -432,6 +433,9 @@ void CMUnitBlitterGL::drawHex(int x, int y, sf::RenderWindow& win) {
 
     glTranslatef( xadjust, yadjust, 0 );
 
+    drawUnitSocketGL( cmap.getGrid().getHexWidth(), cmap.getGrid().getHexHeight(),
+                      cmap.getPlayerColour( unit->getOwner() ), 255 );
+
     glColor3f(1,1,1);
 
     drawSpriteCentered( unitType.spriteNormal, cmap.getGrid().getHexWidth(), cmap.getGrid().getHexHeight() );
@@ -769,6 +773,15 @@ void ClientUnit::beginTurn(void) {
     activity = ActivityPoints( unitType, 1, 1, 1 );
 }
 
+sf::Color sfmlColourFromSexp(Sise::SExp *sexp) {
+    using namespace Sise;
+    using namespace SProto;
+    Cons *args = asProperCons(sexp);
+    return sf::Color( *asInt( args->nthcar(0) ),
+                      *asInt( args->nthcar(1) ),
+                      *asInt( args->nthcar(2) ) );
+}
+
 bool ClientMap::handleNetworkInfo(const std::string& cmd, Sise::SExp* sexp) {
     using namespace Sise;
     // create CActions and send them to queueFromNetwork
@@ -813,7 +826,8 @@ bool ClientMap::handleNetworkInfo(const std::string& cmd, Sise::SExp* sexp) {
             *this,
             *asInt( args->nthcar(0) ),
             *asString( args->nthcar(1) ),
-            *asString( args->nthcar(2) )
+            *asString( args->nthcar(2) ),
+            sfmlColourFromSexp( args->nthcar(3) )
         );
         queueAction( act );
     } else if( cmd == "player-turn-begins" ) {
@@ -894,6 +908,12 @@ ClientUnit *ClientMap::createUnit(int a, ClientUnitType& b, int c, int d, int e,
 void ClientUnit::setHp(int hp_) {
     hp = hp_;
     hpIndicator.setState( hp, maxHp );
+}
+
+sf::Color ClientMap::getPlayerColour(int id) const {
+    std::map<int,sf::Color>::const_iterator i = playerColours.find( id );
+    if( i == playerColours.end() ) return sf::Color(0,0,0);
+    return i->second;
 }
 
 std::string ClientMap::getPlayerName(int id) const {

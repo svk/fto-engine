@@ -419,7 +419,9 @@ class ClientMap : public HexOpacityMap,
         ResourceManager<ClientUnitType>& unitTypes;
         ResourceManager<RandomVariantsCollection<sf::SoundBuffer> >& soundBuffers;
 
+            // bad ideas just accumulating here -- there should be a ClientPlayer structure, of course
         std::map<int, std::string> playerNames;
+        std::map<int, sf::Color> playerColours;
 
         int currentPlayerId;
         double currentInitialRemainingTime;
@@ -439,8 +441,10 @@ class ClientMap : public HexOpacityMap,
 
         bool isOpaque(int,int) const;
 
+        void setPlayerColour(int id, const sf::Color& col) { playerColours[id] = col; }
         void setPlayerName(int id, const std::string& name) { playerNames[id] = name; }
         std::string getPlayerName(int) const;
+        sf::Color getPlayerColour(int) const;
 
         CMLevelBlitterGL& getLevelBlitter(void) { return levelBlitter; }
         CMUnitBlitterGL& getUnitBlitter(int);

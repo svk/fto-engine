@@ -93,6 +93,49 @@ void HpIndicator::drawGL(int tileWidth, int tileHeight) {
     }
 }
 
+void drawUnitSocketGL(int tileWidth, int tileHeight, int r, int g, int b, int a) {
+    const static int sectors = 100;
+    const static SinTable sint (sectors);
+    const static CosTable cost(sectors);
+    const float sx = (float)(0.5 + ((float)(tileWidth))/2.0),
+                sy = (float)(0.5 + ((float)(tileHeight))/2.0);
+
+    const float rf = ((float)r) / 255.0,
+                gf = ((float)g) / 255.0,
+                bf = ((float)b) / 255.0,
+                af = ((float)a) / 255.0;
+    const float rad = ((float)tileHeight) / 3.0;
+
+    using namespace std;
+
+    glDisable( GL_TEXTURE_2D );
+    glEnable( GL_LINE_SMOOTH );
+    glEnable( GL_BLEND );
+    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+
+    glPushMatrix();
+        glTranslatef( sx, sy, 0 );
+        glScalef( rad, rad, rad );
+
+        glColor4f( rf, gf, bf, af );
+        glBegin( GL_TRIANGLE_FAN );
+        glVertex2f( 0, 0 );
+        for(int i=0;i<sectors;i++) {
+            glVertex2f(  cost.value[i],  sint.value[i] );
+        }
+        glVertex2f(  cost.value[0],  sint.value[0] );
+        glEnd();
+
+        glColor4f( 0, 0, 0, af );
+        glBegin( GL_LINE_LOOP );
+        for(int i=0;i<sectors;i++) {
+            glVertex2f(  cost.value[i],  sint.value[i] );
+        }
+        glVertex2f(  cost.value[0],  sint.value[0] );
+        glEnd();
+    glPopMatrix();
+}
+
 void drawHpIndicatorGL(int hp,int maxHp) {
     // an alternative way of doing this: having two sprites, pasting part of one and part of the other
     // together
@@ -107,6 +150,7 @@ void drawHpIndicatorGL(int hp,int maxHp) {
 
     const float healthyr = 0 + 0.25, healthyg = 0.5 + 0.25, healthyb = 0.0 + 0.25;
     const float damagedr = 0.5 + 0.25, damagedg = 0.0 + 0.25, damagedb = 0.0 + 0.25;
+
 
     using namespace std;
 
@@ -211,6 +255,10 @@ void Panel::draw(sf::RenderWindow& window, int width) {
         myView.Move( 0, - (*i)->getHeight() );
     }
     window.SetView( window.GetDefaultView() );
+}
+
+void drawUnitSocketGL(int w,int h ,sf::Color rgb,int a) {
+    drawUnitSocketGL( w, h, rgb.r, rgb.g, rgb.b, a );
 }
 
 }

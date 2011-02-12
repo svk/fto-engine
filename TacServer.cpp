@@ -25,12 +25,13 @@ void IdGenerator::addUsed(int id) {
     usedIds.insert( id );
 }
 
-ServerPlayer::ServerPlayer(SProto::Server& server, ServerMap& smap, int id, const std::string& username) :
+ServerPlayer::ServerPlayer(SProto::Server& server, ServerMap& smap, int id, const std::string& username, ServerColour playerColour) :
     id ( id ),
     username ( username ),
     memory ( smap.getMapSize() ),
     server ( server ),
-    smap ( smap )
+    smap ( smap ),
+    playerColour ( playerColour )
 {
     using namespace std;
     int sz = memory.getSize();
@@ -565,6 +566,15 @@ TacTestServer::TacTestServer(SProto::Server& server, int radius, const std::stri
     fillManagerFromFile( tilesfn, tileTypes );
     myMap.reinitialize( &tileTypes[ "border" ] );
     trivialLevelGenerator( myMap, &tileTypes[ "std-wall" ], &tileTypes[ "std-floor" ], 0.4 );
+
+    // fill this from a lisp file? or is that overkill?
+    colourPool.add( 255, 0, 0 );
+    colourPool.add( 0, 255, 0 );
+    colourPool.add( 0, 0, 255 );
+    colourPool.add( 255, 255, 0 );
+    colourPool.add( 255, 0, 255 );
+    colourPool.add( 0, 255, 255 );
+
 }
 
 void TacTestServer::delbroadcast(Sise::SExp* sexp) {
@@ -686,7 +696,7 @@ bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, S
 //            turns.addParticipant( player->getId(), 10.0, 10.0 );
             return true;
         }
-        player = new ServerPlayer( server, myMap, myMap.generatePlayerId(), cli->getUsername() );
+        player = new ServerPlayer( server, myMap, myMap.generatePlayerId(), cli->getUsername(), colourPool.next() );
         myMap.adoptPlayer( player );
         myMap.actionNewPlayer(*player);
         spawnPlayerUnits( player );
@@ -879,6 +889,7 @@ void ServerPlayer::sendPlayer(const ServerPlayer& player) {
                        ( new Int( player.getId() ) )
                        ( new String( player.getUsername() ) )
                        ( new String( player.getUsername() ) )
+                       ( player.getColour().toSexp() )
                  .make() );
 }
 
@@ -945,6 +956,15 @@ void TacTestServer::checkWinLossCondition(void) {
                                     prepareChatMessage( "", oss.str() ))))));
         }
     }
+}
+
+Sise::SExp* ServerColour::toSexp(void) const {
+    using namespace Sise;
+    using namespace SProto;
+    return List()( new Int( r ) )
+                 ( new Int( g ) )
+                 ( new Int( b ) )
+           .make();
 }
 
 };

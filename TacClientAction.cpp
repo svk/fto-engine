@@ -19,9 +19,7 @@ void BrightenCAction::operator()(void) const {
 void ApplyAttackResultSubstantialCAction::operator()(void) const {
     ClientUnit *aunit = cmap.getUnitById( attackerId );
     using namespace std;
-    cerr << "pot move en pre: " << aunit->getAP().getPotentialMovementEnergy() << endl;
     aunit->getAP().spendActionPoint( 1 );
-    cerr << "pot move en post: " << aunit->getAP().getPotentialMovementEnergy() << endl;
     ClientUnit *dunit = cmap.getUnitById( defenderId );
     if( !dunit ) return;
     if( result.status == AttackResult::HIT ) {
@@ -57,7 +55,6 @@ void RevealTerrainCAction::operator()(void) const {
         cmap.setTileType( i->first.first, i->first.second, i->second );
     }
     using namespace std;
-    cerr << "revelations size: " << revelations.size() << endl;
 }
 
 void BeginPlayerTurnCAction::operator()(void) const {
@@ -71,7 +68,6 @@ void RemoveUnitCAction::operator()(void) const {
 void UnitDiscoverCAction::operator()(void) const {
     using namespace std;
     ClientUnit *unit = cmap.createUnit( unitId, unitType, team, owner, hp, maxHp );
-    cerr << "creating unit w owner " << owner << endl;
     unit->getAP() = ap;
     cmap.placeUnitAt( unitId, x, y, layer );
 }
@@ -100,6 +96,7 @@ void BumpAnimationCAction::operator()(void) const {
 
 void IntroducePlayerCAction::operator()(void) const {
     cmap.setPlayerName( playerId, displayName );
+    cmap.setPlayerColour( playerId, colour );
 }
 
 void MovementAnimationCAction::operator()(void) const {
