@@ -430,6 +430,7 @@ class ClientMap : public HexOpacityMap,
     public:
         ClientMap(int, TacSpritesheet&, ScreenGrid&, FreetypeFace*, ResourceManager<ClientTileType>&, ResourceManager<ClientUnitType>&, ResourceManager<RandomVariantsCollection<sf::SoundBuffer> >& soundBuffers);
 
+        sf::Color getCurrentPlayerColour(void) const { return getPlayerColour( currentPlayerId ); }
         std::string getCurrentPlayerName(void) const { return getPlayerName( currentPlayerId ); }
         double getCurrentPlayerTime(void) { return currentInitialRemainingTime - elapsedTime.getElapsedTime(); }
 

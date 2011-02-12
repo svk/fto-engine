@@ -117,7 +117,7 @@ class TestTacTPScreen : public SfmlScreen,
             cmap.animate( dt );
             cmap.processActions();
 
-            currentPlayer.setText( cmap.getCurrentPlayerName() );
+            currentPlayer.set( cmap.getCurrentPlayerName(), cmap.getCurrentPlayerColour() );
             currentTimeLeft.setText( formatTimeCoarse( cmap.getCurrentPlayerTime() ) );
         }
 
