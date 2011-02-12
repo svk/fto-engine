@@ -7,6 +7,8 @@
 #include "BoxRandom.h"
 #include "TacRules.h"
 
+#include <algorithm>
+
 namespace Tac {
 
 int IdGenerator::generate(void) {
@@ -930,7 +932,9 @@ void TacTestServer::checkWinLossCondition(void) {
         std::string username = *i;
         ServerPlayer *player = myMap.getPlayerByUsername( username );
         if( !player ) continue;
+        if( find( defeatedPlayers.begin(), defeatedPlayers.end(), username ) != defeatedPlayers.end() ) continue;
         if( player->getNumberOfUnits() == 0 ) {
+            defeatedPlayers.insert( username );
             std::ostringstream oss;
             oss << "*** ";
             oss << "Player " << username << " has been defeated!";
