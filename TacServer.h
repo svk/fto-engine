@@ -86,6 +86,7 @@ class ServerPlayer {
         const HexTools::HexRegion& getTotalFov(void);
         void addControlledUnit(ServerUnit* unit) { controlledUnits.push_back( unit ); }
         void removeControlledUnit(ServerUnit*);
+        int getNumberOfUnits(void) const { return controlledUnits.size(); }
         
         void gatherIndividualFov(const ServerMap&);
         void updateFov(const ServerMap&);
@@ -221,6 +222,7 @@ class ServerMap : public HexTools::HexOpacityMap {
         int getMapSize(void) const { return mapSize; }
 
         ServerTile* getRandomTileFor(const ServerUnit*);
+        ServerTile* getRandomTileForNear(const ServerUnit*, int, int);
 
         bool isOpaque(int,int) const;
 
@@ -271,6 +273,9 @@ class TacTestServer : public SProto::SubServer {
         void announceTurn(void);
 
         void delbroadcast(Sise::SExp*);
+
+        void checkWinLossCondition(void);
+        void spawnPlayerUnits(ServerPlayer*);
 };
 
 };

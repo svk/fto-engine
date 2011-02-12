@@ -158,7 +158,24 @@ void ServerUnit::setController(ServerPlayer* player) {
         controller->removeControlledUnit( this );
     }
     controller = player;
-    controller->addControlledUnit( this );
+    if( controller ) {
+        controller->addControlledUnit( this );
+    }
+}
+
+ServerTile* ServerMap::getRandomTileForNear(const ServerUnit* unit, int cx, int cy) {
+    const int tries = 1000;
+    int i = 0;
+    while( i < tries ) {
+        int x, y;
+        HexTools::inflateHexCoordinate( i, x, y );
+        ServerTile& tile = tiles.get( x + cx, y + cy );
+        if( tile.mayEnter( unit ) ) {
+            return &tile;
+        }
+        i++;
+    }
+    return 0;
 }
 
 ServerTile* ServerMap::getRandomTileFor(const ServerUnit* unit) {
@@ -246,6 +263,8 @@ bool ServerMap::actionRemoveUnit(ServerUnit *unit) {
     unit->leaveTile();
 
     evtUnitDisappears( *unit, *tile );
+
+    unit->setController(0);
 
     return true;
 }
@@ -576,7 +595,6 @@ void TacTestServer::announceTurn(void) {
     using namespace Sise;
     using namespace std;
     int playerId = turns.current();
-    cerr << "will announce: " << endl;
     while( !myMap.getPlayerById( playerId ) ) {
         if( playerId == -1 ) return;
         turns.removeParticipant( playerId );
@@ -588,8 +606,6 @@ void TacTestServer::announceTurn(void) {
     oss << " in " << formatTime( turns.getCurrentRemainingTime() );
     myMap.actionPlayerTurnBegins( *myMap.getPlayerById( playerId ), turns.getCurrentRemainingTime() );
     using namespace std;
-    cerr << "Announcing: " << oss.str() << endl;
-    cerr << "Announcing: " << oss.str() << endl;
     delbroadcast( new Cons( new Symbol( "chat" ),
                   new Cons( new Symbol( "channel" ),
                   new Cons( new Symbol( "tactest" ), 
@@ -647,7 +663,6 @@ bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, S
         cli->enterChannel( "tactest", "tactest" );
         clients.insert( cli->getUsername() );
         if( player ) {
-            ServerUnit *unit = player->getAnyControlledUnit();
             myMap.actionNewPlayer(*player);
             player->sendMemories();
             player->assumeAmnesia();
@@ -655,6 +670,11 @@ bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, S
             ServerPlayer *currentPlayer = myMap.getPlayerById( turns.current() );
             if( currentPlayer ) {
                 player->sendPlayerTurnBegins( *currentPlayer, turns.getCurrentRemainingTime() );
+            }
+            ServerUnit *unit = player->getAnyControlledUnit();
+            if( !unit ) {
+                spawnPlayerUnits( player );
+                unit = player->getAnyControlledUnit();
             }
             cli->delsend(( List()(new Symbol( "tactest" ))
                                  (new Symbol( "welcome" ))
@@ -665,24 +685,13 @@ bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, S
             return true;
         }
         player = new ServerPlayer( server, myMap, myMap.generatePlayerId(), cli->getUsername() );
-        ServerUnit *unit;
-        if( cli->getUsername() == "kaw" ) { // obv I'll be leaving in something like this; doubled hit rate, +50% damage reduction, etc.
-            unit = new ServerUnit( myMap.generateUnitId(), unitTypes["pc"] );
-        } else {
-            unit = new ServerUnit( myMap.generateUnitId(), unitTypes["troll"] );
-        }
-        ServerTile *tile = myMap.getRandomTileFor( unit );
-        if( !tile ) {
-            delete player;
-            delete unit;
-            return true;
-        }
+        myMap.adoptPlayer( player );
+        myMap.actionNewPlayer(*player);
+        spawnPlayerUnits( player );
+
         turns.addParticipant( player->getId(), 10.0, 10.0 );
         using namespace std;
         cerr << turns.getNumberOfParticipants() << " are now playing" << endl;
-        myMap.adoptPlayer( player );
-        myMap.adoptUnit( unit );
-        myMap.actionNewPlayer(*player);
         if( turns.getNumberOfParticipants() == 1 ) {
             turns.start();
             announceTurn();
@@ -692,20 +701,17 @@ bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, S
                 player->sendPlayerTurnBegins( *currentPlayer, turns.getCurrentRemainingTime() );
             }
         }
-        unit->setController( player );
-        unit->getAP() = ActivityPoints( unit->getUnitType(), 1, 1, 1 );
-        int x, y;
-        using namespace std;
-        tile->getXY( x, y );
-        myMap.actionPlaceUnit( unit, x, y );
         cli->delsend(( List()(new Symbol( "tactest" ))
                              (new Symbol( "welcome" ))
                              (new String( cli->getUsername() ))
-                             (new Int( unit->getId() ) )
+                             (new Int( player->getAnyControlledUnit()->getId() ) )
                         .make() ));
     } else {
         return false;
     }
+
+    checkWinLossCondition();
+
     return true;
 }
 
@@ -893,6 +899,48 @@ void ServerPlayer::sendMeleeAttack(const ServerUnit& attacker, const ServerUnit&
                        ( result.toSexp() )
                  .make() );
 
+}
+
+void TacTestServer::spawnPlayerUnits(ServerPlayer* player) {
+    using namespace std;
+    ServerUnit *unit;
+    if( player->getUsername() == "kaw" ) { // obv I'll be leaving in something like this; doubled hit rate, +50% damage reduction, etc.
+        unit = new ServerUnit( myMap.generateUnitId(), unitTypes["pc"] );
+    } else {
+        unit = new ServerUnit( myMap.generateUnitId(), unitTypes["troll"] );
+    }
+    ServerTile *tile = myMap.getRandomTileFor( unit );
+    myMap.adoptUnit( unit );
+    unit->setController( player );
+    unit->getAP() = ActivityPoints( unit->getUnitType(), 1, 1, 1 );
+    int x, y;
+    if( !tile ) {
+        cerr << "WARNING: out of room on map" << endl;
+        return;
+    }
+    tile->getXY( x, y );
+    cerr << "spawning unit at " << x << " " << y << endl;
+    myMap.actionPlaceUnit( unit, x, y );
+}
+
+void TacTestServer::checkWinLossCondition(void) {
+    using namespace Sise;
+    using namespace SProto;
+    for(std::set<std::string>::iterator i = clients.begin(); i != clients.end(); i++) {
+        std::string username = *i;
+        ServerPlayer *player = myMap.getPlayerByUsername( username );
+        if( !player ) continue;
+        if( player->getNumberOfUnits() == 0 ) {
+            std::ostringstream oss;
+            oss << "*** ";
+            oss << "Player " << username << " has been defeated!";
+            delbroadcast( new Cons( new Symbol( "chat" ),
+                          new Cons( new Symbol( "channel" ),
+                          new Cons( new Symbol( "tactest" ), 
+                          new Cons( new String( "tactest" ),
+                                    prepareChatMessage( "", oss.str() ))))));
+        }
+    }
 }
 
 };
