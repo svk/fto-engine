@@ -2,6 +2,9 @@
 
 #include <iostream>
 
+#include <SFML/System.hpp>
+#include <SFML/Graphics.hpp>
+
 class TestHandler : public Sise::NamedSexpHandler {
     public:
         void handleNamedSExp(const std::string& name, Sise::SExp *sexp) {

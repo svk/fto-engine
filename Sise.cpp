@@ -282,10 +282,12 @@ SExp* ListParser::get(void) {
         }
     }
     elements.clear();
+    terminatingCdr = 0;
     return rv;
 }
 
 bool ListParser::feed(char ch) {
+    using namespace std;
     bool took = false;
     if( subparser ) {
         took = subparser->feed( ch );

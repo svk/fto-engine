@@ -35,7 +35,7 @@ test-typesetter: test-typesetter.o typesetter.o myabort.o
 	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
 
 test-sexp: test-sexp.o Sise.o myabort.o
-	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
+	$(CC) $(CPPFLAGS) $(CORE_LIBS) $^ -o $@
 
 test-sisenet: test-sisenet.o Sise.o myabort.o
 	$(CC) $(CPPFLAGS) $(LIBS) $^ -o $@
