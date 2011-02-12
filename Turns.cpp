@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #include <sstream>
+#include <iomanip>
 
 FischerTurnManager::FischerTurnManager(void) :
     clock (),
@@ -120,6 +121,25 @@ double Timer::getElapsedTime(void) {
     return dt.tv_sec + 0.000001 * dt.tv_usec;
 }
 
+std::string formatTimeCoarse(double seconds) {
+    int t = (int)(0.5 + seconds * 1000);
+    const int k[] = { 1000 * 60 * 60, 1000 * 60, 1000 };
+    const int kn = 3;
+    int r[kn];
+    std::ostringstream oss;
+    for(int i=0;i<kn;i++) {
+        r[i] = t / k[i];
+        t -= r[i] * k[i];
+    }
+    for(int i=0;i<kn;i++) {
+        if( i != 0 ) oss << ":";
+        oss << std::setfill('0') << std::setw(2);
+        oss << r[i];
+    }
+    return oss.str();
+}
+
+
 std::string formatTime(double seconds) {
     int t = (int)(0.5 + seconds * 1000);
     const int k[] = { 1000 * 60 * 60 * 24, 1000 * 60 * 60, 1000 * 60, 1000, 1 };
@@ -127,14 +147,12 @@ std::string formatTime(double seconds) {
     const std::string sx[] = { "d", "h", "m", "s", "ms" };
     int r[kn];
     std::ostringstream oss;
-    using namespace std;
-    cerr << "fmtTime=" << seconds << endl;
     for(int i=0;i<kn;i++) {
         r[i] = t / k[i];
         t -= r[i] * k[i];
     }
     for(int i=0;i<kn;i++) if( r[i] ) {
-        if( i != (kn-1) ) oss << " ";
+        if( i != 0 ) oss << " ";
         oss << r[i] << sx[i];
     }
     return oss.str();

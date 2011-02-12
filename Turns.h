@@ -52,5 +52,6 @@ class FischerTurnManager {
 };
 
 std::string formatTime(double);
+std::string formatTimeCoarse(double);
 
 #endif

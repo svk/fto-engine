@@ -454,13 +454,16 @@ void ServerPlayer::sendPlayerTurnBegins(const ServerPlayer& player, double timeL
     using namespace std;
     using namespace SProto;
     using namespace Sise;
+    cerr << "sending playerturnbegins to " << username << "... getting rc...";
     RemoteClient *rc = server.getConnectedUser( username );
     if( !rc ) return;
+    cerr << "successs..";
     rc->delsend( List()( new Symbol( "tac" ) )
                        ( new Symbol( "player-turn-begins" ) )
                        ( new Int( player.getId() ) )
                        ( new Int( (int)(0.5 + 1000 * timeLeft) ) )
                  .make() );
+    cerr << "sent!" << endl;
 }
 
 void ServerPlayer::sendUnitDisappears(const ServerUnit& unit) {
@@ -551,7 +554,6 @@ void TacTestServer::delbroadcast(Sise::SExp* sexp) {
 void TacTestServer::tick(double dt) {
     if( turns.getNumberOfParticipants() == 0) return;
     using namespace std;
-    cerr << "remaining time: " << turns.getCurrentRemainingTime() << endl;
     if( turns.getCurrentRemainingTime() <= 0 ) {
         turns.next();
         announceTurn();
@@ -643,6 +645,10 @@ bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, S
             player->sendMemories();
             player->assumeAmnesia();
             player->sendFovDelta();
+            ServerPlayer *currentPlayer = myMap.getPlayerById( turns.current() );
+            if( currentPlayer ) {
+                player->sendPlayerTurnBegins( *currentPlayer, turns.getCurrentRemainingTime() );
+            }
             cli->delsend(( List()(new Symbol( "tactest" ))
                                  (new Symbol( "welcome" ))
                                  (new String( cli->getUsername() ))
@@ -673,6 +679,11 @@ bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, S
         if( turns.getNumberOfParticipants() == 1 ) {
             turns.start();
             announceTurn();
+        } else {
+            ServerPlayer *currentPlayer = myMap.getPlayerById( turns.current() );
+            if( currentPlayer ) {
+                player->sendPlayerTurnBegins( *currentPlayer, turns.getCurrentRemainingTime() );
+            }
         }
         unit->setController( player );
         unit->getAP() = ActivityPoints( unit->getUnitType(), 1, 1, 1 );

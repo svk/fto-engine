@@ -110,7 +110,7 @@ class TestTacTPScreen : public SfmlScreen,
             cmap.processActions();
 
             currentPlayer.setText( cmap.getCurrentPlayerName() );
-            currentTimeLeft.setText( formatTime( cmap.getCurrentPlayerTime() ) );
+            currentTimeLeft.setText( formatTimeCoarse( cmap.getCurrentPlayerTime() ) );
         }
 
         void resize(int width_, int height_) {
