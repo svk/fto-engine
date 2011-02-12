@@ -50,6 +50,8 @@ class TestTacTPScreen : public SfmlScreen,
 
         ViewportMouseScroller *vpMouseScroller;
 
+        int lastCurrentPlayer;
+
 
     public:
         TestTacTPScreen(
@@ -82,7 +84,8 @@ class TestTacTPScreen : public SfmlScreen,
             sidePanel (),
             currentPlayer ( font ),
             currentTimeLeft ( font ),
-            vpMouseScroller ( 0 )
+            vpMouseScroller ( 0 ),
+            lastCurrentPlayer (-1)
         {
             sidePanel.add( &currentPlayer );
             sidePanel.add( &currentTimeLeft );
@@ -116,8 +119,10 @@ class TestTacTPScreen : public SfmlScreen,
         void tick(double dt) {
             cmap.animate( dt );
             cmap.processActions();
-
-            currentPlayer.set( cmap.getCurrentPlayerName(), cmap.getCurrentPlayerColour() );
+            if( lastCurrentPlayer != cmap.getCurrentPlayerId() ) {
+                currentPlayer.set( cmap.getCurrentPlayerName(), cmap.getCurrentPlayerColour() );
+                lastCurrentPlayer = cmap.getCurrentPlayerId();
+            }
             currentTimeLeft.setText( formatTimeCoarse( cmap.getCurrentPlayerTime() ) );
         }
 
