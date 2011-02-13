@@ -80,10 +80,10 @@ namespace Sise {
 
 
 
-    struct Cons;
-    struct Int;
-    struct String;
-    struct Symbol;
+    class Cons;
+    class Int;
+    class String;
+    class Symbol;
 
     class SExp {
         Type type;
