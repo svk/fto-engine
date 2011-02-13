@@ -346,6 +346,21 @@ class TestTacTPScreen : public SfmlScreen,
             return false;
         }
 
+        bool handleMousePressLeft(const sf::Event::MouseButtonEvent& ev) {
+            int x = window.GetInput().GetMouseX(),
+                y = window.GetInput().GetMouseY();
+            if( vp.translateCoordinates( x, y ) ) {
+                grid.screenToHex( x, y, 0, 0 );
+                ClientTile& tile = cmap.getTile( x, y );
+                int id = tile.getUnitIdAt( 0 );
+                if( id != INVALID_ID ) {
+                    unitId = id;
+                    centerOnUnit( unitId );
+                }
+            }
+            return true;
+        }
+
         bool handleMousePressRight(const sf::Event::MouseButtonEvent& ev) {
             if( !vpMouseScroller ) {
                 window.ShowMouseCursor( false );
@@ -361,6 +376,8 @@ class TestTacTPScreen : public SfmlScreen,
                     return handleMouseMoved( ev.MouseMove );
                 case sf::Event::MouseButtonPressed:
                     switch( ev.MouseButton.Button ) {
+                        case sf::Mouse::Left:
+                            return handleMousePressLeft( ev.MouseButton );
                         case sf::Mouse::Right:
                             return handleMousePressRight( ev.MouseButton );
                         default: break;
