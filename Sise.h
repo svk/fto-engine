@@ -24,6 +24,8 @@
 
 #include <string>
 
+#include <gmpxx.h>
+
 #include <stdexcept>
 
 /* Not meant to be resistant towards malicious
@@ -67,7 +69,8 @@ namespace Sise {
         TYPE_CONS,
         TYPE_INT,
         TYPE_STRING,
-        TYPE_SYMBOL
+        TYPE_SYMBOL,
+        TYPE_BIG_RATIONAL
     };
 
     struct SExpTypeError : public SExpInterpretationError {
@@ -84,6 +87,7 @@ namespace Sise {
     class Int;
     class String;
     class Symbol;
+    class BigRational;
 
     class SExp {
         Type type;
@@ -105,6 +109,9 @@ namespace Sise {
     String* asString(SExp*);
     Int* asInt(SExp*);
     Symbol* asSymbol(SExp*);
+    BigRational* asBigRational(SExp*);
+
+    mpq_class asMPQ( SExp* );
 
     class Cons : public SExp {
         SExp *carPtr;
@@ -147,6 +154,13 @@ namespace Sise {
             void output(std::ostream&);
     };
 
+    class BigRational : public PodType<mpq_class,TYPE_BIG_RATIONAL> {
+        public:
+            explicit BigRational(mpq_class data) : PodType<mpq_class,TYPE_BIG_RATIONAL>(data) {}
+
+            void output(std::ostream&);
+    };
+
     class Symbol : public PodType<std::string,TYPE_SYMBOL> {
         public:
             explicit Symbol(std::string data) : PodType<std::string,TYPE_SYMBOL>(data) {}
@@ -174,8 +188,17 @@ namespace Sise {
     class NumberParser : public SExpParser {
         // expects everything
         private:
-            char buffer[128];
+            enum {
+                TYPE_PLAIN,
+                TYPE_BIG,
+                TYPE_RATIONAL
+            } type;
+
+            char buffer[9];
             int length;
+
+            std::ostringstream bigbuf;
+
             bool isDone;
 
         public:

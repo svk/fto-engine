@@ -38,6 +38,24 @@ SExp::SExp(Type type) :
 SExp::~SExp(void) {
 }
 
+mpq_class asMPQ( SExp* x ) {
+    if( !x ) throw UnexpectedNilError();
+    if( x->isType( TYPE_INT ) ) {
+        return mpq_class( *asInt(x) );
+    }
+    if( x->isType( TYPE_BIG_RATIONAL ) ) {
+        return *asBigRational( x );
+    }
+    throw SExpTypeError( TYPE_BIG_RATIONAL, x->getType() );
+}
+
+BigRational* asBigRational(SExp* x) {
+    const Type t = TYPE_BIG_RATIONAL;
+    if( !x ) throw UnexpectedNilError();
+    if( !x->isType( t ) ) throw SExpTypeError( t, x->getType() );
+    return dynamic_cast<BigRational*>( x );
+}
+
 Int* asInt(SExp* x) {
     const Type t = TYPE_INT;
     if( !x ) throw UnexpectedNilError();
@@ -144,6 +162,10 @@ void Cons::output(std::ostream& os) {
     os.put( ')' );
 }
 
+void BigRational::output(std::ostream& os) {
+    os << data.get_num() << "/" << data.get_den();
+}
+
 void Int::output(std::ostream& os) {
     char buffer[512];
     snprintf( buffer, sizeof buffer, "%d", data );
@@ -216,9 +238,14 @@ bool StringParser::feed(char ch) {
 }
 
 SExp* NumberParser::get(void) {
-    // no floats for now
-    int rv = atoi( buffer );
-    return new Int( rv );
+    if( type == TYPE_PLAIN ) {
+        int rv = atoi( buffer );
+        return new Int( rv );
+    } else if( type == TYPE_BIG ) {
+        throw ParseError( "big integers not yet supported" );
+    } else {
+        return new BigRational(mpq_class( bigbuf.str() ) );
+    }
 }
 
 bool NumberParser::done(void) const {
@@ -226,11 +253,22 @@ bool NumberParser::done(void) const {
 }
 
 bool NumberParser::feed(char ch) {
-    if( length >= (int) sizeof buffer ) {
-        throw ParseError( "parse error / buffer overflow -- expected smallint" );
+    if( length >= (int) sizeof buffer && type == TYPE_PLAIN ) {
+        type = TYPE_BIG;
+        bigbuf << buffer;
     }
     if( isdigit( ch ) || (length == 0 && ch == '-') ) {
-        buffer[length++] = ch;
+        if( type == TYPE_PLAIN ) {
+            buffer[length++] = ch;
+        } else if( type == TYPE_BIG || type == TYPE_RATIONAL ) {
+            bigbuf << ch;
+        }
+    } else if( ch == '/' && (type == TYPE_PLAIN || type == TYPE_BIG) ) {
+        if( type == TYPE_PLAIN ) {
+            bigbuf << buffer;
+        }
+        type = TYPE_RATIONAL;
+        bigbuf << '/';
     } else {
         isDone = true;
         return false;
@@ -239,6 +277,7 @@ bool NumberParser::feed(char ch) {
 }
 
 NumberParser::NumberParser(void) :
+    type ( TYPE_PLAIN ),
     length ( 0 ),
     isDone ( false )
 {
