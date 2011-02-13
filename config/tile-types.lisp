@@ -9,7 +9,7 @@
     (name . "floor")
     (mobility . floor)
     (opacity . clear)
-    (base-cost . 100)
+    (base-cost . 1/2)
     (border? . no))
 (std-wall
     (sprite-name . tile-wall)

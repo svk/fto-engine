@@ -157,6 +157,7 @@ namespace Sise {
     class BigRational : public PodType<mpq_class,TYPE_BIG_RATIONAL> {
         public:
             explicit BigRational(mpq_class data) : PodType<mpq_class,TYPE_BIG_RATIONAL>(data) {}
+            explicit BigRational(int data) : PodType<mpq_class,TYPE_BIG_RATIONAL>(mpq_class(data)) {}
 
             void output(std::ostream&);
     };

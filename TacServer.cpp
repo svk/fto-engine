@@ -360,7 +360,7 @@ bool ServerMap::cmdMoveUnit(ServerPlayer* player,int unitId, int dx, int dy) {
     int x, y;
     leavingTile->getXY( x, y );
     ServerTile& enteringTile = tiles.get( x + dx, y + dy );
-    int cost;
+    mpq_class cost;
     if( !enteringTile.getTileType().mayTraverse( unit->getUnitType(), cost ) ) return false;
     if( !unit->getAP().maySpendMovementEnergy( cost ) ) return false;
 

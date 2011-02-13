@@ -25,11 +25,11 @@ struct AttackCapability {
 
 struct DefenseCapability {
     int defense, reduction;
-    int mResistance;
+    mpq_class resistance;
 
     DefenseCapability(void) {}
-    DefenseCapability(int defense, int reduction, int mResistance) :
-        defense( defense ), reduction ( reduction ), mResistance ( mResistance )
+    DefenseCapability(int defense, int reduction, mpq_class resistance) :
+        defense( defense ), reduction ( reduction ), resistance ( resistance )
     {}
 
     Sise::SExp *toSexp(void) const;
@@ -70,7 +70,7 @@ struct UnitType {
     std::string name;
 
     int maxHp;
-    int speed;
+    mpq_class speed;
     int nativeLayer;
 
     AttackCapability *meleeAttack;
@@ -90,10 +90,10 @@ struct TileType {
     Type::Mobility mobility;
     Type::Opacity opacity;
     bool border;
-    int baseCost;
+    mpq_class baseCost;
 
     bool mayTraverse(const UnitType&) const;
-    bool mayTraverse(const UnitType&, int&) const;
+    bool mayTraverse(const UnitType&, mpq_class&) const;
 
     TileType(const std::string&,
              const std::string&, // name

@@ -499,19 +499,6 @@ ClientUnitType::ClientUnitType(Sise::SExp *sexp) :
 {
 }
 
-ClientUnitType::ClientUnitType(const std::string& symbol, const std::string& alias, const std::string& name, int speed, int maxHp, AttackCapability* acap, DefenseCapability defc) :
-    UnitType ( symbol, name, speed, maxHp, acap, defc ),
-    spriteNormal ( sheet->makeSprite( SpriteId( alias, SpriteId::NORMAL ) ) )
-{
-}
-
-ClientTileType::ClientTileType(const std::string& symbol, const std::string& alias, const std::string& name, Type::Mobility mobility, Type::Opacity opacity, bool border, int baseCost ) :
-    TileType( symbol, name, mobility, opacity, border, baseCost ),
-    spriteNormal ( sheet->makeSprite( SpriteId( alias, SpriteId::NORMAL ) ) ),
-    spriteGrayscale ( sheet->makeSprite( SpriteId( alias, SpriteId::GRAYSCALE ) ) )
-{
-}
-
 void ClientMap::setTileType(int x, int y, const ClientTileType* tt) {
     ClientTile& tile = tiles.get(x, y );
     if( &tile != &tiles.getDefault() ) {

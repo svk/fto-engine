@@ -46,6 +46,8 @@ mpq_class asMPQ( SExp* x ) {
     if( x->isType( TYPE_BIG_RATIONAL ) ) {
         return *asBigRational( x );
     }
+    using namespace std;
+    cerr << "type: " << x->getType() << endl;
     throw SExpTypeError( TYPE_BIG_RATIONAL, x->getType() );
 }
 
@@ -163,7 +165,7 @@ void Cons::output(std::ostream& os) {
 }
 
 void BigRational::output(std::ostream& os) {
-    os << data.get_num() << "/" << data.get_den();
+    os << data;
 }
 
 void Int::output(std::ostream& os) {
@@ -242,7 +244,18 @@ SExp* NumberParser::get(void) {
         int rv = atoi( buffer );
         return new Int( rv );
     } else if( type == TYPE_BIG ) {
-        throw ParseError( "big integers not yet supported" );
+        using namespace std;
+        cerr << "big number-- ::" << bigbuf.str() << "::" << endl;
+        std::string mys = bigbuf.str();
+        mpz_class number( mys );
+        cerr << "big number fits?" << endl;
+        if( !number.fits_sint_p() ) {
+            cerr << "no" << endl;
+            return new BigRational( mpq_class( bigbuf.str() ) );
+        }
+        cerr << "yes:" << number.get_si() << endl;
+        return new Int( number.get_si() );
+        // big integers aren't supported yet, so we assume rational
     } else {
         return new BigRational(mpq_class( bigbuf.str() ) );
     }
@@ -255,7 +268,9 @@ bool NumberParser::done(void) const {
 bool NumberParser::feed(char ch) {
     if( length >= (int) sizeof buffer && type == TYPE_PLAIN ) {
         type = TYPE_BIG;
-        bigbuf << buffer;
+        for(int i=0;i<length;i++) {
+            bigbuf << buffer[i];
+        }
     }
     if( isdigit( ch ) || (length == 0 && ch == '-') ) {
         if( type == TYPE_PLAIN ) {
@@ -265,7 +280,9 @@ bool NumberParser::feed(char ch) {
         }
     } else if( ch == '/' && (type == TYPE_PLAIN || type == TYPE_BIG) ) {
         if( type == TYPE_PLAIN ) {
-            bigbuf << buffer;
+            for(int i=0;i<length;i++) {
+                bigbuf << buffer[i];
+            }
         }
         type = TYPE_RATIONAL;
         bigbuf << '/';
@@ -279,6 +296,7 @@ bool NumberParser::feed(char ch) {
 NumberParser::NumberParser(void) :
     type ( TYPE_PLAIN ),
     length ( 0 ),
+    bigbuf (),
     isDone ( false )
 {
     memset( buffer, 0, sizeof buffer );

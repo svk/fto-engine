@@ -22,13 +22,13 @@ class TileTypeMap {
 
 class ActivityPoints {
     private:
-        int speed;
+        mpq_class speed;
 
         int movementPoints;
         int actionPoints;
         int flexPoints;
 
-        int movementEnergy;
+        mpq_class movementEnergy;
 
     public:
         ActivityPoints(void);
@@ -38,13 +38,13 @@ class ActivityPoints {
 
         const ActivityPoints& operator=(const ActivityPoints&);
 
-        int getImmediateMovementEnergy(void) const;
-        int getPotentialMovementEnergy(void) const;
+        mpq_class getImmediateMovementEnergy(void) const;
+        mpq_class getPotentialMovementEnergy(void) const;
 
-        bool maySpendMovementEnergy(int) const;
+        bool maySpendMovementEnergy(mpq_class) const;
         bool maySpendActionPoints(int) const;
 
-        void spendMovementEnergy(int);
+        void spendMovementEnergy(mpq_class);
         void spendActionPoint(int);
 
         void forbidMovement(void);
@@ -114,16 +114,17 @@ struct BernoulliDamageDie : public NondeterministicTransform<AttackResult,Attack
 };
 
 struct DamageResister : public DeterministicTransform<AttackResult,AttackResult> {
-    const double resistance;
+    const mpq_class resistance;
 
-    DamageResister(double resistance) :
+    DamageResister(mpq_class resistance) :
         resistance ( resistance )
     {
     }
 
     AttackResult transform(AttackResult x) {
         if( x.status == AttackResult::HIT ){
-            x.damage = MAX( 0, (int)(((double)x.damage) * (1.0-resistance)) );
+            mpq_class reduction = resistance * x.damage;
+            x.damage = MAX( 0, x.damage - (int) reduction.get_d() );
         }
         return x;
     }
@@ -161,7 +162,7 @@ struct DamageDealer : public NondeterministicTransform<AttackResult,AttackResult
 
 int getDamageOfAttack(AttackResult);
 
-void findAllAccessible(const UnitType&, const TileTypeMap&, int, int, int, HexTools::HexReceiver&);
+void findAllAccessible(const UnitType&, const TileTypeMap&, int, int, mpq_class, HexTools::HexReceiver&);
 
 };
 

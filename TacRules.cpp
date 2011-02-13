@@ -96,7 +96,7 @@ const ActivityPoints& ActivityPoints::operator=(const ActivityPoints& that) {
     return *this;
 }
 
-int ActivityPoints::getImmediateMovementEnergy(void) const {
+mpq_class ActivityPoints::getImmediateMovementEnergy(void) const {
     // this is for highlighting zones, so it's somewhat informally
     // defined
     assert( movementEnergy >= 0 );
@@ -111,11 +111,11 @@ int ActivityPoints::getImmediateMovementEnergy(void) const {
     return 0;
 }
 
-int ActivityPoints::getPotentialMovementEnergy(void) const {
+mpq_class ActivityPoints::getPotentialMovementEnergy(void) const {
     return movementEnergy + (movementPoints+flexPoints) * speed;
 }
 
-bool ActivityPoints::maySpendMovementEnergy(int cost) const {
+bool ActivityPoints::maySpendMovementEnergy(mpq_class cost) const {
     using namespace std;
     cerr << "may spend " << cost << "? " << getPotentialMovementEnergy() << "[" << speed << "]" << endl;
     return getPotentialMovementEnergy() >= cost;
@@ -125,7 +125,7 @@ bool ActivityPoints::maySpendActionPoints(int points) const {
     return (actionPoints + flexPoints) >= points;
 }
 
-void ActivityPoints::spendMovementEnergy(int cost) {
+void ActivityPoints::spendMovementEnergy(mpq_class cost) {
     if( movementEnergy >= cost ) {
         movementEnergy -= cost;
     } else {
@@ -165,7 +165,7 @@ void ActivityPoints::spendActionPoint(int cost) {
     }
 }
 
-void findAllAccessible(const UnitType& unitType, const TileTypeMap& ttMap, int cx, int cy, int energy, HexTools::HexReceiver& region) {
+void findAllAccessible(const UnitType& unitType, const TileTypeMap& ttMap, int cx, int cy, mpq_class energy, HexTools::HexReceiver& region) {
     using namespace HexTools;
 
     static const int dx[] = { 3, 0, -3, -3, 0, 3 },
@@ -175,7 +175,7 @@ void findAllAccessible(const UnitType& unitType, const TileTypeMap& ttMap, int c
 
         using namespace std;
 
-    SparseHexMap<int> costs ( -1 );
+    SparseHexMap<mpq_class> costs ( -1 );
 
     costs.set( cx, cy, 0 );
     std::queue<HexCoordinate> q;
@@ -188,15 +188,15 @@ void findAllAccessible(const UnitType& unitType, const TileTypeMap& ttMap, int c
 
         region.add( coord.first, coord.second );
 
-        int cost = costs.get( coord.first, coord.second );
+        mpq_class cost = costs.get( coord.first, coord.second );
 
         for(int i=0;i<6;i++) {
             const int x = coord.first + dx[i], y = coord.second + dy[i];
             const TileType* tt = ttMap.getTileTypeAt( x, y );
-            int traversalCost;
+            mpq_class traversalCost;
             if( tt && tt->mayTraverse( unitType, traversalCost ) ) {
                 if( (cost + traversalCost) > energy ) continue;
-                int oldCost = costs.get(x,y);
+                mpq_class oldCost = costs.get(x,y);
                 oldCost = costs.get(x,y);
                 if( oldCost < 0 || oldCost > (cost + traversalCost) ) {
                     costs.set(x,y, cost + traversalCost );
@@ -238,11 +238,11 @@ AttackResult AttackResult::fromSexp(Sise::SExp* sexp) {
 
 Sise::SExp* ActivityPoints::toSexp(void) const {
     using namespace Sise;
-    return List()( new Int( speed ) )
+    return List()( new BigRational( speed ) )
                  ( new Int( movementPoints ) )
                  ( new Int( actionPoints ) )
                  ( new Int( flexPoints ) )
-                 ( new Int( movementEnergy ) )
+                 ( new BigRational( movementEnergy ) )
            .make();
 }
 
@@ -253,7 +253,7 @@ ActivityPoints::ActivityPoints(Sise::SExp* sexp) {
     movementPoints = *asInt( args->nthcar(1) );
     actionPoints = *asInt( args->nthcar(2) );
     flexPoints = *asInt( args->nthcar(3) );
-    movementEnergy = *asInt( args->nthcar(4) );
+    movementEnergy = asMPQ( args->nthcar(4) );
 }
 
 bool AttackResult::operator==(const AttackResult& that) const {
@@ -269,11 +269,11 @@ ActivityPoints ActivityPoints::fromSexp(Sise::SExp* sexp) {
     using namespace Sise;
     Cons *args = asProperCons( sexp );
     ActivityPoints rv;
-    rv.speed = *asInt( args->nthcar(0) );
+    rv.speed = asMPQ( args->nthcar(0) );
     rv.movementPoints = *asInt( args->nthcar(1) );
     rv.actionPoints = *asInt( args->nthcar(2) );
     rv.flexPoints = *asInt( args->nthcar(3) );
-    rv.movementEnergy = *asInt( args->nthcar(4) );
+    rv.movementEnergy = asMPQ( args->nthcar(4) );
     return rv;
 }
 
@@ -309,7 +309,7 @@ Outcomes<AttackResult> makeAttackBetween(const AttackCapability& att, const Defe
     Outcomes<AttackResult> rv = makeAttack( att.attack, def.defense );
     rv = DamageDealer( att.attack, def.defense, att.shots, att.firepower)( rv );
     rv = DamageReducer( def.reduction )( rv );
-    rv = DamageResister( ((double)def.mResistance) / 1000.0 )( rv );
+    rv = DamageResister( def.resistance )( rv );
     return rv;
 }
 

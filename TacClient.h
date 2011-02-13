@@ -144,7 +144,6 @@ struct ClientUnitType : public UnitType {
 
     static TacSpritesheet* sheet;
 
-    ClientUnitType(const std::string&, const std::string&, const std::string&, int, int, AttackCapability*, DefenseCapability);
     ClientUnitType(Sise::SExp*);
 };
 
@@ -153,13 +152,6 @@ struct ClientTileType : public TileType {
 
     static TacSpritesheet* sheet;
 
-    ClientTileType(const std::string&, // symbol
-                   const std::string&, // sprite alias
-                   const std::string&, // name
-                   Type::Mobility,
-                   Type::Opacity,
-                   bool,
-                   int);
     ClientTileType(Sise::SExp*);
 };
 

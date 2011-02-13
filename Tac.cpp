@@ -37,7 +37,7 @@ UnitType::UnitType(Sise::SExp* sexp) {
     outputSExp( alist, cerr );
     name = *asString( alist->alistGet( "name" ) );
     maxHp = *asInt( alist->alistGet( "max-hp" ) );
-    speed = *asInt( alist->alistGet( "speed" ) );
+    speed = asMPQ( alist->alistGet( "speed" ) );
     nativeLayer = *asInt( alist->alistGet( "native-layer" ) );
 
     SExp *t = alist->alistGet( "melee-attack" );
@@ -66,7 +66,7 @@ Sise::SExp *TileType::toSexp(void) const {
                  ( new Cons( new Symbol( "border?" ),
                              new Symbol( ( border ) ? "yes" : "no" ) ) )
                  ( new Cons( new Symbol( "base-cost" ),
-                             new Int( baseCost ) ) )
+                             new BigRational( baseCost ) ) )
             .make();
 }
 
@@ -100,7 +100,7 @@ TileType::TileType(Sise::SExp* sexp) {
     } else throw std::logic_error( "invalid border? type" );
 
     if( mobility != Type::WALL ) {
-        baseCost = *asInt( alist->alistGet( "base-cost" ) );
+        baseCost = asMPQ( alist->alistGet( "base-cost" ) );
     }
 }
 
@@ -112,18 +112,18 @@ Sise::SExp *UnitType::toSexp(void) const {
                  ( new Cons( new Symbol( "max-hp" ),
                              new Int( maxHp ) ) )
                  ( new Cons( new Symbol( "speed" ),
-                             new Int( speed ) ) )
+                             new BigRational( speed ) ) )
                  ( new Cons( new Symbol( "native-layer" ),
                              new Int( nativeLayer ) ) )
             .make();
 }
 
 bool TileType::mayTraverse(const UnitType& unitType) const {
-    int disregardThat;
+    mpq_class disregardThat;
     return mayTraverse( unitType, disregardThat );
 }
 
-bool TileType::mayTraverse(const UnitType& unitType, int& outCost) const {
+bool TileType::mayTraverse(const UnitType& unitType, mpq_class& outCost) const {
     if( border ) return false;
     if( mobility == Type::WALL ) return false;
     outCost = baseCost;
@@ -141,7 +141,7 @@ Sise::SExp* DefenseCapability::toSexp(void) const {
     using namespace SProto;
     return List()( new Int( defense ) )
                  ( new Int( reduction ) )
-                 ( new Int( mResistance ) )
+                 ( new BigRational( resistance ) )
            .make();
 }
 DefenseCapability::DefenseCapability(Sise::SExp* sexp) {
@@ -151,7 +151,7 @@ DefenseCapability::DefenseCapability(Sise::SExp* sexp) {
 
     defense = *asInt( args->nthcar(0) );
     reduction = *asInt( args->nthcar(1) );
-    mResistance = *asInt( args->nthcar(2) );
+    resistance = asMPQ( args->nthcar(2) );
 }
 
 Sise::SExp* AttackCapability::toSexp(void) const {
