@@ -2,6 +2,8 @@
     (file "./data/smiley32.png"))
 (unit-troll (normal)
     (file "./data/trollface32.png"))
+(unit-rage (normal)
+    (file "./data/rageface32.png"))
 
 (tile-floor (normal grayscale)
     (solid-colour 100 200 100))

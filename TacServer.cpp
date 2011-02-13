@@ -920,24 +920,35 @@ void ServerPlayer::sendMeleeAttack(const ServerUnit& attacker, const ServerUnit&
 
 void TacTestServer::spawnPlayerUnits(ServerPlayer* player) {
     using namespace std;
-    ServerUnit *unit;
-    if( player->getUsername() == "kaw" ) { // obv I'll be leaving in something like this; doubled hit rate, +50% damage reduction, etc.
-        unit = new ServerUnit( myMap.generateUnitId(), unitTypes["pc"] );
-    } else {
-        unit = new ServerUnit( myMap.generateUnitId(), unitTypes["troll"] );
-    }
-    ServerTile *tile = myMap.getRandomTileFor( unit );
-    myMap.adoptUnit( unit );
-    unit->setController( player );
-    unit->getAP() = ActivityPoints( unit->getUnitType(), 1, 1, 1 );
+    ServerUnit *unit1, *unit2, *unit3;
+    unit1 = new ServerUnit( myMap.generateUnitId(), unitTypes["scout"] );
+
     int x, y;
-    if( !tile ) {
-        cerr << "WARNING: out of room on map" << endl;
-        return;
-    }
-    tile->getXY( x, y );
-    cerr << "spawning unit at " << x << " " << y << endl;
-    myMap.actionPlaceUnit( unit, x, y );
+    ServerTile *tile1 = myMap.getRandomTileFor( unit1 );
+    assert( tile1 );
+    myMap.adoptUnit( unit1 );
+    unit1->setController( player );
+    unit1->getAP() = ActivityPoints( unit1->getUnitType(), 1, 1, 1 );
+    tile1->getXY( x, y );
+    myMap.actionPlaceUnit( unit1, x, y );
+
+    unit2 = new ServerUnit( myMap.generateUnitId(), unitTypes["swordsman"] );
+    ServerTile *tile2 = myMap.getRandomTileForNear( unit2, x, y );
+    assert( tile2 );
+    tile2->getXY( x, y );
+    myMap.adoptUnit( unit2 );
+    unit2->setController( player );
+    unit2->getAP() = ActivityPoints( unit2->getUnitType(), 1, 1, 1 );
+    myMap.actionPlaceUnit( unit2, x, y );
+
+    unit3 = new ServerUnit( myMap.generateUnitId(), unitTypes["shieldmaiden"] );
+    ServerTile *tile3 = myMap.getRandomTileForNear( unit3, x, y );
+    assert( tile3 );
+    tile3->getXY( x, y );
+    myMap.adoptUnit( unit3 );
+    unit3->setController( player );
+    unit3->getAP() = ActivityPoints( unit3->getUnitType(), 1, 1, 1 );
+    myMap.actionPlaceUnit( unit3, x, y );
 }
 
 void TacTestServer::checkWinLossCondition(void) {
