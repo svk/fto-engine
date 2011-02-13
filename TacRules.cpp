@@ -295,4 +295,12 @@ int getDamageOfAttack(AttackResult res) {
     return res.damage;
 }
 
+Outcomes<AttackResult> makeAttackBetween(const AttackCapability& att, const DefenseCapability& def) {
+    Outcomes<AttackResult> rv = makeAttack( att.attack, def.defense );
+    rv = DamageDealer( att.attack, def.defense, att.shots, att.firepower)( rv );
+    rv = DamageReducer( def.reduction )( rv );
+    rv = DamageResister( ((double)def.mResistance) / 1000.0 )( rv );
+    return rv;
+}
+
 };

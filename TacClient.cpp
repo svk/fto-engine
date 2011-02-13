@@ -504,8 +504,8 @@ ClientUnitType::ClientUnitType(Sise::SExp *sexp) :
 {
 }
 
-ClientUnitType::ClientUnitType(const std::string& symbol, const std::string& alias, const std::string& name, int speed, int maxHp) :
-    UnitType ( symbol, name, speed, maxHp ),
+ClientUnitType::ClientUnitType(const std::string& symbol, const std::string& alias, const std::string& name, int speed, int maxHp, AttackCapability* acap, DefenseCapability defc) :
+    UnitType ( symbol, name, speed, maxHp, acap, defc ),
     spriteNormal ( sheet->makeSprite( SpriteId( alias, SpriteId::NORMAL ) ) )
 {
 }

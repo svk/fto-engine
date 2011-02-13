@@ -282,8 +282,6 @@ class TacTestServer : public SProto::SubServer {
     // this is a "test" server because it contains only one "game", and that game doesn't
     // really look much like Tac yet -- everyone moves at once, for one
     private:
-        TileType borderType, wallType, floorType;
-        UnitType pcType, trollType;
         ServerMap myMap;
 
         FischerTurnManager turns;

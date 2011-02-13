@@ -10,6 +10,9 @@
 
 #include "BoxRandom.h"
 
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+
 namespace Tac {
 
 class TileTypeMap {
@@ -96,6 +99,7 @@ struct AttackResult {
 };
 
 Outcomes<AttackResult> makeAttack(int,int);
+Outcomes<AttackResult> makeAttackBetween(const AttackCapability&, const DefenseCapability&);
 
 struct BernoulliDamageDie : public NondeterministicTransform<AttackResult,AttackResult> {
     const mpq_class successP;
@@ -104,6 +108,38 @@ struct BernoulliDamageDie : public NondeterministicTransform<AttackResult,Attack
     BernoulliDamageDie(mpq_class successP, int firepower) : successP( successP ), firepower ( firepower ) {}
 
     Outcomes<AttackResult> transform(AttackResult x);
+};
+
+struct DamageResister : public DeterministicTransform<AttackResult,AttackResult> {
+    const double resistance;
+
+    DamageResister(double resistance) :
+        resistance ( resistance )
+    {
+    }
+
+    AttackResult transform(AttackResult x) {
+        if( x.status == AttackResult::HIT ){
+            x.damage = MAX( 0, (int)(((double)x.damage) * (1.0-resistance)) );
+        }
+        return x;
+    }
+};
+
+struct DamageReducer : public DeterministicTransform<AttackResult,AttackResult> {
+    const int reduction;
+
+    DamageReducer(int reduction) :
+        reduction ( reduction )
+    {
+    }
+
+    AttackResult transform(AttackResult x){
+        if( x.status == AttackResult::HIT ){
+            x.damage = MAX( 0, x.damage - reduction );
+        }
+        return x;
+    }
 };
 
 struct DamageDealer : public NondeterministicTransform<AttackResult,AttackResult> {

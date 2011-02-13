@@ -12,6 +12,30 @@
 
 namespace Tac {
 
+struct AttackCapability {
+    int attack, shots, firepower;
+
+    AttackCapability(int attack, int shots, int firepower) :
+        attack(attack), shots(shots), firepower(firepower)
+    {}
+
+    Sise::SExp *toSexp(void) const;
+    AttackCapability(Sise::SExp*);
+};
+
+struct DefenseCapability {
+    int defense, reduction;
+    int mResistance;
+
+    DefenseCapability(void) {}
+    DefenseCapability(int defense, int reduction, int mResistance) :
+        defense( defense ), reduction ( reduction ), mResistance ( mResistance )
+    {}
+
+    Sise::SExp *toSexp(void) const;
+    DefenseCapability(Sise::SExp*);
+};
+
 // this contains what both the server and the client need to know about
 // unit/tile types. the server is not graphical and as such is not
 // interested in actually loading sprites.
@@ -49,9 +73,12 @@ struct UnitType {
     int speed;
     int nativeLayer;
 
-    UnitType(const std::string&, const std::string&, int, int);
+    AttackCapability *meleeAttack;
+    DefenseCapability defense;
+
+    UnitType(const std::string&, const std::string&, int, int, AttackCapability*, DefenseCapability);
     UnitType(Sise::SExp*);
-    virtual ~UnitType(void) {}
+    virtual ~UnitType(void);
 
     Sise::SExp *toSexp(void) const;
 };

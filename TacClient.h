@@ -144,7 +144,7 @@ struct ClientUnitType : public UnitType {
 
     static TacSpritesheet* sheet;
 
-    ClientUnitType(const std::string&, const std::string&, const std::string&, int, int);
+    ClientUnitType(const std::string&, const std::string&, const std::string&, int, int, AttackCapability*, DefenseCapability);
     ClientUnitType(Sise::SExp*);
 };
 

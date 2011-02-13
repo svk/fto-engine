@@ -1,13 +1,18 @@
 #include "Tac.h"
 
+#include "Sise.h"
+#include "SProto.h"
+
 namespace Tac {
 
-UnitType::UnitType(const std::string& symbol, const std::string& name, int speed, int maxHp) :
+UnitType::UnitType(const std::string& symbol, const std::string& name, int speed, int maxHp, AttackCapability *meleeAttack, DefenseCapability defense ) :
     symbol ( symbol ),
     name ( name ),
     maxHp ( maxHp ),
     speed ( speed ),
-    nativeLayer ( 0 ) // xx
+    nativeLayer ( 0 ), // xx
+    meleeAttack ( meleeAttack ),
+    defense ( defense )
 {
 }
 
@@ -34,6 +39,15 @@ UnitType::UnitType(Sise::SExp* sexp) {
     maxHp = *asInt( alist->alistGet( "max-hp" ) );
     speed = *asInt( alist->alistGet( "speed" ) );
     nativeLayer = *asInt( alist->alistGet( "native-layer" ) );
+
+    SExp *t = alist->alistGet( "melee-attack" );
+    if( t ) {
+        meleeAttack = new AttackCapability( t );
+    } else {
+        meleeAttack = 0;
+    }
+
+    defense = DefenseCapability( alist->alistGet( "defense" ) );
 }
 
 Sise::SExp *TileType::toSexp(void) const {
@@ -115,5 +129,48 @@ bool TileType::mayTraverse(const UnitType& unitType, int& outCost) const {
     outCost = baseCost;
     return true;
 }
+
+UnitType::~UnitType(void) {
+    if( meleeAttack ) {
+        delete meleeAttack;
+    }
+}
+
+Sise::SExp* DefenseCapability::toSexp(void) const {
+    using namespace Sise;
+    using namespace SProto;
+    return List()( new Int( defense ) )
+                 ( new Int( reduction ) )
+                 ( new Int( mResistance ) )
+           .make();
+}
+DefenseCapability::DefenseCapability(Sise::SExp* sexp) {
+    using namespace Sise;
+    using namespace SProto;
+    Cons *args = asProperCons( sexp );
+
+    defense = *asInt( args->nthcar(0) );
+    reduction = *asInt( args->nthcar(1) );
+    mResistance = *asInt( args->nthcar(2) );
+}
+
+Sise::SExp* AttackCapability::toSexp(void) const {
+    using namespace Sise;
+    using namespace SProto;
+    return List()( new Int( attack ) )
+                 ( new Int( shots ) )
+                 ( new Int( firepower ) )
+           .make();
+}
+AttackCapability::AttackCapability(Sise::SExp* sexp) {
+    using namespace Sise;
+    using namespace SProto;
+    Cons *args = asProperCons( sexp );
+
+    attack = *asInt( args->nthcar(0) );
+    shots = *asInt( args->nthcar(1) );
+    firepower = *asInt( args->nthcar(2) );
+}
+
 
 };

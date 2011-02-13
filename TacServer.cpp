@@ -305,9 +305,7 @@ bool ServerMap::actionMoveUnit(ServerUnit *unit, int dx, int dy) {
 }
 
 bool ServerMap::actionMeleeAttack(ServerUnit& attacker, ServerUnit& defender) {
-    const int diceno = 8, firepower = 4;
-    Outcomes<AttackResult> results = makeAttack( 0, 0 );
-    results = DamageDealer(0,0,diceno,firepower)( results );
+    Outcomes<AttackResult> results = makeAttackBetween( *attacker.getUnitType().meleeAttack, defender.getUnitType().defense );
     AttackResult result = chooseRandomOutcome( results, gmpPrng );
 
     evtMeleeAttack( attacker, defender, result );
@@ -320,6 +318,8 @@ bool ServerMap::cmdMeleeAttack(ServerPlayer* player,int unitId, int targetId ) {
     ServerUnit *target = getUnitById( targetId );
     if( !unit || !target ) return false;
     if( player != unit->getController() ) return false;
+
+    if( !unit->getUnitType().meleeAttack ) return false;
 
     ServerTile *unitTile = unit->getTile();
     ServerTile *targetTile = target->getTile();
@@ -555,11 +555,6 @@ void ServerPlayer::sendUnitMoved(const ServerUnit& unit, const ServerTile& fromT
 
 TacTestServer::TacTestServer(SProto::Server& server, int radius, const std::string& unitsfn, const std::string& tilesfn) :
     SProto::SubServer( "tactest", server ),
-    borderType( "border", "impassable wall", Type::WALL, Type::BLOCK, true, 0 ),
-    wallType ( "wall", "wall", Type::WALL, Type::BLOCK, false, 0 ),
-    floorType ( "floor", "floor", Type::FLOOR, Type::CLEAR, false, 100 ),
-    pcType ( "pc", "Player", 200, 84 ),
-    trollType ( "troll", "Troll", 500, 43 ),
     myMap ( radius, 0 )
 {
     fillManagerFromFile( unitsfn, unitTypes );
