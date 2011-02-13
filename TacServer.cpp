@@ -580,6 +580,7 @@ TacTestServer::TacTestServer(SProto::Server& server, int radius, const std::stri
     SProto::SubServer( "tactest", server ),
     myMap ( radius, 0 )
 {
+    using namespace std;
     fillManagerFromFile( unitsfn, unitTypes );
     fillManagerFromFile( tilesfn, tileTypes );
     myMap.reinitialize( &tileTypes[ "border" ] );

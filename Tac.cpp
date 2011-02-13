@@ -33,8 +33,6 @@ UnitType::UnitType(Sise::SExp* sexp) {
     Cons *alist = asProperCons( args->getcdr() );
 
     symbol = *asSymbol( args->getcar() );
-    using namespace std;
-    outputSExp( alist, cerr );
     name = *asString( alist->alistGet( "name" ) );
     maxHp = *asInt( alist->alistGet( "max-hp" ) );
     speed = asMPQ( alist->alistGet( "speed" ) );

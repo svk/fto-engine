@@ -117,7 +117,6 @@ mpq_class ActivityPoints::getPotentialMovementEnergy(void) const {
 
 bool ActivityPoints::maySpendMovementEnergy(mpq_class cost) const {
     using namespace std;
-    cerr << "may spend " << cost << "? " << getPotentialMovementEnergy() << "[" << speed << "]" << endl;
     return getPotentialMovementEnergy() >= cost;
 }
 

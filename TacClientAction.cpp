@@ -7,11 +7,8 @@ namespace Tac {
 void APUpdateCAction::operator()(void) const {
     ClientUnit *unit = cmap.getUnitById( unitId );
     using namespace std;
-    cerr << "updating ap for unit " << unitId << endl;
     if( unit ) {
-        cerr << "pot energy pre: " << unit->getAP().getPotentialMovementEnergy() << endl;
         unit->getAP() = ap;
-        cerr << "pot energy post: " << unit->getAP().getPotentialMovementEnergy() << endl;
     }
 }
 
@@ -83,8 +80,6 @@ void UnitDiscoverCAction::operator()(void) const {
 
 void SetActiveRegionCAction::operator()(void) const {
     using namespace std;
-    cerr << "active region size: " << region.size() << endl;
-
     cmap.updateActive( region );
 }
 
