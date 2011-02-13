@@ -107,7 +107,6 @@ class TestTacTPScreen : public SfmlScreen,
             using namespace Sise;
             using namespace std;
             using namespace SProto;
-            outputSExp( msg, cerr );
             if( getChatMessageOrigin(msg) == "" ) {
                 showServerMessage( getChatMessageBody(msg) );
             } else {
@@ -166,9 +165,7 @@ class TestTacTPScreen : public SfmlScreen,
             }
             double cx, cy;
             using namespace std;
-            cerr << "would center on " << unitId << endl;
             if( unit && cmap.getUnitBaseScreenPositionById( unitId, cx, cy ) ) {
-                cerr << "yea, centering" << endl;
                 vp.center( cx, cy );
             }
         }
@@ -414,8 +411,6 @@ class TestTacTPScreen : public SfmlScreen,
                 handleChat( asProperCons( arg ) );
             } else if( name == "tac" ) {
                 Cons *args = asProperCons( arg );
-                using namespace std;
-                outputSExp( args, cerr );
                 cmap.handleNetworkInfo( *asSymbol( args->getcar() ),
                                         args->getcdr() );
                 cmap.processActions();

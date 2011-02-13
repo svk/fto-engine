@@ -193,8 +193,6 @@ ServerTile* ServerMap::getRandomTileFor(const ServerUnit* unit) {
         if( tile.mayEnter( unit ) ) {
             int x, y;
             tile.getXY( x, y );
-            using namespace std;
-            cerr << "chose random tile " << x << " " << y << endl;
             return &tiles.get( guess );
         }
     }
@@ -395,12 +393,9 @@ bool ServerPlayer::isObserving(const ServerTile& tile) const {
 
 void ServerMap::evtUnitActivityChanged(ServerUnit& unit) {
     using namespace std;
-    cerr << "activity changed for " << unit.getId() << endl;
     for(std::map<int,ServerPlayer*>::iterator i = players.begin(); i != players.end(); i++) {
         ServerPlayer *player = i->second;
-        cerr << "send to " << player->getUsername() << "?" << endl;
         if( player->isObserving( unit ) ) {
-            cerr << "yes" << endl;
             player->sendUnitAP( unit );
         }
     }
@@ -499,16 +494,13 @@ void ServerPlayer::sendPlayerTurnBegins(const ServerPlayer& player, double timeL
     using namespace std;
     using namespace SProto;
     using namespace Sise;
-    cerr << "sending playerturnbegins to " << username << "... getting rc...";
     RemoteClient *rc = server.getConnectedUser( username );
     if( !rc ) return;
-    cerr << "successs..";
     rc->delsend( List()( new Symbol( "tac" ) )
                        ( new Symbol( "player-turn-begins" ) )
                        ( new Int( player.getId() ) )
                        ( new Int( (int)(0.5 + 1000 * timeLeft) ) )
                  .make() );
-    cerr << "sent!" << endl;
 }
 
 void ServerPlayer::sendUnitDisappears(const ServerUnit& unit) {
@@ -674,7 +666,6 @@ bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, S
     using namespace SProto;
     using namespace Sise;
     using namespace std;
-    cerr << "handling " << cmd << " from " << cli->getUsername() << endl;
     ServerPlayer *player = 0;
     if( cli->hasUsername() ) {
         player = myMap.getPlayerByUsername( cli->getUsername() );
@@ -738,7 +729,6 @@ bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, S
 
         turns.addParticipant( player->getId(), 30.0, 30.0 );
         using namespace std;
-        cerr << turns.getNumberOfParticipants() << " are now playing" << endl;
         if( turns.getNumberOfParticipants() == 1 ) {
             turns.start();
             announceTurn();

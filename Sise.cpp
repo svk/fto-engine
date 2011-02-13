@@ -47,7 +47,6 @@ mpq_class asMPQ( SExp* x ) {
         return *asBigRational( x );
     }
     using namespace std;
-    cerr << "type: " << x->getType() << endl;
     throw SExpTypeError( TYPE_BIG_RATIONAL, x->getType() );
 }
 
@@ -245,15 +244,11 @@ SExp* NumberParser::get(void) {
         return new Int( rv );
     } else if( type == TYPE_BIG ) {
         using namespace std;
-        cerr << "big number-- ::" << bigbuf.str() << "::" << endl;
         std::string mys = bigbuf.str();
         mpz_class number( mys );
-        cerr << "big number fits?" << endl;
         if( !number.fits_sint_p() ) {
-            cerr << "no" << endl;
             return new BigRational( mpq_class( bigbuf.str() ) );
         }
-        cerr << "yes:" << number.get_si() << endl;
         return new Int( number.get_si() );
         // big integers aren't supported yet, so we assume rational
     } else {
