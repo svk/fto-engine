@@ -246,6 +246,25 @@ Sise::SExp* ActivityPoints::toSexp(void) const {
            .make();
 }
 
+ActivityPoints::ActivityPoints(Sise::SExp* sexp) {
+    using namespace Sise;
+    Cons *args = asProperCons( sexp );
+    speed = *asInt( args->nthcar(0) );
+    movementPoints = *asInt( args->nthcar(1) );
+    actionPoints = *asInt( args->nthcar(2) );
+    flexPoints = *asInt( args->nthcar(3) );
+    movementEnergy = *asInt( args->nthcar(4) );
+}
+
+bool AttackResult::operator==(const AttackResult& that) const {
+    if( status != that.status ) return false;
+    if( status == MISS && that.status == MISS ) return true;
+    if( status == HIT ) {
+        return damage == that.damage;
+    }
+    throw std::logic_error( "invalid state" );
+}
+
 ActivityPoints ActivityPoints::fromSexp(Sise::SExp* sexp) {
     using namespace Sise;
     Cons *args = asProperCons( sexp );
@@ -256,15 +275,6 @@ ActivityPoints ActivityPoints::fromSexp(Sise::SExp* sexp) {
     rv.flexPoints = *asInt( args->nthcar(3) );
     rv.movementEnergy = *asInt( args->nthcar(4) );
     return rv;
-}
-
-bool AttackResult::operator==(const AttackResult& that) const {
-    if( status != that.status ) return false;
-    if( status == MISS && that.status == MISS ) return true;
-    if( status == HIT ) {
-        return damage == that.damage;
-    }
-    throw std::logic_error( "invalid state" );
 }
 
 Outcomes<AttackResult> makeAttack(int att, int def) {
@@ -302,5 +312,13 @@ Outcomes<AttackResult> makeAttackBetween(const AttackCapability& att, const Defe
     rv = DamageResister( ((double)def.mResistance) / 1000.0 )( rv );
     return rv;
 }
+
+void ActivityPoints::forbidMovement(void) {
+    movementEnergy = 0;
+    movementPoints = 0;
+    actionPoints += flexPoints;
+    flexPoints = 0;
+}
+
 
 };

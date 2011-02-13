@@ -340,7 +340,11 @@ bool ServerMap::cmdMeleeAttack(ServerPlayer* player,int unitId, int targetId ) {
 
     if( rv ) {
         unit->getAP().spendActionPoint( cost );
+        unit->getAP().forbidMovement(); // no hit and run rule
+
+        evtUnitActivityChanged( *unit );
     }
+
     
     return rv;
 }
@@ -364,6 +368,8 @@ bool ServerMap::cmdMoveUnit(ServerPlayer* player,int unitId, int dx, int dy) {
 
     if( rv ) {
         unit->getAP().spendMovementEnergy( cost );
+
+        evtUnitActivityChanged( *unit );
     }
     
     return rv;
@@ -385,6 +391,19 @@ bool ServerPlayer::isObserving(const ServerTile& tile) const {
     int x, y;
     tile.getXY( x, y );
     return individualFov.contains( x, y );
+}
+
+void ServerMap::evtUnitActivityChanged(ServerUnit& unit) {
+    using namespace std;
+    cerr << "activity changed for " << unit.getId() << endl;
+    for(std::map<int,ServerPlayer*>::iterator i = players.begin(); i != players.end(); i++) {
+        ServerPlayer *player = i->second;
+        cerr << "send to " << player->getUsername() << "?" << endl;
+        if( player->isObserving( unit ) ) {
+            cerr << "yes" << endl;
+            player->sendUnitAP( unit );
+        }
+    }
 }
 
 void ServerMap::evtMeleeAttack(ServerUnit& attacker, ServerUnit& defender, AttackResult result) {
@@ -509,6 +528,18 @@ void ServerPlayer::sendUnitDiscovered(const ServerUnit& unit) {
     if( tile ) {
         sendUnitDiscoveredAt( unit, *tile );
     }
+}
+
+void ServerPlayer::sendUnitAP(const ServerUnit& unit) {
+    using namespace Sise;
+    using namespace SProto;
+    RemoteClient *rc = server.getConnectedUser( username );
+    if( !rc ) return;
+    rc->delsend( List()( new Symbol( "tac" ) )
+                       ( new Symbol( "ap-update" ) )
+                       ( new Int( unit.getId() ) )
+                       ( unit.getAP().toSexp() )
+                 .make() );
 }
 
 void ServerPlayer::sendUnitDiscoveredAt(const ServerUnit& unit, const ServerTile& tile) {

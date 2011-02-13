@@ -18,6 +18,19 @@ struct IntroducePlayerCAction : public ClientAction {
 
 };
 
+struct APUpdateCAction : public ClientAction {
+    ClientMap& cmap;
+    int unitId;
+    ActivityPoints ap;
+
+    APUpdateCAction(ClientMap& cmap, int unitId, ActivityPoints ap) :
+        cmap ( cmap ), unitId ( unitId ), ap ( ap ) {}
+
+    ClientAction* duplicate(void) const { return new APUpdateCAction( cmap, unitId, ap ); }
+    void operator()(void) const;
+    bool isCosmetic(void) const { return false; }
+
+};
 
 struct PlaySoundCAction : public ClientAction {
     ClientMap& cmap;

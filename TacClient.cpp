@@ -191,11 +191,6 @@ void ClientMap::moveUnit(int id,int dx,int dy) {
     if( !unit->getPosition( lx, ly ) ) {
         throw std::logic_error( "unit cannot be moved without being placed" );
     }
-    const TileType* targetTT = tiles.get( lx + dx, ly + dy ).getTileType();
-    int cost;
-    if( targetTT && targetTT->mayTraverse( unit->getUnitType(), cost ) ) {
-        unit->getAP().spendMovementEnergy( cost );
-    }
     layer = unit->leaveTile( tiles.get( lx, ly ) );
     placeUnitAt( id, lx + dx, ly + dy, layer );
 }
@@ -801,6 +796,11 @@ bool ClientMap::handleNetworkInfo(const std::string& cmd, Sise::SExp* sexp) {
             }
             args = asCons( args->getcdr() );
         }
+        queueAction( act );
+    } else if( cmd == "ap-update" ) {
+        APUpdateCAction *act = new APUpdateCAction(*this,
+                                                   *asInt( args->nthcar(0) ),
+                                                   ActivityPoints( args->nthcar(1) ) );
         queueAction( act );
     } else if( cmd == "terrain-discovered" ) {
         RevealTerrainCAction *act = new RevealTerrainCAction(*this);

@@ -4,6 +4,17 @@
 
 namespace Tac {
 
+void APUpdateCAction::operator()(void) const {
+    ClientUnit *unit = cmap.getUnitById( unitId );
+    using namespace std;
+    cerr << "updating ap for unit " << unitId << endl;
+    if( unit ) {
+        cerr << "pot energy pre: " << unit->getAP().getPotentialMovementEnergy() << endl;
+        unit->getAP() = ap;
+        cerr << "pot energy post: " << unit->getAP().getPotentialMovementEnergy() << endl;
+    }
+}
+
 void DarkenCAction::operator()(void) const {
     for(std::vector<std::pair<int,int> >::const_iterator i = darkenTiles.begin(); i != darkenTiles.end(); i++) {
         cmap.darkenTile( i->first, i->second );
@@ -17,9 +28,7 @@ void BrightenCAction::operator()(void) const {
 }
 
 void ApplyAttackResultSubstantialCAction::operator()(void) const {
-    ClientUnit *aunit = cmap.getUnitById( attackerId );
     using namespace std;
-    aunit->getAP().spendActionPoint( 1 );
     ClientUnit *dunit = cmap.getUnitById( defenderId );
     if( !dunit ) return;
     if( result.status == AttackResult::HIT ) {

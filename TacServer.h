@@ -128,6 +128,7 @@ class ServerPlayer {
         void sendMemories(void);
         void sendFovDelta(void);
         void sendPlayer(const ServerPlayer&);
+        void sendUnitAP(const ServerUnit&);
         void sendUnitDisappears(const ServerUnit&);
         void sendUnitDiscovered(const ServerUnit&);
         void sendUnitDiscoveredAt(const ServerUnit&, const ServerTile&);
@@ -228,6 +229,7 @@ class ServerMap : public HexTools::HexOpacityMap {
         void evtUnitDisappears(ServerUnit&, ServerTile&);
         void evtUnitMoved(ServerUnit&, ServerTile&, ServerTile&);
         void evtMeleeAttack(ServerUnit&, ServerUnit&, AttackResult);
+        void evtUnitActivityChanged(ServerUnit&);
 
     public:
         ServerMap(int,TileType*);

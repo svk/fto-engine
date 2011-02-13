@@ -34,6 +34,7 @@ class ActivityPoints {
         ActivityPoints(void);
         ActivityPoints(const UnitType&, int, int, int); // usual is 1, 1, 1
         ActivityPoints(const ActivityPoints&);
+        ActivityPoints(Sise::SExp*);
 
         const ActivityPoints& operator=(const ActivityPoints&);
 
@@ -45,6 +46,8 @@ class ActivityPoints {
 
         void spendMovementEnergy(int);
         void spendActionPoint(int);
+
+        void forbidMovement(void);
 
         Sise::SExp *toSexp(void) const;
         static ActivityPoints fromSexp(Sise::SExp*);
