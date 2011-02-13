@@ -705,7 +705,7 @@ bool TacTestServer::handle( SProto::RemoteClient* cli, const std::string& cmd, S
         myMap.actionNewPlayer(*player);
         spawnPlayerUnits( player );
 
-        turns.addParticipant( player->getId(), 10.0, 10.0 );
+        turns.addParticipant( player->getId(), 30.0, 30.0 );
         using namespace std;
         cerr << turns.getNumberOfParticipants() << " are now playing" << endl;
         if( turns.getNumberOfParticipants() == 1 ) {
