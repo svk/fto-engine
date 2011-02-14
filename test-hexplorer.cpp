@@ -246,9 +246,9 @@ int main(int argc, char *argv[]) {
     MTRand_int32 prng ( time(0) );
     DungeonSketch sketch ( prng() );
     int realrooms = 0;
-    while( realrooms < 8 ) {
+    while( realrooms < 4 ) {
         Tac::RoomPainter *room;
-        int roll = prng(0,3);
+        int roll = prng(0,5);
         switch( roll ) {
             case 0:
                 room = new Tac::HollowHexagonRoomPainter( prng(6,7), prng(2,3) );
@@ -257,10 +257,12 @@ int main(int argc, char *argv[]) {
                 room = new Tac::BlankRoomPainter( prng(3,4) );
                 break;
             case 2:
+            case 3:
                 room = new Tac::HexagonRoomPainter( prng(5,8) );
                 ++realrooms;
                 break;
-            case 3:
+            case 4:
+            case 5:
                 room = new Tac::RectangularRoomPainter( prng(5,7) );
                 ++realrooms;
                 break;
