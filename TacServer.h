@@ -285,7 +285,7 @@ class ServerMap : public HexTools::HexOpacityMap {
 
 };
 
-void trivialLevelGenerator(ServerMap&, TileType*, TileType*, double = 0.5);
+void trivialLevelGenerator(ServerMap&, TileType*, TileType*, double = 0.5, int = 1337);
 
 class TacTestServer : public SProto::SubServer {
     // this is a "test" server because it contains only one "game", and that game doesn't
