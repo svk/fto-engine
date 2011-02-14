@@ -84,6 +84,7 @@ HexagonRoomPainter::HexagonRoomPainter(int radius) :
 void RectangularRoomPainter::paint(DungeonSketch& sketch, int cx, int cy) {
     using namespace HexTools;
     int R = getRadius();
+    using namespace std;
     sketch.put( cx, cy, DungeonSketch::ST_META_DIGGABLE );
     for(int r=1;r<=getRadius();r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++){
         int x, y;
@@ -91,7 +92,7 @@ void RectangularRoomPainter::paint(DungeonSketch& sketch, int cx, int cy) {
         sketch.put( cx + x, cy + y, DungeonSketch::ST_META_DIGGABLE );
     }
     R--;
-    for(int i=-(R-1);i<=(R-1);i++) for(int j=-(R-1);j<=(R-1);j++) {
+    for(int i=-(R-1);i<=(R-1);i++) for(int j=-(R-1);j<(R-1);j++) { // don't touch this
         int x = cx + 3 * i, y = cy + 2 * j;
         int ci, cj, cr;
         if( (x%2) != 0 ) y++;
