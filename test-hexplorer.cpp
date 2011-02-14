@@ -19,6 +19,8 @@
 
 #include "HexFov.h"
 
+#include "TacDungeon.h"
+
 struct Tile {
     enum State {
         FLOOR,
@@ -194,6 +196,7 @@ class LevelBlitter : public HexBlitter {
 };
 
 int main(int argc, char *argv[]) {
+    using namespace Tac;
     FreetypeLibrary ftLib;
     FreetypeFace ftFont ("./data/BienetBold.ttf", 20);
 
@@ -222,13 +225,34 @@ int main(int argc, char *argv[]) {
     hexSprites.bind( "zone-red", new HexSprite( images.makeSprite( "zone-red" ), grid ) );
     hexSprites.bind( "zone-green", new HexSprite( images.makeSprite( "zone-green" ), grid ) );
 
-    World world( 40 );
+    DungeonSketch sketch ( time(0) );
+    Tac::HexagonRoomPainter room ( 6 );
+    for(int i=0;i<8;i++) {
+        sketch.paintRoomNear( room, 0, 0 );
+    }
+    int maxr = sketch.getMaxRadius();
+
+    World world( maxr );
     LevelBlitter levelBlit ( world, hexSprites, images );
     HexViewport vp ( grid,  0, 0, 640, 480 );
     vp.setBackgroundColour( sf::Color(0,0,0) );
     sf::View mainView ( sf::Vector2f( 0, 0 ),
                         sf::Vector2f( 320, 240 ) );
     sf::RenderWindow win ( sf::VideoMode(640,480,32), "Hexplorer demo" );
+
+    
+    for(int r=0;r<=maxr;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
+        int x, y;
+        HexTools::cartesianiseHexCoordinate( i, j, r, x, y );
+        switch( sketch.get( x, y ) ) {
+            case DungeonSketch::ST_NORMAL_FLOOR:
+                world.get( x, y ) = Tile::FLOOR;
+                break;
+            default:
+                world.get( x, y ) = Tile::WALL;
+                break;
+        }
+    }
 
     const double transitionTime = 0.15;
     bool transitioning = false;
@@ -239,6 +263,7 @@ int main(int argc, char *argv[]) {
     sf::Clock clock;
     win.SetView( mainView );
     win.SetFramerateLimit( 30 );
+
 
     typedef FiniteLifetimeObjectList<RisingTextAnimation> RTAManager;
     RTAManager textAnims;
