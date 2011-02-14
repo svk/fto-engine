@@ -248,6 +248,17 @@ class SparseHexMap {
         {
         }
 
+        int getMaxRadius(void) const {
+            int rv = 0;
+            for(typename std::map<HexCoordinate,T>::const_iterator i = data.begin(); i != data.end(); i++) {
+                const int x = i->first.first, y = i->first.second;
+                int i, j, r;
+                polariseHexCoordinate( x, y, i, j, r );
+                if( rv < r ) rv = r;
+            }
+            return rv;
+        }
+
         const SparseHexMap<T>& operator=(const SparseHexMap<T>& that) {
             using namespace std;
             if( this != &that ) {

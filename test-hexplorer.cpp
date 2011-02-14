@@ -70,6 +70,7 @@ class World : public HexTools::HexMap<Tile>,
         }
 
         bool isOpaque(int x, int y) const {
+            return &get(x,y) == &getDefault();
             return get(x,y).state != Tile::FLOOR;
         }
 
