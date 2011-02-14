@@ -24,7 +24,10 @@
 struct Tile {
     enum State {
         FLOOR,
-        WALL
+        WALL,
+        DOOR,
+        HL1,
+        HL2
     };
     State state;
     Tile(void) : state( Tile::WALL ), lit ( false ) {}
@@ -116,7 +119,7 @@ class LevelBlitter : public HexBlitter {
         ResourceManager<HexSprite>& sprites;
         StringKeyedSpritesheet& sheet;
 
-        sf::Sprite tileWall, tileFloor, zoneFog, tileWallMemory, tileFloorMemory;
+        sf::Sprite tileWall, tileFloor, zoneFog, tileWallMemory, tileFloorMemory, tileDoor;
         sf::Sprite thinGrid;
         sf::Sprite zoneRed, zoneGreen;
 
@@ -132,6 +135,7 @@ class LevelBlitter : public HexBlitter {
             zoneFog ( sheet.makeSprite( "zone-fog" ) ),
             tileWallMemory ( sheet.makeSprite( "tile-wall-memory" ) ),
             tileFloorMemory ( sheet.makeSprite( "tile-floor-memory" ) ),
+            tileDoor ( sheet.makeSprite( "tile-door" ) ),
             thinGrid ( sheet.makeSprite( "thin-grid" ) ),
             zoneRed ( sheet.makeSprite( "zone-red" ) ),
             zoneGreen ( sheet.makeSprite( "zone-green" ) )
@@ -169,7 +173,17 @@ class LevelBlitter : public HexBlitter {
                        rgContains = regionGreen.contains( x, y ),
                        isLit = world.get(x,y).lit;
             if( !world.seen.contains(x,y) ) return;
+            if( world.get(x,y).state == Tile::WALL ) return;
             if( true || !(!isLit || rrContains || rgContains) ) switch( world.get(x,y).state ) {
+                case Tile::HL1:
+                    putSprite( zoneRed );
+                    break;
+                case Tile::HL2:
+                    putSprite( zoneGreen );
+                    break;
+                case Tile::DOOR:
+                    putSprite( tileDoor );
+                    break;
                 case Tile::WALL:
                     putSprite( tileWall );
                     break;
@@ -177,6 +191,7 @@ class LevelBlitter : public HexBlitter {
                     putSprite( tileFloor );
                     break;
             } else switch( world.get(x,y).state ) {
+                default:
                 case Tile::WALL:
                     putSprite( tileWallMemory );
                     break;
@@ -210,6 +225,7 @@ int main(int argc, char *argv[]) {
     images.adopt( "tile-floor-memory", ToGrayscale().apply(
                                       grid.createSingleColouredImage( sf::Color(100,200,100))));
     images.adopt( "tile-wall", grid.createSingleColouredImage( sf::Color( 50,20,20 ) ) );
+    images.adopt( "tile-door", grid.createSingleColouredImage( sf::Color( 200,100,100 ) ) );
     images.adopt( "tile-wall-memory", ToGrayscale().apply(
                                      grid.createSingleColouredImage( sf::Color(50,20,20))));
     images.adopt( "zone-fog", grid.createSingleColouredImage( sf::Color( 0,0,0,128 ) ) );
@@ -235,17 +251,17 @@ int main(int argc, char *argv[]) {
         int roll = prng(0,3);
         switch( roll ) {
             case 0:
-                room = new Tac::HollowHexagonRoomPainter( prng(5,6), prng(2,3) );
+                room = new Tac::HollowHexagonRoomPainter( prng(6,7), prng(2,3) );
                 break;
             case 1:
-                room = new Tac::BlankRoomPainter( prng(2,3) );
+                room = new Tac::BlankRoomPainter( prng(3,4) );
                 break;
             case 2:
-                room = new Tac::HexagonRoomPainter( prng(3,6) );
+                room = new Tac::HexagonRoomPainter( prng(5,8) );
                 ++realrooms;
                 break;
             case 3:
-                room = new Tac::RectangularRoomPainter( prng(4,6) );
+                room = new Tac::RectangularRoomPainter( prng(5,7) );
                 ++realrooms;
                 break;
             default:
@@ -257,6 +273,32 @@ int main(int argc, char *argv[]) {
         delete room;
     }
     int maxr = sketch.getMaxRadius();
+    std::vector<HexTools::HexCoordinate> potentialPCs;
+    for(int r=0;r<=maxr;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
+        int x, y;
+        cartesianiseHexCoordinate( i, j, r, x, y );
+        potentialPCs.push_back( HexTools::HexCoordinate( x, y ) );
+    }
+    for(int j=0;j<20;j++) {
+        for(std::vector<HexTools::HexCoordinate>::iterator i = potentialPCs.begin(); i != potentialPCs.end();) {
+            int x = i->first, y = i->second;
+            if( !Tac::PointCorridor( sketch, x, y ).check() ) {
+                i = potentialPCs.erase( i );
+            } else {
+                i++;
+            }
+        }
+        using namespace std;
+        if( potentialPCs.size() > 0 ) {
+            HexTools::HexCoordinate coord = potentialPCs[ prng( 0, potentialPCs.size() - 1 ) ];
+            Tac::PointCorridor pc ( sketch, coord.first, coord.second );
+            pc.dig();
+            cerr << "added " << j << endl;
+        } else {
+            using namespace std;
+            cerr << "NOPE" << endl;
+        }
+    }
 
     World world( maxr );
     LevelBlitter levelBlit ( world, hexSprites, images );
@@ -271,9 +313,18 @@ int main(int argc, char *argv[]) {
         int x, y;
         HexTools::cartesianiseHexCoordinate( i, j, r, x, y );
         switch( sketch.get( x, y ) ) {
+            case DungeonSketch::ST_NORMAL_DOORWAY:
+            case DungeonSketch::ST_NORMAL_CORRIDOR:
             case DungeonSketch::ST_NORMAL_FLOOR:
                 world.get( x, y ) = Tile::FLOOR;
                 break;
+                world.get( x, y ) = Tile::HL1;
+                break;
+                world.get( x, y ) = Tile::HL2;
+                break;
+            case DungeonSketch::ST_META_CONNECTOR:
+            case DungeonSketch::ST_NONE:
+            case DungeonSketch::ST_META_DIGGABLE:
             default:
                 world.get( x, y ) = Tile::WALL;
                 break;

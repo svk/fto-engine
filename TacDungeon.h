@@ -30,6 +30,9 @@ class DungeonSketch {
             ST_NONE,
             ST_NORMAL_FLOOR,
             ST_NORMAL_WALL,
+            ST_NORMAL_CORRIDOR,
+            ST_NORMAL_DOORWAY,
+            ST_META_DIGGABLE,
             ST_META_CONNECTOR
         };
 
@@ -51,6 +54,25 @@ class DungeonSketch {
         HexTools::HexCoordinate placeRoomNear(int,int,int);
 
         HexTools::HexCoordinate paintRoomNear(RoomPainter&,int,int);
+};
+
+class PointCorridor {
+    private:
+        DungeonSketch& sketch;
+        int cx, cy;
+
+        bool checked;
+        bool activeDir[6];
+
+        int length;
+
+        static int dx[6], dy[6];
+
+    public:
+        PointCorridor(DungeonSketch&, int, int);
+
+        bool check(void);
+        void dig(void);
 };
 
 class RoomPainter {
