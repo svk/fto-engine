@@ -243,26 +243,31 @@ int main(int argc, char *argv[]) {
     hexSprites.bind( "zone-red", new HexSprite( images.makeSprite( "zone-red" ), grid ) );
     hexSprites.bind( "zone-green", new HexSprite( images.makeSprite( "zone-green" ), grid ) );
 
-    MTRand_int32 prng ( time(0) );
+    MTRand_int32 prng ( 1337 );
     DungeonSketch sketch ( prng() );
+    using namespace std;
     int realrooms = 0;
     while( realrooms < 4 ) {
         Tac::RoomPainter *room;
         int roll = prng(0,5);
         switch( roll ) {
             case 0:
+                cerr << "hollow hexagon" << endl;
                 room = new Tac::HollowHexagonRoomPainter( prng(6,7), prng(2,3) );
                 break;
             case 1:
+                cerr << "blank" << endl;
                 room = new Tac::BlankRoomPainter( prng(3,4) );
                 break;
             case 2:
             case 3:
+                cerr << "hexagon" << endl;
                 room = new Tac::HexagonRoomPainter( prng(5,8) );
                 ++realrooms;
                 break;
             case 4:
             case 5:
+                cerr << "rectangle" << endl;
                 room = new Tac::RectangularRoomPainter( prng(5,7) );
                 ++realrooms;
                 break;

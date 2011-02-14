@@ -95,7 +95,7 @@ void RectangularRoomPainter::paint(DungeonSketch& sketch, int cx, int cy) {
     for(int i=-(R-1);i<=(R-1);i++) for(int j=-(R-1);j<(R-1);j++) { // don't touch this
         int x = cx + 3 * i, y = cy + 2 * j;
         int ci, cj, cr;
-        if( (x%2) != 0 ) y++;
+        if( (i%2) != 0 ) y++;
         HexTools::polariseHexCoordinate( x - cx, y - cy, ci, cj, cr );
         assert( cr <= getRadius() );
         if( abs(i) == (R-1) || abs(j) == (R-1) ) {
@@ -222,7 +222,6 @@ void PointCorridor::dig(void) {
         check();
     }
     using namespace std;
-    cerr << "digging len " << length << endl;
     for(int i=0;i<6;i++) if(activeDir[i] ){
         int x = cx, y = cy;
         while( sketch.get(x,y) != DungeonSketch::ST_META_CONNECTOR ) {
