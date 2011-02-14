@@ -51,15 +51,17 @@ ServerTile::ServerTile(void) :
     // warnings if we miss that
 }
 
-ServerMap::ServerMap(int mapSize, TileType *defaultTt) :
+ServerMap::ServerMap(int mapSize, TileType *defaultTt, int seed) :
     mapSize ( mapSize ),
-    unitIdGen (),
-    playerIdGen (),
+    prng ( seed ),
+    unitIdGen ( prng() ),
+    playerIdGen ( prng() ),
     tiles ( mapSize ),
     players (),
     units (),
     gmpPrng( gmp_randinit_mt )
 {
+    gmpPrng.seed( prng() );
     reinitialize( defaultTt );
 }
 
@@ -85,9 +87,9 @@ ServerUnit::ServerUnit(int id, const UnitType& unitType) :
 {
 }
 
-void trivialLevelGenerator(ServerMap& smap, TileType* wall, TileType* floor, double wallDensity) {
+void trivialLevelGenerator(ServerMap& smap, TileType* wall, TileType* floor, double wallDensity, int seed) {
     const int mapSize = smap.getMapSize();
-    MTRand prng;
+    MTRand prng ( seed );
     smap.getTile(0,0).setTileType( (prng() < wallDensity) ? wall : floor );
     for(int r=1;r<=mapSize;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
         int x, y;
@@ -166,7 +168,7 @@ void ServerUnit::setController(ServerPlayer* player) {
     }
 }
 
-ServerTile* ServerMap::getRandomTileForNear(const ServerUnit* unit, int cx, int cy) {
+ServerTile* ServerMap::getTileForNear(const ServerUnit* unit, int cx, int cy) {
     const int tries = 1000;
     int i = 0;
     while( i < tries ) {
@@ -184,7 +186,6 @@ ServerTile* ServerMap::getRandomTileForNear(const ServerUnit* unit, int cx, int 
 ServerTile* ServerMap::getRandomTileFor(const ServerUnit* unit) {
     int tries = 1000;
     int mapIndexableSize = tiles.getSize();
-    MTRand_int32 prng;
     
     while( tries-- > 0 ) {
         int guess = abs(prng()) % mapIndexableSize;
@@ -576,15 +577,15 @@ void ServerPlayer::sendUnitMoved(const ServerUnit& unit, const ServerTile& fromT
                  .make() );
 }
 
-TacTestServer::TacTestServer(SProto::Server& server, int radius, const std::string& unitsfn, const std::string& tilesfn) :
+TacTestServer::TacTestServer(SProto::Server& server, int radius, const std::string& unitsfn, const std::string& tilesfn, int seed) :
     SProto::SubServer( "tactest", server ),
-    myMap ( radius, 0 )
+    myMap ( radius, 0, seed )
 {
     using namespace std;
     fillManagerFromFile( unitsfn, unitTypes );
     fillManagerFromFile( tilesfn, tileTypes );
     myMap.reinitialize( &tileTypes[ "border" ] );
-    trivialLevelGenerator( myMap, &tileTypes[ "std-wall" ], &tileTypes[ "std-floor" ], 0.4 );
+    trivialLevelGenerator( myMap, &tileTypes[ "std-wall" ], &tileTypes[ "std-floor" ], 0.4, myMap.getPrng()() );
 
     // fill this from a lisp file? or is that overkill?
     colourPool.add( 255, 0, 0 );
@@ -955,7 +956,7 @@ void TacTestServer::spawnPlayerUnits(ServerPlayer* player) {
     myMap.actionPlaceUnit( unit1, x, y );
 
     unit2 = new ServerUnit( myMap.generateUnitId(), unitTypes["swordsman"] );
-    ServerTile *tile2 = myMap.getRandomTileForNear( unit2, x, y );
+    ServerTile *tile2 = myMap.getTileForNear( unit2, x, y );
     assert( tile2 );
     tile2->getXY( x, y );
     myMap.adoptUnit( unit2 );
@@ -964,7 +965,7 @@ void TacTestServer::spawnPlayerUnits(ServerPlayer* player) {
     myMap.actionPlaceUnit( unit2, x, y );
 
     unit3 = new ServerUnit( myMap.generateUnitId(), unitTypes["shieldmaiden"] );
-    ServerTile *tile3 = myMap.getRandomTileForNear( unit3, x, y );
+    ServerTile *tile3 = myMap.getTileForNear( unit3, x, y );
     assert( tile3 );
     tile3->getXY( x, y );
     myMap.adoptUnit( unit3 );

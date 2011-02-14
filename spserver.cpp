@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     SProto::Server server;
 
     Nash::NashSubserver ssNash ( server );
-    Tac::TacTestServer ssTacTest ( server, 10, "./config/unit-types.lisp", "./config/tile-types.lisp" );
+    Tac::TacTestServer ssTacTest ( server, 10, "./config/unit-types.lisp", "./config/tile-types.lisp", time(0) );
 
     server.addListener( SPROTO_STANDARD_PORT );
 

@@ -48,12 +48,15 @@ namespace Tac {
 
 class ServerMap;
 
-class IdGenerator {
+class IdGenerator { // this actually DOES need high-quality seeding, for security, if we're picky
+                    // (and if we're not picky what's the use of randomizing IDs at all?)
     private:
         MTRand_int32 prng;
         std::set< int > usedIds;
 
     public:
+        IdGenerator(int seed) : prng ( seed ), usedIds () {};
+
         void addUsed(int);
         int generate(void);
 };
@@ -215,6 +218,8 @@ class ServerMap : public HexTools::HexOpacityMap {
     private:
         int mapSize;
 
+        MTRand_int32 prng;
+
         IdGenerator unitIdGen;
         IdGenerator playerIdGen;
 
@@ -232,8 +237,10 @@ class ServerMap : public HexTools::HexOpacityMap {
         void evtUnitActivityChanged(ServerUnit&);
 
     public:
-        ServerMap(int,TileType*);
+        ServerMap(int,TileType*,int);
         ~ServerMap(void);
+
+        MTRand_int32& getPrng(void) { return prng; }
 
         void reinitialize(TileType*);
 
@@ -254,7 +261,7 @@ class ServerMap : public HexTools::HexOpacityMap {
         int getMapSize(void) const { return mapSize; }
 
         ServerTile* getRandomTileFor(const ServerUnit*);
-        ServerTile* getRandomTileForNear(const ServerUnit*, int, int);
+        ServerTile* getTileForNear(const ServerUnit*, int, int);
 
         bool isOpaque(int,int) const;
 
@@ -297,7 +304,7 @@ class TacTestServer : public SProto::SubServer {
         ServerColourPool colourPool;
 
     public:
-        TacTestServer(SProto::Server&, int, const std::string&, const std::string& );
+        TacTestServer(SProto::Server&, int, const std::string&, const std::string&, int );
 
         bool handle( SProto::RemoteClient*, const std::string&, Sise::SExp* );
         void tick(double dt);

@@ -12,6 +12,8 @@
 
 #include "Sise.h"
 
+#include <ctime>
+
 template<class T>
 class ResourceManager {
     // not thread-safe for assignment
@@ -48,7 +50,13 @@ class RandomVariantsCollection {
         std::vector<T*> elts;
     public:
         RandomVariantsCollection(void) :
-            prng (),
+            prng (time(0)), // this doesn't need high-quality seeding
+            elts ()
+        {
+        }
+
+        RandomVariantsCollection(int seed) : // ..if it does..
+            prng (seed),
             elts ()
         {
         }
