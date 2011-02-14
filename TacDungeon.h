@@ -66,9 +66,32 @@ class RoomPainter {
         virtual void paint(DungeonSketch&,int,int) = 0;
 };
 
+class BlankRoomPainter : public RoomPainter {
+    public:
+        BlankRoomPainter(int);
+
+        void paint(DungeonSketch&,int,int);
+};
+
 class HexagonRoomPainter : public RoomPainter {
     public:
         HexagonRoomPainter(int);
+
+        void paint(DungeonSketch&,int,int);
+};
+
+class RectangularRoomPainter : public RoomPainter {
+    public:
+        RectangularRoomPainter(int);
+
+        void paint(DungeonSketch&,int,int);
+};
+
+class HollowHexagonRoomPainter : public RoomPainter {
+    private:
+        int thickness;
+    public:
+        HollowHexagonRoomPainter(int, int);
 
         void paint(DungeonSketch&,int,int);
 };

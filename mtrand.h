@@ -1,3 +1,5 @@
+// some hacks added by me (kaw) (operator() with modulus)
+
 // mtrand.h
 // C++ include file for MT19937, with initialization improved 2002/1/26.
 // Coded by Takuji Nishimura and Makoto Matsumoto.
@@ -42,6 +44,10 @@
 // Feedback about the C++ port should be sent to Jasper Bedaux,
 // see http://www.bedaux.net/mtrand/ for e-mail address and info.
 
+#include <cstdlib>
+#include <cstdio>
+#include <cassert>
+
 #ifndef MTRAND_H
 #define MTRAND_H
 
@@ -58,6 +64,8 @@ public:
   void seed(const unsigned long*, int size); // seed with array
 // overload operator() to make this a generator (functor)
   unsigned long operator()() { return rand_int32(); }
+  unsigned long operator()(int smallx) { assert( smallx > 0 ); assert( smallx < 0x0800000 ); return abs(rand_int32()) % smallx; }
+  unsigned long operator()(int smallmin, int smallmax) { assert( smallmin <= smallmax ); if( smallmin == smallmax ) return smallmin; return smallmin + (*this)(smallmax-smallmin+1); }
 // 2007-02-11: made the destructor virtual; thanks "double more" for pointing this out
   virtual ~MTRand_int32() {} // destructor
 protected: // used by derived classes, otherwise not accessible; use the ()-operator

@@ -169,7 +169,7 @@ class LevelBlitter : public HexBlitter {
                        rgContains = regionGreen.contains( x, y ),
                        isLit = world.get(x,y).lit;
             if( !world.seen.contains(x,y) ) return;
-            if( !(!isLit || rrContains || rgContains) ) switch( world.get(x,y).state ) {
+            if( true || !(!isLit || rrContains || rgContains) ) switch( world.get(x,y).state ) {
                 case Tile::WALL:
                     putSprite( tileWall );
                     break;
@@ -184,6 +184,7 @@ class LevelBlitter : public HexBlitter {
                     putSprite( tileFloorMemory );
                     break;
             }
+#if 0
             if( !isLit ) {
                 putSprite( zoneFog );
             } else if( rgContains ) {
@@ -191,6 +192,7 @@ class LevelBlitter : public HexBlitter {
             } else if( rrContains ) {
                 putSprite( zoneRed );
             }
+#endif
             putSprite( thinGrid );
         }
 };
@@ -225,10 +227,34 @@ int main(int argc, char *argv[]) {
     hexSprites.bind( "zone-red", new HexSprite( images.makeSprite( "zone-red" ), grid ) );
     hexSprites.bind( "zone-green", new HexSprite( images.makeSprite( "zone-green" ), grid ) );
 
-    DungeonSketch sketch ( time(0) );
-    Tac::HexagonRoomPainter room ( 6 );
-    for(int i=0;i<8;i++) {
-        sketch.paintRoomNear( room, 0, 0 );
+    MTRand_int32 prng ( time(0) );
+    DungeonSketch sketch ( prng() );
+    int realrooms = 0;
+    while( realrooms < 8 ) {
+        Tac::RoomPainter *room;
+        int roll = prng(0,3);
+        switch( roll ) {
+            case 0:
+                room = new Tac::HollowHexagonRoomPainter( prng(5,6), prng(2,3) );
+                break;
+            case 1:
+                room = new Tac::BlankRoomPainter( prng(2,3) );
+                break;
+            case 2:
+                room = new Tac::HexagonRoomPainter( prng(3,6) );
+                ++realrooms;
+                break;
+            case 3:
+                room = new Tac::RectangularRoomPainter( prng(4,6) );
+                ++realrooms;
+                break;
+            default:
+                using namespace std;
+                cerr << roll << endl;
+                throw std::logic_error( "oops" );
+        }
+        sketch.paintRoomNear( *room, 0, 0 );
+        delete room;
     }
     int maxr = sketch.getMaxRadius();
 
@@ -268,10 +294,10 @@ int main(int argc, char *argv[]) {
     typedef FiniteLifetimeObjectList<RisingTextAnimation> RTAManager;
     RTAManager textAnims;
 
-    MTRand prng ( 1337 );
-
     world.updateVision();
     levelBlit.updateRegions(0,0);
+
+    ViewportMouseScroller *vpMouseScroller = 0;
 
     while( win.IsOpened() ) {
         using namespace std;
@@ -290,7 +316,7 @@ int main(int argc, char *argv[]) {
                 } else {
                     int ax = world.px + tdx, ay = world.py + tdy;
                     vp.hexToScreen( ax, ay );
-                    LabelSprite *label = new LabelSprite( (prng() > 0.5) ? "42" : "*miss*", sf::Color(200,0,0), ftFont );
+                    LabelSprite *label = new LabelSprite( (prng(0,1)) ? "42" : "*miss*", sf::Color(200,0,0), ftFont );
                     ax -= label->getWidth() / 2.0;
                     textAnims.adopt(
                         new RisingTextAnimation( ax, ay, label, 1.0, 100.0 )
@@ -310,6 +336,11 @@ int main(int argc, char *argv[]) {
             case sf::Event::Closed:
                 win.Close();
                 break;
+            case sf::Event::MouseMoved:
+                if( vpMouseScroller ) {
+                    vpMouseScroller->scroll();
+                }
+                break;
             case sf::Event::MouseButtonPressed:
                 if( ev.MouseButton.Button == sf::Mouse::Left ) {
                     int x = win.GetInput().GetMouseX(),
@@ -324,7 +355,23 @@ int main(int argc, char *argv[]) {
                             levelBlit.updateRegions(world.px,world.py);
                         }
                     }
+                } else if( ev.MouseButton.Button == sf::Mouse::Right ) {
+                    using namespace std;
+                    if( !vpMouseScroller ) {
+                        win.ShowMouseCursor( false );
+                        vpMouseScroller = new ViewportMouseScroller( vp, win.GetInput() );
+                    }
                 }
+                break;
+            case sf::Event::MouseButtonReleased:
+                if( ev.MouseButton.Button == sf::Mouse::Right ) {
+                    if( vpMouseScroller ) {
+                        delete vpMouseScroller;
+                        vpMouseScroller = 0;
+                        win.ShowMouseCursor( true );
+                    }
+                }
+                break;
             case sf::Event::KeyPressed:
                 if( transitioning ) break;
                 transitioning = true;
@@ -361,11 +408,12 @@ int main(int argc, char *argv[]) {
         }
         int cx = world.px, cy = world.py;
         grid.hexToScreen( cx, cy );
-        vp.center( cx, cy );
+//        vp.center( cx, cy );
         cx += tdxv;
         cy += tdyv;
         if( !drybump ) {
-            vp.center( cx, cy );
+//            vp.center( cx, cy );
+            ;
         }
 
 
