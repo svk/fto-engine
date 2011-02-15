@@ -17,6 +17,9 @@
 
 #include <map>
 
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+
 namespace HexTools {
 
 int hexCircleSize(int);
@@ -233,30 +236,26 @@ template<class T>
 class SparseHexMap {
     private:
         T defaultValue;
+        int maxRadius;
         std::map<HexCoordinate,T> data;
     
     public:
         explicit SparseHexMap(const T& defaultValue) :
             defaultValue( defaultValue ),
+            maxRadius ( 0 ),
             data ()
         {
         }
 
         SparseHexMap(const SparseHexMap& h) :
             defaultValue ( h.defaultValue ),
+            maxRadius ( h.maxRadius ),
             data ( h.data )
         {
         }
 
         int getMaxRadius(void) const {
-            int rv = 0;
-            for(typename std::map<HexCoordinate,T>::const_iterator i = data.begin(); i != data.end(); i++) {
-                const int x = i->first.first, y = i->first.second;
-                int i, j, r;
-                polariseHexCoordinate( x, y, i, j, r );
-                if( rv < r ) rv = r;
-            }
-            return rv;
+            return maxRadius;
         }
 
         const SparseHexMap<T>& operator=(const SparseHexMap<T>& that) {
@@ -264,6 +263,7 @@ class SparseHexMap {
             if( this != &that ) {
                 defaultValue = that.defaultValue;
                 data = that.data;
+                maxRadius = that.maxRadius;
             }
             return *this;
         }
@@ -272,6 +272,9 @@ class SparseHexMap {
         }
 
         void set(int x, int y, const T& v) {
+            int i, j, r;
+            polariseHexCoordinate( x, y, i, j, r );
+            maxRadius = MAX( maxRadius, r );
             data[HexCoordinate(x,y)] = v;
         }
 
