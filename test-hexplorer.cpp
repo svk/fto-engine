@@ -243,11 +243,11 @@ int main(int argc, char *argv[]) {
     hexSprites.bind( "zone-red", new HexSprite( images.makeSprite( "zone-red" ), grid ) );
     hexSprites.bind( "zone-green", new HexSprite( images.makeSprite( "zone-green" ), grid ) );
 
-    MTRand_int32 prng ( 1337 );
+    MTRand_int32 prng ( time(0) );
     DungeonSketch sketch ( prng() );
     using namespace std;
     int realrooms = 0;
-    while( realrooms < 4 ) {
+    while( realrooms < 5 ) {
         Tac::RoomPainter *room;
         int roll = prng(0,5);
         switch( roll ) {

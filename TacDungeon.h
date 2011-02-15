@@ -3,6 +3,8 @@
 
 #include <vector>
 
+#include <set>
+
 #include "HexTools.h"
 
 /* Basic shapes:
@@ -24,6 +26,24 @@ namespace Tac {
 
 class RoomPainter;
 
+class RoomNode {
+    private:
+        bool connected;
+        std::set<RoomNode*> connections;
+        HexTools::HexRegion region; // floorspace -- spawn region
+
+    public:
+        RoomNode(void);
+
+        void connect(RoomNode*);
+        void add(int,int);
+        void remove(int,int);
+
+        void markConnected(void);
+        int getRegionSize(void) const;
+        bool isMarkedConnected(void) const;
+};
+
 class DungeonSketch {
     public:
         enum SketchTile {
@@ -39,10 +59,17 @@ class DungeonSketch {
     private:
         HexTools::SparseHexMap<SketchTile> sketch;
         MTRand_int32 prng;
+        std::vector<RoomNode*> rooms;
+        std::map<HexTools::HexCoordinate, RoomNode*> rConnectors;
 
     public:
         DungeonSketch(int);
         ~DungeonSketch(void);
+
+        void registerConnector(int, int, RoomNode*);
+        RoomNode* getConnectorRoom(int, int);
+
+        void adoptRoom(RoomNode*);
 
         int getMaxRadius(void) const { return sketch.getMaxRadius(); }
 

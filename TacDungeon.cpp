@@ -11,7 +11,51 @@ DungeonSketch::DungeonSketch(int seed) :
 {
 }
 
+RoomNode::RoomNode(void) :
+    connected ( false ),
+    connections (),
+    region ()
+{
+}
+
+void RoomNode::connect(RoomNode *node) {
+    node->connections.insert( this );
+    connections.insert( node );
+}
+
+void RoomNode::add(int x, int y) {
+    region.add( x, y );
+}
+
+void RoomNode::remove(int x, int y){
+    region.remove( x, y );
+}
+
+void RoomNode::markConnected(void) {
+    if( !connected ) {
+        connected = true;
+        for(std::set<RoomNode*>::iterator i = connections.begin(); i != connections.end(); i++){
+            (*i)->markConnected();
+        }
+    }
+}
+
+bool RoomNode::isMarkedConnected(void) const {
+    return connected;
+}
+
+int RoomNode::getRegionSize(void) const {
+    return region.size();
+}
+
+void DungeonSketch::adoptRoom(RoomNode* room) {
+    rooms.push_back( room );
+}
+
 DungeonSketch::~DungeonSketch(void) {
+    for(std::vector<RoomNode*>::iterator i = rooms.begin(); i != rooms.end(); i++){
+        delete *i;
+    }
 }
 
 bool DungeonSketch::checkRoomAt(int cx, int cy, int R) const {
@@ -85,6 +129,8 @@ void RectangularRoomPainter::paint(DungeonSketch& sketch, int cx, int cy) {
     using namespace HexTools;
     int R = getRadius();
     using namespace std;
+    RoomNode *node = new RoomNode();
+    sketch.adoptRoom( node );
     sketch.put( cx, cy, DungeonSketch::ST_META_DIGGABLE );
     for(int r=1;r<=getRadius();r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++){
         int x, y;
@@ -101,10 +147,12 @@ void RectangularRoomPainter::paint(DungeonSketch& sketch, int cx, int cy) {
         if( abs(i) == (R-1) || abs(j) == (R-1) ) {
             if( !i || !j ) {
                 sketch.put( cx + x, cy + y, DungeonSketch::ST_META_CONNECTOR );
+                sketch.registerConnector( cx + x, cy + y, node );
             } else {
                 sketch.put( cx + x, cy + y, DungeonSketch::ST_NORMAL_WALL );
             }
         } else{
+            node->add( cx + x, cy + y );
             sketch.put( cx + x, cy + y, DungeonSketch::ST_NORMAL_FLOOR );
         }
     }
@@ -124,6 +172,8 @@ void BlankRoomPainter::paint(DungeonSketch& sketch, int cx, int cy) {
 void HollowHexagonRoomPainter::paint(DungeonSketch& sketch, int cx, int cy) {
     using namespace HexTools;
     int R = getRadius();
+    RoomNode *node = new RoomNode();
+    sketch.adoptRoom( node );
     sketch.put(cx,cy, DungeonSketch::ST_NORMAL_WALL );
     for(int r=1;r<=R;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++){
         int x, y;
@@ -133,12 +183,15 @@ void HollowHexagonRoomPainter::paint(DungeonSketch& sketch, int cx, int cy) {
         } else if( r == (R-1) ) {
             if( j == (R-1)/2 ) {
                 sketch.put( cx + x, cy + y, DungeonSketch::ST_META_CONNECTOR );
+                sketch.registerConnector( cx + x, cy + y, node );
             } else {
+                node->add( cx + x, cy + y );
                 sketch.put( cx + x, cy + y, DungeonSketch::ST_NORMAL_WALL );
             }
         } else if( r < ((R-1)-thickness)) {
             sketch.put( cx + x, cy + y, DungeonSketch::ST_NORMAL_WALL );
         } else {
+            node->add( cx + x, cy + y );
             sketch.put( cx + x, cy + y, DungeonSketch::ST_NORMAL_FLOOR );
         }
     }
@@ -147,6 +200,9 @@ void HollowHexagonRoomPainter::paint(DungeonSketch& sketch, int cx, int cy) {
 void HexagonRoomPainter::paint(DungeonSketch& sketch, int cx, int cy) {
     using namespace HexTools;
     int R = getRadius();
+    RoomNode *node = new RoomNode();
+    sketch.adoptRoom( node );
+    node->add( cx, cy );
     sketch.put(cx,cy, DungeonSketch::ST_NORMAL_FLOOR );
     for(int r=1;r<=R;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++){
         int x, y;
@@ -155,11 +211,13 @@ void HexagonRoomPainter::paint(DungeonSketch& sketch, int cx, int cy) {
             sketch.put( cx + x, cy + y, DungeonSketch::ST_META_DIGGABLE );
         } else if( r == (R-1) ) {
             if( j == (R-1)/2 ) {
+                sketch.registerConnector( cx + x, cy + y, node );
                 sketch.put( cx + x, cy + y, DungeonSketch::ST_META_CONNECTOR );
             } else {
                 sketch.put( cx + x, cy + y, DungeonSketch::ST_NORMAL_WALL );
             }
         } else {
+            node->add( cx + x, cy + y );
             sketch.put( cx + x, cy + y, DungeonSketch::ST_NORMAL_FLOOR );
         }
     }
@@ -222,6 +280,7 @@ void PointCorridor::dig(void) {
         check();
     }
     using namespace std;
+    std::set< RoomNode* > ends;
     for(int i=0;i<6;i++) if(activeDir[i] ){
         int x = cx, y = cy;
         while( sketch.get(x,y) != DungeonSketch::ST_META_CONNECTOR ) {
@@ -237,8 +296,33 @@ void PointCorridor::dig(void) {
             x += dx[i];
             y += dy[i];
         }
+        RoomNode* rv = sketch.getConnectorRoom( x, y );
+        if( !rv ) {
+            cerr << "warning: unregistered connector at " << x << " " << y << endl;
+        } else {
+            ends.insert( rv );
+        }
         sketch.put( x, y, DungeonSketch::ST_NORMAL_DOORWAY );
     }
+
+    for(std::set<RoomNode*>::iterator i = ends.begin(); i != ends.end(); i++) {
+        for(std::set<RoomNode*>::iterator j = ends.begin(); j != ends.end(); j++) {
+            if( *i != *j ) {
+                (*i)->connect( *j );
+            }
+        }
+    }
+
+}
+
+void DungeonSketch::registerConnector(int x, int y, RoomNode *room) {
+    rConnectors[ HexTools::HexCoordinate(x,y) ] = room;
+}
+
+RoomNode* DungeonSketch::getConnectorRoom(int x, int y) {
+    std::map< HexTools::HexCoordinate, RoomNode* >::const_iterator i = rConnectors.find( HexTools::HexCoordinate(x,y) );
+    if( i == rConnectors.end() ) return 0;
+    return i->second;
 }
 
 }
