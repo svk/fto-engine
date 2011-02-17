@@ -223,7 +223,7 @@ void ClientTile::setUnit(int id, int layer) {
 ClientMap::ClientMap(int radius, TacSpritesheet& sheet, ScreenGrid& grid, FreetypeFace* risingTextFont, ResourceManager<ClientTileType>& tileTypes, ResourceManager<ClientUnitType>& unitTypes, ResourceManager<RandomVariantsCollection<sf::SoundBuffer> >& soundBuffers ) :
     risingTextFont ( risingTextFont ),
     radius ( radius ),
-    tiles ( radius ),
+    tiles (),
     units (),
     animatedUnit ( 0 ),
     levelBlitter (*this, sheet),

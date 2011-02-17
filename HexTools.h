@@ -3,6 +3,8 @@
 
 #include <stdexcept>
 
+#include <iostream>
+
 #include <utility>
 
 #include <cstdlib>
@@ -98,7 +100,7 @@ class HexMap {
             using namespace std;
             if( this != &that ) {
                 radius = that.radius;
-                size = that.radius;
+                size = that.size;
                 defaultTile = that.defaultTile;
                 if( tiles ) {
                     delete [] tiles;
@@ -285,6 +287,105 @@ class SparseHexMap {
                 return defaultValue;
             }
             return i->second;
+        }
+};
+
+template<class T>
+class DynamicHexMap {
+    private:
+        int size;
+        T defaultTile;
+        T *tiles;
+    
+    public:
+        explicit DynamicHexMap(void) :
+            size ( 1 ),
+            tiles( new T [ size ] )
+        {
+            for(int i=0;i<size;i++) {
+                using namespace std;
+                tiles[i] = defaultTile;
+            }
+        }
+
+        void extendTo(int i) {
+            const int oldsize = size;
+            T *rv = 0;
+            int j = 0;
+            using namespace std;
+            if( i < size ) return;
+            while( i >= size ) {
+                size *= 2;
+            }
+            rv = new T [ size ];
+            for(;j<oldsize;j++) {
+                rv[j] = tiles[j];
+            }
+            for(;j<size;j++) {
+                rv[j] = defaultTile;
+            }
+            delete [] tiles;
+            tiles = rv;
+        }
+
+        DynamicHexMap(const DynamicHexMap& h) :
+            size ( h.size ),
+            defaultTile ( h.defaultTile ),
+            tiles ( new T [ size ] )
+        {
+            for(int i=0;i<size;i++) {
+                using namespace std;
+                tiles[i] = h.tiles[i];
+            }
+        }
+
+        const DynamicHexMap<T>& operator=(const DynamicHexMap<T>& that) {
+            using namespace std;
+            if( this != &that ) {
+                size = that.size;
+                defaultTile = that.defaultTile;
+                if( tiles ) {
+                    delete [] tiles;
+                }
+                tiles = new T [ size ];
+                for(int i=0;i<size;i++) {
+                    tiles[i] = that.tiles[i];
+                }
+            }
+            return *this;
+        }
+
+        ~DynamicHexMap(void) {
+            delete [] tiles;
+        }
+
+        T& get(int k) {
+            if( k < 0 || k >= size ) return getDefault();
+            return tiles[k];
+        }
+        const T& get(int k) const {
+            if( k < 0 || k >= size ) return getDefault();
+            return tiles[k];
+        }
+
+        bool isDefault(int x, int y) const {
+            return &get(x,y) == &defaultTile;
+        }
+
+        T& getDefault(void) { return defaultTile; }
+        T& get(int x, int y) {
+            using namespace std;
+            int k = flattenHexCoordinate( x, y );
+            if( k < 0 ) return getDefault();
+            extendTo( k );
+            return tiles[k];
+        }
+
+        const T& getDefault(void) const { return defaultTile; }
+        const T& get(int x, int y) const {
+            int k = flattenHexCoordinate( x, y );
+            if( k < 0 || k >= size ) return getDefault();
+            return tiles[k];
         }
 };
 

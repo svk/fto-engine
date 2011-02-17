@@ -383,7 +383,7 @@ class ClientMap : public HexOpacityMap,
         FreetypeFace* risingTextFont;
 
         int radius;
-        HexTools::HexMap<ClientTile> tiles;
+        HexTools::DynamicHexMap<ClientTile> tiles;
         ClientUnitManager units;
 
         ClientActionQueue caq;
