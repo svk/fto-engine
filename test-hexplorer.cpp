@@ -75,8 +75,8 @@ class World : public HexTools::HexMap<Tile>,
         }
 
         bool isOpaque(int x, int y) const {
-            return &get(x,y) == &getDefault();
-            return get(x,y).state != Tile::FLOOR;
+            return !(get(x,y).state == Tile::FLOOR
+                     || ( get(x,y).state == Tile::HL1 ) );
         }
 
         void setLit(int x, int y) {
@@ -91,7 +91,10 @@ class World : public HexTools::HexMap<Tile>,
         }
 
         bool canMove(int dx, int dy) {
-            return ( get(px+dx,py+dy).state == Tile::FLOOR );
+            return ( get(px+dx,py+dy).state == Tile::FLOOR )
+                   || ( get(px+dx,py+dy).state == Tile::HL1 )
+                   || ( get(px+dx,py+dy).state == Tile::HL2 )
+                   ;
         }
 
         void updateVision(void) {
@@ -102,7 +105,10 @@ class World : public HexTools::HexMap<Tile>,
         }
 
         bool move(int dx, int dy) {
-            if( get(px+dx,py+dy).state == Tile::FLOOR ) {
+            if( get(px+dx,py+dy).state == Tile::FLOOR
+                || get(px+dx,py+dy).state == Tile::HL1
+                || get(px+dx,py+dy).state == Tile::HL2
+                ) {
                 px += dx;
                 py += dy;
                 updateVision();
@@ -174,7 +180,7 @@ class LevelBlitter : public HexBlitter {
                        isLit = world.get(x,y).lit;
             if( !world.seen.contains(x,y) ) return;
             if( world.get(x,y).state == Tile::WALL ) return;
-            if( true || !(!isLit || rrContains || rgContains) ) switch( world.get(x,y).state ) {
+            if( isLit ) switch( world.get(x,y).state ) {
                 case Tile::HL1:
                     putSprite( zoneRed );
                     break;
@@ -192,9 +198,11 @@ class LevelBlitter : public HexBlitter {
                     break;
             } else switch( world.get(x,y).state ) {
                 default:
+                case Tile::HL2:
                 case Tile::WALL:
                     putSprite( tileWallMemory );
                     break;
+                case Tile::HL1:
                 case Tile::FLOOR:
                     putSprite( tileFloorMemory );
                     break;
