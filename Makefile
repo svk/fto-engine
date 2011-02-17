@@ -40,7 +40,7 @@ test-sexp: test-sexp.o Sise.o myabort.o
 test-sisenet: test-sisenet.o Sise.o myabort.o
 	$(CXX) $(CPPFLAGS) $(CORE_LIBS) $^ -o $@
 
-spserver: Sise.o spserver.o SProto.o myabort.o Nash.o NashServer.o HexTools.o HexFov.o HexTools.o myabort.o mtrand.o Tac.o TacServer.o TacRules.o Turns.o
+spserver: Sise.o spserver.o SProto.o myabort.o Nash.o NashServer.o HexTools.o HexFov.o HexTools.o myabort.o mtrand.o Tac.o TacServer.o TacRules.o Turns.o TacDungeon.o
 	$(CXX) $(CPPFLAGS) $(CORE_LIBS) $^ -o $@
 
 spclient: spclient.o Sise.o SProto.o myabort.o

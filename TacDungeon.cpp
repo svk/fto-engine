@@ -571,7 +571,29 @@ void SimpleLevelGenerator::generate(void) {
             generatePointCorridor();
         }
     }
+    finalize();
     finalChecks();
+}
+
+DungeonSketch::SketchTile SimpleLevelGenerator::TileFinalizer::operator()(DungeonSketch::SketchTile t) const {
+    switch( t ) {
+        case DungeonSketch::ST_NONE:
+        case DungeonSketch::ST_META_DIGGABLE:
+        case DungeonSketch::ST_META_CONNECTOR:
+            return DungeonSketch::DungeonSketch::ST_NORMAL_WALL;
+        default:
+            return t;
+    }
+}
+
+void SimpleLevelGenerator::finalize(void) {
+    TileFinalizer tilefin;
+    int sz = sketch.getMaxRadius();
+    for(int r=0;r<=sz;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
+        int x, y;
+        HexTools::cartesianiseHexCoordinate( i, j, r, x, y );
+        sketch.put(x,y, tilefin( sketch.get(x,y) ) );
+    }
 }
 
 void SimpleLevelGenerator::setSWCExtraCorridors(int n) {

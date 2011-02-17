@@ -84,6 +84,13 @@ class DungeonSketch {
         std::vector<RoomNode*>& getRooms(void) { return rooms; }
 };
 
+template
+<class T>
+class DungeonTileMapper {
+    public:
+        virtual T operator()(DungeonSketch::SketchTile) const = 0;
+};
+
 class PointCorridor {
     private:
         DungeonSketch* sketch;
@@ -177,6 +184,10 @@ class LevelGenerator {
 
 class SimpleLevelGenerator : public LevelGenerator {
     private:
+        struct TileFinalizer : public DungeonTileMapper<DungeonSketch::SketchTile> {
+            DungeonSketch::SketchTile operator()(DungeonSketch::SketchTile) const;
+        };
+
         struct PainterEntry {
             RoomPainter *painter;
             int weight;
@@ -212,6 +223,8 @@ class SimpleLevelGenerator : public LevelGenerator {
         bool checkPCC( PointCorridor& );
         void generatePCCs(void);
         bool isConnected(void);
+
+        void finalize(void);
 
         void finalChecks(void);
     

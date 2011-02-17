@@ -526,7 +526,7 @@ int main(int argc, char *argv[]) {
     FreetypeLibrary lib;
     FreetypeFace risingTextFont ("./data/CrimsonText-Bold.otf", 20);
 
-    const int mapSize = 10;
+    const int mapSize = 100;
 
     ScreenGrid grid ( "./data/hexproto3.png" );
 

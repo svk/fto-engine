@@ -51,6 +51,28 @@ ServerTile::ServerTile(void) :
     // warnings if we miss that
 }
 
+ServerMap::ServerMap(DungeonSketch& sketch, const DungeonTileMapper<TileType*>& mapper, int seed) :
+    mapSize ( sketch.getMaxRadius() ),
+    prng ( seed ),
+    unitIdGen ( prng() ),
+    playerIdGen ( prng() ),
+    tiles ( mapSize ),
+    players (),
+    units (),
+    gmpPrng( gmp_randinit_mt )
+{
+    for(int r=1;r<=mapSize;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
+        int x, y;
+        HexTools::cartesianiseHexCoordinate( i, j, r, x, y );
+        tiles.get(x,y).setXY(x,y);
+        tiles.get(x,y).setTileType( mapper( sketch.get(x,y) ) );
+    }
+    tiles.get(0,0).setXY(0,0);
+    tiles.get(0,0).setTileType( mapper( sketch.get(0,0) ) );
+    tiles.getDefault().setTileType( mapper( DungeonSketch::ST_NONE ) );
+}
+
+
 ServerMap::ServerMap(int mapSize, TileType *defaultTt, int seed) :
     mapSize ( mapSize ),
     prng ( seed ),
@@ -74,6 +96,7 @@ void ServerMap::reinitialize(TileType *defaultTt) {
         tiles.get(x,y).setTileType( defaultTt );
     }
     tiles.get(0,0).setXY(0,0);
+    tiles.get(0,0).setTileType( defaultTt );
     tiles.getDefault().setTileType( defaultTt );
 }
 
@@ -577,16 +600,13 @@ void ServerPlayer::sendUnitMoved(const ServerUnit& unit, const ServerTile& fromT
                  .make() );
 }
 
-TacTestServer::TacTestServer(SProto::Server& server, int radius, const std::string& unitsfn, const std::string& tilesfn, int seed) :
+TacTestServer::TacTestServer(SProto::Server& server, const std::string& unitsfn, const std::string& tilesfn, int seed, DungeonSketch& sketch) :
     SProto::SubServer( "tactest", server ),
-    myMap ( radius, 0, seed )
+    tileTypes( tilesfn ),
+    unitTypes( unitsfn ),
+    tilesetMapper( tileTypes ),
+    myMap ( sketch, tilesetMapper, seed )
 {
-    using namespace std;
-    fillManagerFromFile( unitsfn, unitTypes );
-    fillManagerFromFile( tilesfn, tileTypes );
-    myMap.reinitialize( &tileTypes[ "border" ] );
-    trivialLevelGenerator( myMap, &tileTypes[ "std-wall" ], &tileTypes[ "std-floor" ], 0.4, myMap.getPrng()() );
-
     // fill this from a lisp file? or is that overkill?
     colourPool.add( 255, 0, 0 );
     colourPool.add( 0, 255, 0 );
@@ -1003,6 +1023,21 @@ Sise::SExp* ServerColour::toSexp(void) const {
                  ( new Int( g ) )
                  ( new Int( b ) )
            .make();
+}
+
+TileType* SimpleTileset::operator()(DungeonSketch::SketchTile t) const {
+    switch( t ) {
+        case DungeonSketch::ST_NONE:
+            return &tileTypes[ "border" ];
+        case DungeonSketch::ST_NORMAL_DOORWAY:
+        case DungeonSketch::ST_NORMAL_CORRIDOR:
+        case DungeonSketch::ST_NORMAL_FLOOR:
+            return &tileTypes[ "std-floor" ];
+        case DungeonSketch::ST_NORMAL_WALL:
+            return &tileTypes[ "std-wall" ];
+        default:
+            throw std::runtime_error( "encountered unknown tile sketch type (meta unstripped?)" );
+    }
 }
 
 };

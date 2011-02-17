@@ -21,6 +21,8 @@
 
 #include <gmpxx.h>
 
+#include "TacDungeon.h"
+
 /* Thoughts.
    
    Server needs: - to keep track of the REAL map,
@@ -238,6 +240,7 @@ class ServerMap : public HexTools::HexOpacityMap {
 
     public:
         ServerMap(int,TileType*,int);
+        ServerMap(DungeonSketch&, const DungeonTileMapper<TileType*>&,int);
         ~ServerMap(void);
 
         MTRand_int32& getPrng(void) { return prng; }
@@ -287,12 +290,19 @@ class ServerMap : public HexTools::HexOpacityMap {
 
 void trivialLevelGenerator(ServerMap&, TileType*, TileType*, double = 0.5, int = 1337);
 
+class SimpleTileset : public DungeonTileMapper<TileType*> {
+    private:
+        ResourceManager<TileType>& tileTypes;
+
+    public:
+        SimpleTileset(ResourceManager<TileType>& tts) : tileTypes(tts) {}
+        TileType* operator()(DungeonSketch::SketchTile) const;
+};
+
 class TacTestServer : public SProto::SubServer {
     // this is a "test" server because it contains only one "game", and that game doesn't
     // really look much like Tac yet -- everyone moves at once, for one
     private:
-        ServerMap myMap;
-
         FischerTurnManager turns;
 
         std::set<std::string> clients;
@@ -300,11 +310,15 @@ class TacTestServer : public SProto::SubServer {
         ResourceManager<TileType> tileTypes;
         ResourceManager<UnitType> unitTypes;
 
+        SimpleTileset tilesetMapper;
+
+        ServerMap myMap;
+
         std::set<std::string> defeatedPlayers;
         ServerColourPool colourPool;
 
     public:
-        TacTestServer(SProto::Server&, int, const std::string&, const std::string&, int );
+        TacTestServer(SProto::Server&, const std::string&, const std::string&, int, DungeonSketch& );
 
         bool handle( SProto::RemoteClient*, const std::string&, Sise::SExp* );
         void tick(double dt);
@@ -317,6 +331,7 @@ class TacTestServer : public SProto::SubServer {
         void checkWinLossCondition(void);
         void spawnPlayerUnits(ServerPlayer*);
 };
+
 
 };
 

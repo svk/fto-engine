@@ -29,6 +29,8 @@ class ResourceManager {
             }
         }
 
+        ResourceManager(const std::string&);
+
         void bind(const std::string& str, T* resource) {
             typename ResourceContainer::iterator i = resources.find( str );
             if( i != resources.end() ) {
@@ -99,6 +101,11 @@ void fillManagerFromFile(const std::string& filename, ResourceManager<T>& uts) {
         delete data;
         uts.bind( name, ut );
     }
+}
+
+template<class T>
+ResourceManager<T>::ResourceManager(const std::string& name){
+    fillManagerFromFile( name, *this );
 }
 
 #endif
