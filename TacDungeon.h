@@ -3,6 +3,7 @@
 
 #include <vector>
 
+#include <list>
 #include <set>
 
 #include "HexTools.h"
@@ -39,9 +40,12 @@ class RoomNode {
         void add(int,int);
         void remove(int,int);
 
+        bool isDirectlyConnected(RoomNode*) const;
+
         void markConnected(void);
         int getRegionSize(void) const;
         bool isMarkedConnected(void) const;
+        void clearConnectedMark(void) { connected = false; }
 };
 
 class DungeonSketch {
@@ -58,12 +62,11 @@ class DungeonSketch {
 
     private:
         HexTools::SparseHexMap<SketchTile> sketch;
-        MTRand_int32 prng;
         std::vector<RoomNode*> rooms;
         std::map<HexTools::HexCoordinate, RoomNode*> rConnectors;
 
     public:
-        DungeonSketch(int);
+        DungeonSketch(void);
         ~DungeonSketch(void);
 
         void registerConnector(int, int, RoomNode*);
@@ -78,18 +81,17 @@ class DungeonSketch {
 
         bool checkRoomAt(int,int,int) const;
 
-        HexTools::HexCoordinate placeRoomNear(int,int,int);
-
-        HexTools::HexCoordinate paintRoomNear(RoomPainter&,int,int);
+        std::vector<RoomNode*>& getRooms(void) { return rooms; }
 };
 
 class PointCorridor {
     private:
-        DungeonSketch& sketch;
+        DungeonSketch* sketch;
         int cx, cy;
 
         bool checked;
         bool activeDir[6];
+        RoomNode* node[6];
 
         int length;
 
@@ -97,9 +99,17 @@ class PointCorridor {
 
     public:
         PointCorridor(DungeonSketch&, int, int);
+        PointCorridor(const PointCorridor&);
+
+        const PointCorridor& operator=(const PointCorridor&);
 
         bool check(void);
         void dig(void);
+
+        int getLength(void) const { return length; }
+
+        bool isActive(int j) const { return activeDir[j]; }
+        RoomNode* getNode(int j) { return node[j]; }
 };
 
 class RoomPainter {
@@ -108,6 +118,7 @@ class RoomPainter {
 
     public:
         RoomPainter(int);
+        virtual ~RoomPainter(void){}
 
         void paint(int,int, DungeonSketch::SketchTile);
         int getRadius(void) const { return radius; }
@@ -143,6 +154,79 @@ class HollowHexagonRoomPainter : public RoomPainter {
         HollowHexagonRoomPainter(int, int);
 
         void paint(DungeonSketch&,int,int);
+};
+
+struct LevelGenerationFailure : public std::runtime_error {
+    LevelGenerationFailure(const std::string& reason) :
+        std::runtime_error( reason )
+    {
+    }
+};
+
+class LevelGenerator {
+    protected:
+        MTRand_int32& prng;
+        DungeonSketch sketch;
+
+    public:
+        LevelGenerator(MTRand_int32&);
+
+        virtual void generate(void) = 0;
+        DungeonSketch& getSketch(void) { return sketch; }
+};
+
+class SimpleLevelGenerator : public LevelGenerator {
+    private:
+        struct PainterEntry {
+            RoomPainter *painter;
+            int weight;
+            bool countTowardsTarget;
+            bool adopted;
+
+            PainterEntry(RoomPainter*,int,bool,bool);
+        };
+
+        std::vector<PainterEntry> entries;
+
+        int roomTarget;
+        bool ensureConnectedness;
+        bool forbidTrivialLoops;
+        int maxCorridors;
+        bool useCorridorLengthLimit;
+        int corridorLengthLimit;
+        bool useRadiusLimit;
+        int radiusLimit;
+        bool shortestCorridorFirst;
+        bool stopWhenConnected;
+        int swcExtraCorridors;
+
+        PainterEntry& selectPainter(void);
+        HexTools::HexCoordinate placeRoomNear(int,int,int);
+
+        bool pointCorridorCandidatesGenerated;
+        std::vector< PointCorridor > pccs;
+        int corridorCount;
+
+        void generateRooms(void);
+        bool generatePointCorridor(void);
+        bool checkPCC( PointCorridor& );
+        void generatePCCs(void);
+        bool isConnected(void);
+
+        void finalChecks(void);
+    
+    public:
+        SimpleLevelGenerator(MTRand_int32&);
+        ~SimpleLevelGenerator(void);
+
+        void setRoomTarget(int);
+        void adoptPainter(RoomPainter*,int,bool);
+
+        void setShortestCorridorsFirst(bool = true);
+        void setStopWhenConnected(bool = true);
+        void setSWCExtraCorridors(int);
+
+        void generate(void);
 };
 
 };

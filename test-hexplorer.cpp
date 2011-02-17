@@ -244,68 +244,50 @@ int main(int argc, char *argv[]) {
     hexSprites.bind( "zone-green", new HexSprite( images.makeSprite( "zone-green" ), grid ) );
 
     MTRand_int32 prng ( time(0) );
-    DungeonSketch sketch ( prng() );
-    using namespace std;
-    int realrooms = 0;
-    while( realrooms < 5 ) {
-        Tac::RoomPainter *room;
-        int roll = prng(0,5);
-        switch( roll ) {
-            case 0:
-                cerr << "hollow hexagon" << endl;
-                room = new Tac::HollowHexagonRoomPainter( prng(6,7), prng(2,3) );
-                break;
-            case 1:
-                cerr << "blank" << endl;
-                room = new Tac::BlankRoomPainter( prng(3,4) );
-                break;
-            case 2:
-            case 3:
-                cerr << "hexagon" << endl;
-                room = new Tac::HexagonRoomPainter( prng(5,8) );
-                ++realrooms;
-                break;
-            case 4:
-            case 5:
-                cerr << "rectangle" << endl;
-                room = new Tac::RectangularRoomPainter( prng(5,7) );
-                ++realrooms;
-                break;
-            default:
-                using namespace std;
-                cerr << roll << endl;
-                throw std::logic_error( "oops" );
+    SimpleLevelGenerator *levelgen = 0;
+    while( !levelgen ) {
+        try {
+            levelgen = new SimpleLevelGenerator( prng );
+            levelgen->setRoomTarget( 5 );
+            levelgen->setShortestCorridorsFirst();
+            levelgen->setStopWhenConnected();
+            levelgen->setSWCExtraCorridors( 2 );
+
+            levelgen->adoptPainter( new Tac::HollowHexagonRoomPainter( 6, 2 ),
+                                   1,
+                                   false );
+            levelgen->adoptPainter( new Tac::HollowHexagonRoomPainter( 7, 3 ),
+                                   1,
+                                   false );
+            levelgen->adoptPainter( new Tac::BlankRoomPainter( 3 ),
+                                   1,
+                                   false );
+
+            levelgen->adoptPainter( new Tac::HexagonRoomPainter( 4 ),
+                                   2,
+                                   true );
+            levelgen->adoptPainter( new Tac::HexagonRoomPainter( 5 ),
+                                   2,
+                                   true );
+            levelgen->adoptPainter( new Tac::HexagonRoomPainter( 6 ),
+                                   2,
+                                   true );
+            levelgen->adoptPainter( new Tac::HexagonRoomPainter( 7 ),
+                                   1,
+                                   true );
+
+            levelgen->generate();
         }
-        sketch.paintRoomNear( *room, 0, 0 );
-        delete room;
-    }
-    int maxr = sketch.getMaxRadius();
-    std::vector<HexTools::HexCoordinate> potentialPCs;
-    for(int r=0;r<=maxr;r++) for(int i=0;i<6;i++) for(int j=0;j<r;j++) {
-        int x, y;
-        cartesianiseHexCoordinate( i, j, r, x, y );
-        potentialPCs.push_back( HexTools::HexCoordinate( x, y ) );
-    }
-    for(int j=0;j<20;j++) {
-        for(std::vector<HexTools::HexCoordinate>::iterator i = potentialPCs.begin(); i != potentialPCs.end();) {
-            int x = i->first, y = i->second;
-            if( !Tac::PointCorridor( sketch, x, y ).check() ) {
-                i = potentialPCs.erase( i );
-            } else {
-                i++;
-            }
-        }
-        using namespace std;
-        if( potentialPCs.size() > 0 ) {
-            HexTools::HexCoordinate coord = potentialPCs[ prng( 0, potentialPCs.size() - 1 ) ];
-            Tac::PointCorridor pc ( sketch, coord.first, coord.second );
-            pc.dig();
-            cerr << "added " << j << endl;
-        } else {
+        catch( LevelGenerationFailure& e ) {
             using namespace std;
-            cerr << "NOPE" << endl;
+            cerr << "warning: level generation failure, trying again.. (" << e.what() << ")" << endl;
+            delete levelgen;
+            levelgen = 0;
         }
     }
+
+    DungeonSketch& sketch = levelgen->getSketch();
+    int maxr = sketch.getMaxRadius();
 
     World world( maxr );
     LevelBlitter levelBlit ( world, hexSprites, images );
@@ -320,12 +302,16 @@ int main(int argc, char *argv[]) {
         int x, y;
         HexTools::cartesianiseHexCoordinate( i, j, r, x, y );
         switch( sketch.get( x, y ) ) {
-            case DungeonSketch::ST_NORMAL_DOORWAY:
             case DungeonSketch::ST_NORMAL_CORRIDOR:
             case DungeonSketch::ST_NORMAL_FLOOR:
                 world.get( x, y ) = Tile::FLOOR;
                 break;
-                world.get( x, y ) = Tile::HL1;
+            case DungeonSketch::ST_NORMAL_DOORWAY:
+                if( prng(0,1) ) {
+                    world.get( x, y ) = Tile::HL1;
+                } else {
+                    world.get( x, y ) = Tile::FLOOR;
+                }
                 break;
                 world.get( x, y ) = Tile::HL2;
                 break;
@@ -337,6 +323,8 @@ int main(int argc, char *argv[]) {
                 break;
         }
     }
+
+    delete levelgen;
 
     const double transitionTime = 0.15;
     bool transitioning = false;
