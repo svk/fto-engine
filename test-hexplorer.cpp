@@ -302,18 +302,18 @@ int main(int argc, char *argv[]) {
         int x, y;
         HexTools::cartesianiseHexCoordinate( i, j, r, x, y );
         switch( sketch.get( x, y ) ) {
-            case DungeonSketch::ST_NORMAL_CORRIDOR:
             case DungeonSketch::ST_NORMAL_FLOOR:
                 world.get( x, y ) = Tile::FLOOR;
                 break;
             case DungeonSketch::ST_NORMAL_DOORWAY:
                 if( prng(0,1) ) {
-                    world.get( x, y ) = Tile::HL1;
+                    world.get( x, y ) = Tile::HL2;
                 } else {
-                    world.get( x, y ) = Tile::FLOOR;
+                    world.get( x, y ) = Tile::HL1;
                 }
                 break;
-                world.get( x, y ) = Tile::HL2;
+            case DungeonSketch::ST_NORMAL_CORRIDOR:
+                world.get( x, y ) = Tile::HL1;
                 break;
             case DungeonSketch::ST_META_CONNECTOR:
             case DungeonSketch::ST_NONE:
